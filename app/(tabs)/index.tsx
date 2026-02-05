@@ -1,7 +1,9 @@
 import { ThemedText } from "@/components/themed-text";
+import * as Location from 'expo-location';
 import { Magnetometer } from "expo-sensors";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Animated, StyleSheet, View } from "react-native";
+import { watchLocation } from "../Utils/location";
 import {
   headingFromMagnetometer,
   smoothAngle,
@@ -15,6 +17,15 @@ export default function HomeScreen() {
   const gamma = motion?.rotation?.gamma ?? 0;
   const [heading, setHeading] = useState(0); // 0..360
   const headingRef = useRef(0);
+
+  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
+
+  function hasLocationPermissions(): boolean
+  {
+    return locationPermissionStatus?.granted ?? false;
+  }
+
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
   // For smooth rotation animation
   const rotation = useRef(new Animated.Value(0)).current;
@@ -33,6 +44,19 @@ export default function HomeScreen() {
 
     return () => sub.remove();
   }, []);
+
+  useEffect(() => {
+    if(!hasLocationPermissions())
+    {
+      requestLocationPermissions();
+    }
+
+    if(hasLocationPermissions())
+    {
+      watchLocation(setLocation, errorReason => console.log("Location error: " + errorReason));
+    }
+
+  }, [locationPermissionStatus]);
 
   useEffect(() => {
     // To make the arrow point North, rotate the arrow opposite the heading
@@ -63,6 +87,9 @@ export default function HomeScreen() {
       <ThemedText type="title">Welcome to JayWalk!</ThemedText>
       <ThemedText>
         Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)}
+      </ThemedText>
+      <ThemedText>
+        Location: {location?.coords.latitude.toFixed(7) ?? "???"}, {location?.coords.longitude.toFixed(7) ?? "???"}
       </ThemedText>
       <View style={styles.compass}>
         {/* Arrow */}
