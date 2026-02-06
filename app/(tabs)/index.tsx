@@ -1,103 +1,175 @@
-import { ThemedText } from "@/components/themed-text";
-import * as Location from 'expo-location';
-import { Magnetometer } from "expo-sensors";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Animated, StyleSheet, View } from "react-native";
+import LocationMenu from "@/components/ui/LocationMenu";
+import * as Location from "expo-location";
+import { useEffect, useState } from "react";
+import { StyleSheet, Text, View } from "react-native";
+import { Button, Snackbar, TextInput } from "react-native-paper";
+import InfoIcon from "../../assets/images/icons/info.svg";
 import { watchLocation } from "../Utils/location";
-import {
-  headingFromMagnetometer,
-  smoothAngle,
-  useOrientation,
-} from "../Utils/phoneOrientation";
+import { useOrientation } from "../Utils/phoneOrientation";
 
 export default function HomeScreen() {
   const motion = useOrientation();
-  const alpha = motion?.rotation?.alpha ?? 0;
-  const beta = motion?.rotation?.beta ?? 0;
-  const gamma = motion?.rotation?.gamma ?? 0;
-  const [heading, setHeading] = useState(0); // 0..360
-  const headingRef = useRef(0);
+  // const alpha = motion?.rotation?.alpha ?? 0;
+  // const beta = motion?.rotation?.beta ?? 0;
+  // const gamma = motion?.rotation?.gamma ?? 0;
+  // const [heading, setHeading] = useState(0); // 0..360
+  const [currLocationText, setcurrLocationText] = useState("");
+  const [destLocationText, setDestLocationText] = useState("");
+  const [showSnackbar, setShowSnackbar] = useState(false);
+  // const headingRef = useRef(0);
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
-  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
+  const options = ["Engineering", "Union", "Memorial Stadium"];
 
-  function hasLocationPermissions(): boolean
-  {
+  const [locationPermissionStatus, requestLocationPermissions] =
+    Location.useForegroundPermissions();
+
+  function hasLocationPermissions(): boolean {
     return locationPermissionStatus?.granted ?? false;
   }
 
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+
+  const handleStartRoutingPress = () => {
+    if (currLocationText && destLocationText) {
+      console.log(`Routing from ${currLocationText} to ${destLocationText}...`);
+    } else {
+      setShowSnackbar(true);
+    }
+  };
 
   // For smooth rotation animation
-  const rotation = useRef(new Animated.Value(0)).current;
+  // const rotation = useRef(new Animated.Value(0)).current;
+
+  // useEffect(() => {
+  //   Magnetometer.setUpdateInterval(100);
+
+  //   const sub = Magnetometer.addListener((data) => {
+  //     const raw = headingFromMagnetometer(data);
+  //     const smoothed = smoothAngle(headingRef.current, raw, 0.2);
+  //     headingRef.current = smoothed;
+  //     setHeading(smoothed);
+  //   });
+
+  //   return () => sub.remove();
+  // }, []);
 
   useEffect(() => {
-    Magnetometer.setUpdateInterval(100);
-
-    const sub = Magnetometer.addListener((data) => {
-      const raw = headingFromMagnetometer(data);
-      console.log(`Raw heading: ${raw.toFixed(2)}`);
-      const smoothed = smoothAngle(headingRef.current, raw, 0.2);
-      console.log(`Smoothed heading: ${smoothed.toFixed(2)}`);
-      headingRef.current = smoothed;
-      setHeading(smoothed);
-    });
-
-    return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
-    if(!hasLocationPermissions())
-    {
+    if (!hasLocationPermissions()) {
       requestLocationPermissions();
     }
 
-    if(hasLocationPermissions())
-    {
-      watchLocation(setLocation, errorReason => console.log("Location error: " + errorReason));
+    if (hasLocationPermissions()) {
+      watchLocation(setLocation, (errorReason) =>
+        console.log("Location error: " + errorReason),
+      );
     }
-
   }, [locationPermissionStatus]);
 
-  useEffect(() => {
-    // To make the arrow point North, rotate the arrow opposite the heading
-    // If heading is 90° (east), arrow should rotate -90° to point north.
-    Animated.timing(rotation, {
-      toValue: -heading,
-      duration: 80,
-      useNativeDriver: true,
-    }).start();
-  }, [heading, rotation]);
+  // useEffect(() => {
+  //   // To make the arrow point North, rotate the arrow opposite the heading
+  //   // If heading is 90° (east), arrow should rotate -90° to point north.
+  //   Animated.timing(rotation, {
+  //     toValue: -heading + 90,
+  //     duration: 80,
+  //     useNativeDriver: true,
+  //   }).start();
+  // }, [heading, rotation]);
 
-  const rotateStyle = useMemo(
-    () => ({
-      transform: [
-        {
-          rotate: rotation.interpolate({
-            inputRange: [-360, 360],
-            outputRange: ["-360deg", "360deg"],
-          }),
-        },
-      ],
-    }),
-    [rotation],
-  );
+  // const rotateStyle = useMemo(
+  //   () => ({
+  //     transform: [
+  //       {
+  //         rotate: rotation.interpolate({
+  //           inputRange: [-360, 360],
+  //           outputRange: ["-360deg", "360deg"],
+  //         }),
+  //       },
+  //     ],
+  //   }),
+  //   [rotation],
+  // );
 
   return (
     <View style={styles.container}>
-      <ThemedText type="title">Welcome to JayWalk!</ThemedText>
-      <ThemedText>
-        Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)}
-      </ThemedText>
-      <ThemedText>
-        Location: {location?.coords.latitude.toFixed(7) ?? "???"}, {location?.coords.longitude.toFixed(7) ?? "???"}
-      </ThemedText>
-      <View style={styles.compass}>
-        {/* Arrow */}
-        <Animated.View style={[styles.arrowWrap, rotateStyle]}>
-          <View style={styles.arrow} />
-          <View style={styles.arrowTail} />
-        </Animated.View>
+      <View style={styles.header}>
+        <Text style={styles.appTitle}>JayWalk</Text>
+        <InfoIcon width={24} height={24} color="#fff" />
       </View>
+      <View style={styles.content}>
+        {/* <Text>
+          Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)}
+        </Text> */}
+        <Text>
+          Location: {location?.coords.latitude.toFixed(7) ?? "???"},{" "}
+          {location?.coords.longitude.toFixed(7) ?? "???"}
+        </Text>
+        <Text style={styles.title}>Going Somewhere?</Text>
+        <Text style={styles.subtitle}>Where I am:</Text>
+        <LocationMenu
+          visible={isMenuVisible}
+          onDismiss={() => setIsMenuVisible(false)}
+          anchor={
+            <TextInput
+              label="Current location"
+              value={currLocationText}
+              onChangeText={setcurrLocationText}
+              mode="outlined"
+              activeOutlineColor="#0015ba"
+              style={styles.textField}
+            />
+          }
+          options={options}
+          locationText={currLocationText}
+          setLocationText={setcurrLocationText}
+        />
+        <Text style={styles.subtitle}>Where I want to go:</Text>
+        <LocationMenu
+          visible={isMenuVisible}
+          onDismiss={() => setIsMenuVisible(false)}
+          anchor={
+            <View>
+              <TextInput
+                label="Destination location"
+                value={destLocationText}
+                onChangeText={setDestLocationText}
+                mode="outlined"
+                activeOutlineColor="#0015ba"
+                style={styles.textField}
+              />
+            </View>
+          }
+          options={options}
+          locationText={destLocationText}
+          setLocationText={setDestLocationText}
+        />
+        <Button
+          mode="contained"
+          style={styles.button}
+          disabled={false} // will be if they havent put in both locations
+          onPress={handleStartRoutingPress}
+        >
+          Let's Go!
+        </Button>
+
+        {/* <View style={styles.compass}>
+           Arrow 
+          <Animated.View style={[styles.arrowWrap, rotateStyle]}>
+            <View style={styles.arrow} />
+            <View style={styles.arrowTail} />
+          </Animated.View>
+        </View> */}
+      </View>
+      <Snackbar
+        visible={showSnackbar}
+        onDismiss={() => setShowSnackbar(false)}
+        duration={2000}
+      >
+        You need to enter both your currenet location and destination to start
+        routing.
+      </Snackbar>
     </View>
   );
 }
@@ -105,52 +177,75 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 16,
-    paddingTop: 32,
-    flexDirection: "column",
-    alignItems: "center",
     gap: 8,
+    backgroundColor: "#fafafa",
   },
-  compass: {
-    marginTop: 24,
-    width: 240,
-    height: 240,
-    borderRadius: 120,
-    borderWidth: 2,
-    alignItems: "center",
-    justifyContent: "center",
+  header: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    justifyContent: "space-between",
+    backgroundColor: "#0015BA",
+    paddingHorizontal: 30,
+    paddingBottom: 10,
+    height: 90,
+    width: 400,
   },
-  northLabel: {
-    position: "absolute",
-    top: 10,
-    fontSize: 18,
-    fontWeight: "700",
+  appTitle: {
+    color: "#fff",
+    fontSize: 24,
   },
-
-  arrowWrap: {
-    width: 140,
-    height: 140,
-    alignItems: "center",
-    justifyContent: "center",
+  content: {},
+  button: {
+    marginTop: 16,
+    color: "#fff",
+    backgroundColor: "#E8000d",
+    borderRadius: 8,
+    width: 120,
   },
-  arrow: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 14,
-    borderRightWidth: 14,
-    borderBottomWidth: 40,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: "white",
-    position: "absolute",
-    top: 10,
+  title: { fontSize: 22, fontWeight: "bold", color: "#E8000d" },
+  textField: {
+    width: 200,
+    backgroundColor: "transparent",
+    borderWidth: 0,
+    borderColor: "transparent",
   },
-  arrowTail: {
-    width: 6,
-    height: 60,
-    backgroundColor: "white",
-    borderRadius: 3,
-    position: "absolute",
-    top: 50,
+  subtitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginTop: 12,
+    color: "#E8000d",
   },
+  // compass: {
+  //   marginTop: 24,
+  //   width: 240,
+  //   height: 240,
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  // },
+  // arrowWrap: {
+  //   width: 140,
+  //   height: 140,
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  // },
+  // arrow: {
+  //   width: 0,
+  //   height: 0,
+  //   borderLeftWidth: 14,
+  //   borderRightWidth: 14,
+  //   borderBottomWidth: 40,
+  //   borderLeftColor: "transparent",
+  //   borderRightColor: "transparent",
+  //   borderBottomColor: "white",
+  //   position: "absolute",
+  //   top: 10,
+  // },
+  // arrowTail: {
+  //   width: 6,
+  //   height: 60,
+  //   backgroundColor: "white",
+  //   borderRadius: 3,
+  //   position: "absolute",
+  //   top: 50,
+  // },
 });
