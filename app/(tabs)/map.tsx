@@ -1,3 +1,4 @@
+import { Graph, loadGraph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
@@ -9,6 +10,32 @@ export default function TabTwoScreen() {
     latitudeDelta: 0.01, // smaller = more zoomed in
     longitudeDelta: 0.01,
   };
+
+  const graph = loadGraph();
+
+  // Make oulylines for our graph data
+  function makeDataLines(graph: Graph)
+  {
+    let i = 0;
+
+    let out = []
+    for(const edge of graph.edges)
+    {
+      out.push(<Polyline
+        coordinates={[
+          { latitude: edge.startNode.y, longitude: edge.startNode.x },
+          { latitude: edge.endNode.y, longitude: edge.endNode.x },
+        ]}
+        strokeColor="#ff00c3"
+        strokeWidth={5}
+        lineCap="round"
+        lineJoin="round"
+        key={"edge" + (i++).toString()}
+      />);
+    }
+
+    return out;
+  }
 
   // The bounds of where the map will go. These are a rough measurement. If the user
   // goes outside of these bounds, the map will bring them back in.
@@ -25,8 +52,8 @@ export default function TabTwoScreen() {
     <MapView
       ref={mapRef}
       style={{ flex: 1 }}
-      minZoomLevel={14}
-      maxZoomLevel={18} // Prevents zooming out so that they always look at just the campus
+      //minZoomLevel={14}
+      //maxZoomLevel={18} // Prevents zooming out so that they always look at just the campus
       initialRegion={KU} // This places them over the campus on load
       showsUserLocation
       onRegionChangeComplete={(r) => {
@@ -49,6 +76,7 @@ export default function TabTwoScreen() {
         coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
         title="Engineering Campus"
       />
+      {makeDataLines(graph)}
       <Polyline
         coordinates={[
           { latitude: 38.95732, longitude: -95.252774 },

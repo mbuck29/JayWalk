@@ -1,0 +1,11 @@
+[
+    {
+        "id": 0,
+        "startNodeId": 10000,
+        "endNodeId": 10001,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    }
+]
