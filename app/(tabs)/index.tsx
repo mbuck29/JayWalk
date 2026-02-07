@@ -5,19 +5,20 @@ import { StyleSheet, Text, View } from "react-native";
 import { Button, Snackbar, TextInput } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import { watchLocation } from "../Utils/location";
-import { useOrientation } from "../Utils/phoneOrientation";
 
 export default function HomeScreen() {
-  const motion = useOrientation();
+  // const motion = useOrientation();
   // const alpha = motion?.rotation?.alpha ?? 0;
   // const beta = motion?.rotation?.beta ?? 0;
   // const gamma = motion?.rotation?.gamma ?? 0;
   // const [heading, setHeading] = useState(0); // 0..360
+  // const headingRef = useRef(0);
   const [currLocationText, setcurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
   const [showSnackbar, setShowSnackbar] = useState(false);
-  // const headingRef = useRef(0);
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
+  const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
+    useState(false);
 
   const options = ["Engineering", "Union", "Memorial Stadium"];
 
@@ -32,6 +33,10 @@ export default function HomeScreen() {
     null,
   );
 
+  // TODO: Once we have the actual routing we will need to call it here
+  // TODO: We will need to add a check that makes sure that the user put in valid locations
+  // This function handles making sure that the user has entered both a current
+  // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
     if (currLocationText && destLocationText) {
       console.log(`Routing from ${currLocationText} to ${destLocationText}...`);
@@ -96,12 +101,11 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.appTitle}>JayWalk</Text>
+        {/* TODO: Makes this clickable that shows a dialog explaining the app*/}
         <InfoIcon width={24} height={24} color="#fff" />
       </View>
       <View style={styles.content}>
-        {/* <Text>
-          Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)}
-        </Text> */}
+        {/* <Text> Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)} </Text> */}
         <Text>
           Location: {location?.coords.latitude.toFixed(7) ?? "???"},{" "}
           {location?.coords.longitude.toFixed(7) ?? "???"}
@@ -109,16 +113,20 @@ export default function HomeScreen() {
         <Text style={styles.title}>Going Somewhere?</Text>
         <Text style={styles.subtitle}>Where I am:</Text>
         <LocationMenu
-          visible={isMenuVisible}
-          onDismiss={() => setIsMenuVisible(false)}
+          visible={isCurrentMenuVisible}
+          onDismiss={() => setIsCurrentMenuVisible(false)}
           anchor={
             <TextInput
               label="Current location"
               value={currLocationText}
               onChangeText={setcurrLocationText}
-              mode="outlined"
-              activeOutlineColor="#0015ba"
+              mode="flat"
+              activeUnderlineColor="#0015ba"
+              textColor="#000"
+              underlineColor="#000"
+              placeholderTextColor="#000"
               style={styles.textField}
+              onFocus={() => setIsCurrentMenuVisible(true)}
             />
           }
           options={options}
@@ -127,19 +135,18 @@ export default function HomeScreen() {
         />
         <Text style={styles.subtitle}>Where I want to go:</Text>
         <LocationMenu
-          visible={isMenuVisible}
-          onDismiss={() => setIsMenuVisible(false)}
+          visible={isDestinationMenuVisible}
+          onDismiss={() => setIsDestinationMenuVisible(false)}
           anchor={
-            <View>
-              <TextInput
-                label="Destination location"
-                value={destLocationText}
-                onChangeText={setDestLocationText}
-                mode="outlined"
-                activeOutlineColor="#0015ba"
-                style={styles.textField}
-              />
-            </View>
+            <TextInput
+              label="Destination location"
+              value={destLocationText}
+              onChangeText={setDestLocationText}
+              mode="outlined"
+              activeOutlineColor="#0015ba"
+              style={styles.textField}
+              onFocus={() => setIsDestinationMenuVisible(true)}
+            />
           }
           options={options}
           locationText={destLocationText}
@@ -162,6 +169,7 @@ export default function HomeScreen() {
           </Animated.View>
         </View> */}
       </View>
+      {/* Small message to tell the user that they need to put both locations*/}
       <Snackbar
         visible={showSnackbar}
         onDismiss={() => setShowSnackbar(false)}
@@ -206,8 +214,6 @@ const styles = StyleSheet.create({
   textField: {
     width: 200,
     backgroundColor: "transparent",
-    borderWidth: 0,
-    borderColor: "transparent",
   },
   subtitle: {
     fontSize: 16,
