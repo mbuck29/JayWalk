@@ -14,5 +14,69 @@
         "y": 38.957695132473475,
         "buildingId": -1,
         "edgeIds": [0]
+    },
+    {
+        "id": 10002,
+        "name":"outside eaton going north",
+        "x": -95.252333,
+        "y": 38.957222,
+        "buildingId":-1,
+        "edgeIds": [5,1]
+
+
+    },
+    {
+        "id": 10003,
+        "name":"outside eaton going north2",
+        "x": -95.25218092645868,
+        "y": 38.95743151958433,
+        "buildingId":-1,
+        "edgeIds": [1,2]
+
+
+    },
+        {
+        "id": 10004,
+        "name":"outside north by stairs to back entrance",
+        "x": -95.25217620932042,
+        "y":  38.958370751897235,
+        "buildingId":-1,
+        "edgeIds": [2,3]
+
+
+    },
+     {
+        "id": 10005,
+        "name":"north outside eaton walkway",
+        "x": -95.25285456539135,
+        "y": 38.958370751897235,
+        "buildingId":-1,
+        "edgeIds": [3,4]
+
+
+    },
+    {
+        "id": 10006,
+        "name":"north entrance eaton",
+        "x": -95.25285456539135,
+        "y":38.958224032181384,
+        "buildingId":-1,
+        "edgeIds": [4]
+    },
+        {
+        "id": 10007,
+        "name": "south of eaton Entrance walk",
+        "x": -95.25250727586153,
+        "y": 38.95718254634255,
+        "buildingId": -1,
+        "edgeIds": [5,6]
+    },
+    {
+        "id": 10008,
+        "name": "south of eaton",
+        "x":-95.2527509651938,
+        "y":38.95732318831145,
+        "buildingId": -1,
+        "edgeIds": [6]
     }
 ]

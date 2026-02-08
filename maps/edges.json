@@ -7,5 +7,59 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
+    },
+        {
+        "id": 1,
+        "startNodeId": 10002,
+        "endNodeId": 10003,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 2,
+        "startNodeId": 10003,
+        "endNodeId": 10004,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 3,
+        "startNodeId": 10004,
+        "endNodeId": 10005,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 4,
+        "startNodeId": 10005,
+        "endNodeId": 10006,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 5,
+        "startNodeId": 10007,
+        "endNodeId": 10002,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 6,
+        "startNodeId": 10008,
+        "endNodeId": 10007,
+        "length": 10,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
     }
 ]
