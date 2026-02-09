@@ -5,6 +5,7 @@ import { HapticTab } from "@/components/haptic-tab";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 
 import { PaperProvider } from "react-native-paper";
+import HouseIcon from "../../assets/images/icons/house.svg";
 import MapIcon from "../../assets/images/icons/map.svg";
 import RouteIcon from "../../assets/images/icons/route.svg";
 
@@ -26,23 +27,23 @@ export default function TabLayout() {
           options={{
             title: "Home",
             tabBarIcon: () => (
-              <RouteIcon width={28} height={28} color="#ffffff" />
+              <HouseIcon width={28} height={28} color="#ffffff" />
             ),
           }}
         />
         <Tabs.Screen
           name="routing"
           options={{
-            title: "routing",
+            title: "Routing",
             tabBarIcon: () => (
-              <MapIcon width={28} height={28} color="#ffffff" />
+              <RouteIcon width={28} height={28} color="#ffffff" />
             ),
           }}
         />
         <Tabs.Screen
           name="map"
           options={{
-            title: "map",
+            title: "Map",
             tabBarIcon: () => (
               <MapIcon width={28} height={28} color="#ffffff" />
             ),
