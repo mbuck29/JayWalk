@@ -1,7 +1,7 @@
-import { Edge } from "@/maps/graph";
+import { Edge, graph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import { getRoute, getState } from "../Utils/state";
+import { getState } from "../Utils/state";
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
@@ -79,7 +79,7 @@ export default function TabTwoScreen() {
         coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
         title="Engineering Campus"
       />
-      {makeDataLines(getRoute(state)?.route ?? [])}
+      {makeDataLines(graph.edges)}
       <Polyline
         coordinates={[
           { latitude: 38.95732, longitude: -95.252774 },
