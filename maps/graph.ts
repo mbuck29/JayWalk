@@ -27,7 +27,9 @@ export interface Graph
     nodes: Node[]
 }
 
-export function loadGraph(): Graph
+export const graph = loadGraph();
+
+function loadGraph(): Graph
 {
     const edgeData = getEdges();
     const nodeData = getNodes();

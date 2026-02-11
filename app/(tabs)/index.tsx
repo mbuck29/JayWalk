@@ -1,10 +1,15 @@
 import LocationMenu from "@/components/ui/LocationMenu";
+import { graph } from "@/maps/graph";
+import { clearRoute, setRoute, useAppDispatch } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Button, Snackbar, TextInput } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import { watchLocation } from "../Utils/location";
+import { route } from "../Utils/routing";
+import { sanitize } from "../Utils/routingUtils";
+import { getRoute, getState } from "../Utils/state";
 
 export default function HomeScreen() {
   // const motion = useOrientation();
@@ -45,22 +50,6 @@ export default function HomeScreen() {
     }
   };
 
-  // For smooth rotation animation
-  // const rotation = useRef(new Animated.Value(0)).current;
-
-  // useEffect(() => {
-  //   Magnetometer.setUpdateInterval(100);
-
-  //   const sub = Magnetometer.addListener((data) => {
-  //     const raw = headingFromMagnetometer(data);
-  //     const smoothed = smoothAngle(headingRef.current, raw, 0.2);
-  //     headingRef.current = smoothed;
-  //     setHeading(smoothed);
-  //   });
-
-  //   return () => sub.remove();
-  // }, []);
-
   useEffect(() => {
     if (!hasLocationPermissions()) {
       requestLocationPermissions();
@@ -73,29 +62,29 @@ export default function HomeScreen() {
     }
   }, [locationPermissionStatus]);
 
-  // useEffect(() => {
-  //   // To make the arrow point North, rotate the arrow opposite the heading
-  //   // If heading is 90° (east), arrow should rotate -90° to point north.
-  //   Animated.timing(rotation, {
-  //     toValue: -heading + 90,
-  //     duration: 80,
-  //     useNativeDriver: true,
-  //   }).start();
-  // }, [heading, rotation]);
+  const state = getState();
+  const dispatch = useAppDispatch();
+  const currentRoute = getRoute(state);
 
-  // const rotateStyle = useMemo(
-  //   () => ({
-  //     transform: [
-  //       {
-  //         rotate: rotation.interpolate({
-  //           inputRange: [-360, 360],
-  //           outputRange: ["-360deg", "360deg"],
-  //         }),
-  //       },
-  //     ],
-  //   }),
-  //   [rotation],
-  // );
+  const start = 6;
+  const end = 14;
+
+  useEffect(() =>
+  {
+    if(!currentRoute || (currentRoute.stops[0] != graph.nodes[start] || currentRoute.stops[currentRoute.stops.length - 1] != graph.nodes[end]))
+    {
+      const newRoute = route(state, graph.nodes[start], graph.nodes[end]);
+
+      if(newRoute == null)
+      {
+        dispatch(clearRoute());
+      }
+      else
+      {
+        dispatch(setRoute(sanitize(newRoute)));
+      }
+    }
+  }, []);
 
   return (
     <View style={styles.container}>
