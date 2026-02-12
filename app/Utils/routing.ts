@@ -1,31 +1,59 @@
+/**
+ * File: routing.ts
+ * Purpose: Implement an algorithm to find the shortest path between two nodes on the JayWalk graph
+ * Author: C. Cooper
+ * Date Created: 2026-02-10
+ */
+
 import { Edge, Node } from "@/maps/graph";
 import { JayWalkState } from "@/redux/appState";
 import { edgeOther } from "./routingUtils";
 import { getAccessiblePreference, getIndoorOutdoorPreference } from "./state";
 
+/**
+ * The route that a user should take
+ */
 export interface Route
 {
+    /** The edges that the user should follow */
     route: Edge[],
+    /** The stops the user should visit along the route */
     stops: Node[]
 }
 
+/**
+ * Finds the shortest path between the two given nodes in the campus graph.
+ * @param state The global state of the application. Not strictly necessary if calling from a component.
+ * @param start The node to start routing from.
+ * @param end The node to route to.
+ * @returns A Route object representing the route to take, or null if the two nodes are not connected.
+ */
 export function route(state: JayWalkState, start: Node, end: Node): Route | null
 {
+    // This is an impmlementaiton of Dijkstra's algorithm
+
+    // Trivial case if start and end are the same
     if(start == end)
     {
         return {route: [], stops: [start]};
     }
 
+    // Get the user-selected route preferences
     const accessibleOnly = getAccessiblePreference(state);
     const inOutPreference = getIndoorOutdoorPreference(state);
 
+    // A node id -> the last edge before that node in the shortest path map, for the traceback
     const edgeMap: Record<number, Edge> = {};
-    const done: Set<number> = new Set();
 
+    // The set of ids of the edges that have been completed thus far
+    const done: Set<number> = new Set();
+    
     done.add(start.id);
 
+    // Heap for the closest nodes thus far
     const heap = new Heap();
 
+    // Add all of the nodes connected directly to the start node to the heap
     for(const edge of start.edges)
     {
         if(accessibleOnly && !edge.accessible)
@@ -48,6 +76,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
 
     while(!heap.isEmpty())
     {
+        // Get the distance to the nearest unfinished node, and the node itself
         const distance = heap.getRootKey();
         const current = heap.pop();
 
@@ -56,13 +85,16 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
             return null;
         }
 
+        // Mark that the current node has been solved
         done.add(current.id);
 
+        // If we have solved the end node, we are done
         if(current == end)
         {
             break;
         }
 
+        // See if any of the edges out of the current node make a new shortest path to any node
         for(const edge of current.edges)
         {
             if(accessibleOnly && !edge.accessible)
@@ -80,27 +112,33 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
             
             const next = edgeOther(edge, current);
 
+            // If the other node on this edge is solved, skip it
             if(done.has(next.id))
             {
                 continue;
             }
 
+            // Add the other node to the heap if it isn't already there
             if(!heap.has(next))
             {
                 heap.add(next, distance + addDistance);
                 edgeMap[next.id] = edge;
+                continue;
             }
 
+            // If this edge doesn't improve the route distance, don't do anything
             if(heap.getKey(next) <= distance + addDistance)
             {
                 continue;
             }
 
+            // Update the route distance and mark the new previous edge
             heap.reduceKey(next, distance + addDistance);
             edgeMap[next.id] = edge;
         }
     }
 
+    // If we didn't find a route to the end node, return null
     if(!done.has(end.id))
     {
         return null;
@@ -111,6 +149,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
 
     let current = end;
 
+    // Trace back the path to the end node and fill out the edge and node arrays
     while(current.id in edgeMap)
     {
         outNodes.push(current);
@@ -127,6 +166,11 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     }
 }
 
+/**
+ * Get the physical length of the given edge
+ * @param edge The edge
+ * @returns The physical length of the edge
+ */
 function getBaseLength(edge: Edge)
 {
     if(edge.indoors)
@@ -134,6 +178,7 @@ function getBaseLength(edge: Edge)
         return edge.length;
     }
 
+    // Calculate the length based on the end node coordinates, modifying it by *1.5 if it is stairs
     return Math.sqrt(Math.pow(edge.startNode.x - edge.endNode.x, 2) + Math.pow(edge.startNode.y - edge.endNode.y, 2)) * (edge.type == "stairs" ? 1.5 : 1) * 0.000009;
 }
 
@@ -144,6 +189,9 @@ interface HeapNode
     value: Node
 }
 
+/**
+ * A basic min-heap
+ */
 class Heap
 {
     heap: HeapNode[] = []
