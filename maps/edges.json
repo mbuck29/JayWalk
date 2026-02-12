@@ -151,5 +151,32 @@
         "type": "sidewalk",
         "accessible": false,
         "indoors": false
+    },
+    {
+        "id": 17,
+        "startNodeId": 10004,
+        "endNodeId": 10019,
+        "length": 189.802744364829,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 18,
+        "startNodeId": 10019,
+        "endNodeId": 10020,
+        "length": 189.802744364829,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
+    },
+        {
+        "id": 19,
+        "startNodeId": 10020,
+        "endNodeId": 10021,
+        "length": 189.802744364829,
+        "type": "sidewalk",
+        "accessible": false,
+        "indoors": false
     }
 ]

@@ -50,7 +50,8 @@
         "buildingId": -1,
         "edgeIds": [
             2,
-            3
+            3,
+            17
         ]
     },
     {
@@ -192,6 +193,38 @@
         "buildingId": -1,
         "edgeIds": [
             16
+        ]
+    },
+    {
+        "id": 10019,
+        "name": "mclains intersection",
+        "x": -95.25223788582538,
+        "y": 38.95883040882542,
+        "buildingId": -1,
+        "edgeIds": [
+            17,
+            18
+        ]
+    },
+    {
+        "id": 10020,
+        "name": "north of richie hall",
+        "x": -95.25192957764199,
+        "y": 38.95883040882542,
+        "buildingId": -1,
+        "edgeIds": [
+            18,
+            19
+        ]
+    },
+    {
+        "id": 10021,
+        "name": "richie north entrance",
+        "x": -95.25192957764199,
+        "y": 38.95865557656110,
+        "buildingId": -1,
+        "edgeIds": [
+            19
         ]
     }
 ]

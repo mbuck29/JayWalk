@@ -76,18 +76,17 @@ export default function TabTwoScreen() {
         coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
         title="Engineering Campus"
       />
+      {/* Simply map through the nodes and drop a pin for each one */}
+      {graph.nodes.map((node) => (
+        <Marker
+          key={`node-${node.id}`}
+          coordinate={{ latitude: node.y, longitude: node.x }}
+          pinColor="blue"
+          title={`Node ID: ${node.id}`}
+        />
+      ))}
       {makeDataLines(graph)}
-      <Polyline
-        coordinates={[
-          { latitude: 38.95732, longitude: -95.252774 },
-          { latitude: 38.957419, longitude: -95.253358 },
-          { latitude: 38.957685, longitude: -95.253491 },
-        ]}
-        strokeColor="#ff00c3"
-        strokeWidth={5}
-        lineCap="round"
-        lineJoin="round"
-      />
+
     </MapView>
   );
 }
