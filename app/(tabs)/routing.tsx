@@ -1,6 +1,7 @@
-import { Graph, loadGraph } from "@/maps/graph";
+import { Edge, graph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
+import { getState } from "../Utils/state";
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
@@ -11,17 +12,18 @@ export default function TabTwoScreen() {
     longitudeDelta: 0.01,
   };
 
-  const graph = loadGraph();
+  const state = getState();
 
   // Make oulylines for our graph data
-  function makeDataLines(graph: Graph)
+  function makeDataLines(edges: Edge[])
   {
     let i = 0;
 
     let out = []
-    for(const edge of graph.edges)
+    for(const edge of edges)
     {
-      out.push(<Polyline
+      out.push(
+      <Polyline
         coordinates={[
           { latitude: edge.startNode.y, longitude: edge.startNode.x },
           { latitude: edge.endNode.y, longitude: edge.endNode.x },
@@ -31,10 +33,11 @@ export default function TabTwoScreen() {
         lineCap="round"
         lineJoin="round"
         key={"edge" + (i++).toString()}
-      />);
+      />
+      );
     }
 
-    return out;
+    return out.length > 0 ? out : null;
   }
 
   // The bounds of where the map will go. These are a rough measurement. If the user
@@ -85,7 +88,7 @@ export default function TabTwoScreen() {
           title={`Node ID: ${node.id}`}
         />
       ))}
-      {makeDataLines(graph)}
+      {makeDataLines(graph.edges)}
 
     </MapView>
   );

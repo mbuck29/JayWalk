@@ -1,4 +1,4 @@
-import { Graph, loadGraph } from "@/maps/graph";
+import { graph, Graph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
@@ -10,8 +10,6 @@ export default function TabTwoScreen() {
     latitudeDelta: 0.01, // smaller = more zoomed in
     longitudeDelta: 0.01,
   };
-
-  const graph = loadGraph();
 
   // Make oulylines for our graph data
   function makeDataLines(graph: Graph)
