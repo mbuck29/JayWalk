@@ -14,26 +14,22 @@ import { Route } from "./routing";
  * @param route The route to stringify.
  * @returns A string represention of the route.
  */
-export function stringifyRoute(route: Route): string
-{
-    if(route.stops.length == 1)
-    {
-        return route.stops[0].name;
+export function stringifyRoute(route: Route): string {
+  if (route.stops.length == 1) {
+    return route.stops[0].name;
+  }
+
+  let out = "";
+
+  for (let i = 0; i < route.stops.length; i++) {
+    out += route.stops[i].name;
+
+    if (i != route.stops.length - 1) {
+      out += " -> ";
     }
+  }
 
-    let out = "";
-
-    for(let i = 0; i < route.stops.length; i++)
-    {
-        out += route.stops[i].name;
-
-        if(i != route.stops.length - 1)
-        {
-            out += " -> ";
-        }
-    }
-
-    return out;
+  return out;
 }
 
 /**
@@ -42,9 +38,8 @@ export function stringifyRoute(route: Route): string
  * @param node The node to check for
  * @returns True if the given node is one of the given ends of the edge.
  */
-export function edgeHas(edge: Edge, node: Node): boolean
-{
-    return edge.startNode.id == node.id || edge.endNode.id == node.id;
+export function edgeHas(edge: Edge, node: Node): boolean {
+  return edge.startNode.id == node.id || edge.endNode.id == node.id;
 }
 
 /**
@@ -53,9 +48,8 @@ export function edgeHas(edge: Edge, node: Node): boolean
  * @param known The node that is known to be on the edge
  * @returns The other node on the edge
  */
-export function edgeOther(edge: Edge, known: Node): Node
-{
-    return edge.startNode.id === known.id ? edge.endNode : edge.startNode;
+export function edgeOther(edge: Edge, known: Node): Node {
+  return edge.startNode.id === known.id ? edge.endNode : edge.startNode;
 }
 
 /**
@@ -63,42 +57,58 @@ export function edgeOther(edge: Edge, known: Node): Node
  * @param route The route to sanitize
  * @returns A sanitized copy of the given Route without recursive references
  */
-export function sanitize(route: Route): Route
-{
-    // Sanitize the edges
-    const sanitizedEdges = [];
-    for(const edge of route.route)
-    {
-        // Create a copy of the edge except that the nodes don't point to their edges so that there isn't any recursion
-        const newEdge: Edge = {
-            ...edge,
-            startNode: {
-            ...edge.startNode,
-            edges: []
-            },
-            endNode: {
-            ...edge.endNode,
-            edges: []
-            }
-        }
+export function sanitize(route: Route): Route {
+  // Sanitize the edges
+  const sanitizedEdges = [];
+  for (const edge of route.route) {
+    // Create a copy of the edge except that the nodes don't point to their edges so that there isn't any recursion
+    const newEdge: Edge = {
+      ...edge,
+      startNode: {
+        ...edge.startNode,
+        edges: [],
+      },
+      endNode: {
+        ...edge.endNode,
+        edges: [],
+      },
+    };
 
-        sanitizedEdges.push(newEdge);
-    }
+    sanitizedEdges.push(newEdge);
+  }
 
-    // Sanitize the nodes
-    const sanitizedStops = [];
-    for(const stop of route.stops)
-    {
-        const newStop: Node = {
-            ...stop,
-            edges: []
-        }
+  // Sanitize the nodes
+  const sanitizedStops = [];
+  for (const stop of route.stops) {
+    const newStop: Node = {
+      ...stop,
+      edges: [],
+    };
 
-        sanitizedStops.push(newStop);
-    }
+    sanitizedStops.push(newStop);
+  }
 
-    return {
-        route: sanitizedEdges,
-        stops: sanitizedStops
-    }
+  return {
+    route: sanitizedEdges,
+    stops: sanitizedStops,
+  };
+}
+
+export function haversineMeters(
+  lat1: number,
+  lon1: number,
+  lat2: number,
+  lon2: number,
+) {
+  const R = 6371000; // meters
+  const toRad = (d: number) => (d * Math.PI) / 180;
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+
+  return 2 * R * Math.asin(Math.sqrt(a));
 }
