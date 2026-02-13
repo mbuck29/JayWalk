@@ -196,7 +196,9 @@
         "buildingId": -1,
         "edgeIds": [
             16,
-            20
+            20,
+            47,
+            48
         ]
     },
     {
@@ -339,7 +341,8 @@
         "buildingId": -1,
         "edgeIds": [
             31,
-            32
+            32,
+            39
         ]
     },
     {
@@ -395,7 +398,388 @@
         "buildingId": -1,
         "edgeIds": [
             36,
-            37
+            37,
+            40
+        ]
+    },
+    {
+        "id": 10037,
+        "name": "~Sidewalk 4",
+        "x": -95.2536616131337,
+        "y": 38.95727547214996,
+        "buildingId": -1,
+        "edgeIds": [
+            39,
+            40,
+            42
+        ]
+    },
+    {
+        "id": 10038,
+        "name": "~Sidewalk 5",
+        "x": -95.2537231027686,
+        "y": 38.9574243576386,
+        "buildingId": -1,
+        "edgeIds": [
+            42,
+            43
+        ]
+    },
+    {
+        "id": 10039,
+        "name": "LEEP Front Patio",
+        "x": -95.25367222463561,
+        "y": 38.95753869137368,
+        "buildingId": -1,
+        "edgeIds": [
+            43,
+            44,
+            45,
+            53
+        ]
+    },
+    {
+        "id": 10040,
+        "name": "LEEP2 Main Entrance",
+        "x": -95.25372750354221,
+        "y": 38.95763324251858,
+        "buildingId": -1,
+        "edgeIds": [
+            44
+        ]
+    },
+    {
+        "id": 10041,
+        "name": "~Engineering Shortcut 1",
+        "x": -95.25359959526041,
+        "y": 38.957458770275764,
+        "buildingId": -1,
+        "edgeIds": [
+            45,
+            46
+        ]
+    },
+    {
+        "id": 10042,
+        "name": "~Engineering Shortcut 2",
+        "x": -95.25348728915036,
+        "y": 38.95733315546052,
+        "buildingId": -1,
+        "edgeIds": [
+            46,
+            47
+        ]
+    },
+    {
+        "id": 10043,
+        "name": "~Left of Eaton 1",
+        "x": -95.25318378858631,
+        "y": 38.95733585255698,
+        "buildingId": -1,
+        "edgeIds": [
+            48,
+            49
+        ]
+    },
+    {
+        "id": 10044,
+        "name": "~Left of Eaton 2",
+        "x": -95.2531337242648,
+        "y": 38.9574915335145,
+        "buildingId": -1,
+        "edgeIds": [
+            49,
+            50
+        ]
+    },
+    {
+        "id": 10045,
+        "name": "~Left of Eaton 3",
+        "x": -95.25319804281283,
+        "y": 38.95771327819318,
+        "buildingId": -1,
+        "edgeIds": [
+            50,
+            51,
+            57
+        ]
+    },
+    {
+        "id": 10046,
+        "name": "~Eaton to LEEP Mid-Tier Path",
+        "x": -95.25348402918952,
+        "y": 38.95771476532087,
+        "buildingId": -1,
+        "edgeIds": [
+            51,
+            52,
+            54
+        ]
+    },
+    {
+        "id": 10047,
+        "name": "~Right of LEEP Stairs 2",
+        "x": -95.25352566159332,
+        "y": 38.95761795722621,
+        "buildingId": -1,
+        "edgeIds": [
+            52,
+            53
+        ]
+    },
+    {
+        "id": 10048,
+        "name": "~LEEP2 Upper Patio",
+        "x": -95.25348741973677,
+        "y": 38.95779932346167,
+        "buildingId": -1,
+        "edgeIds": [
+            54,
+            55,
+            56
+        ]
+    },
+    {
+        "id": 10049,
+        "name": "LEEP2 Floor 1 Entrance",
+        "x": -95.2535621576978,
+        "y": 38.95779094393095,
+        "buildingId": -1,
+        "edgeIds": [
+            55
+        ]
+    },
+    {
+        "id": 10050,
+        "name": "~South of SPAHR",
+        "x": -95.25319602720705,
+        "y": 38.957799160879404,
+        "buildingId": -1,
+        "edgeIds": [
+            56,
+            57,
+            58
+        ]
+    },
+    {
+        "id": 10051,
+        "name": "~Spahr-Eaton-Learned Plaza South",
+        "x": -95.25302607799972,
+        "y": 38.957817648107444,
+        "buildingId": -1,
+        "edgeIds": [
+            58,
+            59
+        ]
+    },
+    {
+        "id": 10052,
+        "name": "~Spahr-Eaton-Learned Plaza Sidewalk 1",
+        "x": -95.25291654420383,
+        "y": 38.957865590115794,
+        "buildingId": -1,
+        "edgeIds": [
+            59,
+            60
+        ]
+    },
+    {
+        "id": 10053,
+        "name": "~Spahr-Eaton-Learned Plaza Stairs 1",
+        "x": -95.2528865837472,
+        "y": 38.95789324852775,
+        "buildingId": -1,
+        "edgeIds": [
+            60,
+            61,
+            65
+        ]
+    },
+    {
+        "id": 10054,
+        "name": "~Spahr-Eaton-Learned Plaza Sidewalk 2",
+        "x": -95.25295209980999,
+        "y": 38.95792490824838,
+        "buildingId": -1,
+        "edgeIds": [
+            61,
+            62,
+            64
+        ]
+    },
+    {
+        "id": 10055,
+        "name": "~Spahr-Eaton-Learned Plaza Sidewalk 3",
+        "x": -95.25299215043468,
+        "y": 38.95789011640571,
+        "buildingId": -1,
+        "edgeIds": [
+            62,
+            63
+        ]
+    },
+    {
+        "id": 10056,
+        "name": "Spahr Engineering Library Main Entrance",
+        "x": -95.25302081786096,
+        "y": 38.95793017031506,
+        "buildingId": -1,
+        "edgeIds": [
+            63,
+            64
+        ]
+    },
+    {
+        "id": 10057,
+        "name": "Spahr Engineering Library Plaza",
+        "x": -95.2528650062626,
+        "y": 38.95797473338938,
+        "buildingId": -1,
+        "edgeIds": [
+            65,
+            66
+        ]
+    },
+    {
+        "id": 10058,
+        "name": "~Under the Eaton-Learned Skybridge",
+        "x": -95.2527759560803,
+        "y": 38.957966705534695,
+        "buildingId": -1,
+        "edgeIds": [
+            66,
+            67,
+            69,
+            70
+        ]
+    },
+    {
+        "id": 10059,
+        "name": "Eaton Hall Back Entrance",
+        "x": -95.25277683356535,
+        "y": 38.95792642162253,
+        "buildingId": -1,
+        "edgeIds": [
+            67
+        ]
+    },
+    {
+        "id": 10060,
+        "name": "Learned Hall South Entrance",
+        "x": -95.2527269541952,
+        "y": 38.95800394892142,
+        "buildingId": -1,
+        "edgeIds": [
+            69
+        ]
+    },
+    {
+        "id": 10061,
+        "name": "~Eaton-Learned Backrooms",
+        "x": -95.25239326102842,
+        "y": 38.957962794509136,
+        "buildingId": -1,
+        "edgeIds": [
+            70,
+            71
+        ]
+    },
+    {
+        "id": 10062,
+        "name": "~Under Naismith Drive Tunnel",
+        "x": -95.25213600235722,
+        "y": 38.95798430748949,
+        "buildingId": -1,
+        "edgeIds": [
+            71,
+            72
+        ]
+    },
+    {
+        "id": 10063,
+        "name": "~Under the Richie-Slawson Skybridge",
+        "x": -95.25178378204437,
+        "y": 38.95798561504233,
+        "buildingId": -1,
+        "edgeIds": [
+            72,
+            73,
+            74
+        ]
+    },
+    {
+        "id": 10064,
+        "name": "Slawson Hall North Entrance",
+        "x": -95.25177178813982,
+        "y": 38.95792586835244,
+        "buildingId": -1,
+        "edgeIds": [
+            73
+        ]
+    },
+    {
+        "id": 10065,
+        "name": "~North of Slawson Sidewalk",
+        "x": -95.25155745787434,
+        "y": 38.957963857928995,
+        "buildingId": -1,
+        "edgeIds": [
+            74,
+            75
+        ]
+    },
+    {
+        "id": 10066,
+        "name": "~Slawson-Lindley-Chalmers Stairs 1",
+        "x": -95.25131562620876,
+        "y": 38.95807784368927,
+        "buildingId": -1,
+        "edgeIds": [
+            75,
+            76
+        ]
+    },
+    {
+        "id": 10067,
+        "name": "~Lindley-Chalmers Patio",
+        "x": -95.25116476685227,
+        "y": 38.95815991823878,
+        "buildingId": -1,
+        "edgeIds": [
+            76,
+            77
+        ]
+    },
+    {
+        "id": 10068,
+        "name": "~Lindley-Chalmers Stairs 1",
+        "x": -95.25109403761505,
+        "y": 38.958200926085865,
+        "buildingId": -1,
+        "edgeIds": [
+            77,
+            78
+        ]
+    },
+    {
+        "id": 10069,
+        "name": "~Left of Chalmers Sidewalk",
+        "x": -95.25084765909949,
+        "y": 38.95839294506261,
+        "buildingId": -1,
+        "edgeIds": [
+            78,
+            79
+        ]
+    },
+    {
+        "id": 10070,
+        "name": "~North of Chalmers",
+        "x": -95.25066980346236,
+        "y": 38.958414705393665,
+        "buildingId": -1,
+        "edgeIds": [
+            79
         ]
     }
 ]
