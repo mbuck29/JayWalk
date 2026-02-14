@@ -1,7 +1,9 @@
-import { Edge, graph } from "@/maps/graph";
+import { Edge } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
-import { getState } from "../Utils/state";
+import { getRoute, getState } from "../Utils/state";
+
+
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
@@ -12,8 +14,37 @@ export default function TabTwoScreen() {
     longitudeDelta: 0.01,
   };
 
-  const state = getState();
 
+  const state = getState(); // get the current state of app
+  const currentRoute = getRoute(state); //get current route 
+
+  // route for testing
+  //const currentRoute = { stops: [graph.nodes[0], graph.nodes[1], graph.nodes[2]] };
+
+  // CURRENT ROUTE DISPLAY - makes a line through stops
+  function makeRoutePolyline(stops) {
+  if (!stops || stops.length < 2) return null; // return if route too short
+
+  //each stop into coordinates
+  const coords = stops.map((node) => ({
+    latitude: node.y,
+    longitude: node.x,
+  }));
+
+  //displays route
+  return (
+    <Polyline
+      coordinates={coords}
+      strokeColor="#0066ff"
+      strokeWidth={5}
+      lineCap="round"
+      lineJoin="round"
+    />
+  );
+}
+
+
+  //Old fucntion
   // Make oulylines for our graph data
   function makeDataLines(edges: Edge[])
   {
@@ -79,8 +110,11 @@ export default function TabTwoScreen() {
         coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
         title="Engineering Campus"
       />
+
+      {currentRoute && makeRoutePolyline(currentRoute.stops)}
+
       {/* Simply map through the nodes and drop a pin for each one */}
-      {graph.nodes.map((node) => (
+      {/*{graph.nodes.map((node) => (
         <Marker
           key={`node-${node.id}`}
           coordinate={{ latitude: node.y, longitude: node.x }}
@@ -88,7 +122,7 @@ export default function TabTwoScreen() {
           title={`Node ID: ${node.id}`}
         />
       ))}
-      {makeDataLines(graph.edges)}
+      {makeDataLines(graph.edges)}*/}
 
     </MapView>
   );
