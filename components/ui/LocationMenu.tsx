@@ -28,8 +28,12 @@ export default function LocationMenu({
       style={{ marginTop: 55 }} // This makes the menu appear below the text input
     >
       {options
-        // This filters out options based on the user input
-        .filter((o) => o.toLowerCase().includes(locationText.toLowerCase()))
+        .filter(
+          (o) =>
+            o.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
+            !o.includes("~"), // This filters out options that are not real locations,
+        )
+        .slice(0, 5) // This limits the number of options shown to 5 so that it doesnt get too long
 
         // This takes those options and create an item for each of them
         .map((option) => (

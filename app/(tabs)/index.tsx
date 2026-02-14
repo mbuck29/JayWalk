@@ -3,12 +3,13 @@ import { graph } from "@/maps/graph";
 import { clearRoute, setRoute, useAppDispatch } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Button, Snackbar, TextInput } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
+import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
 import { route } from "../Utils/routing";
-import { sanitize } from "../Utils/routingUtils";
+import { haversineMeters, sanitize } from "../Utils/routingUtils";
 import { getRoute, getState } from "../Utils/state";
 
 export default function HomeScreen() {
@@ -20,7 +21,11 @@ export default function HomeScreen() {
   // const headingRef = useRef(0);
   const [currLocationText, setcurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
-  const [showSnackbar, setShowSnackbar] = useState(false);
+  const [showMissingLocation, setShowMissingLocation] = useState(false);
+  const [showNeedLocationPermission, setShowNeedLocationPermission] =
+    useState(false);
+  const [showNotPerciseLocation, setShowNotPerciseLocation] = useState(false);
+  const [showTooFarAway, setShowTooFarAway] = useState(false);
   const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
   const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
     useState(false);
@@ -46,7 +51,7 @@ export default function HomeScreen() {
     if (currLocationText && destLocationText) {
       console.log(`Routing from ${currLocationText} to ${destLocationText}...`);
     } else {
-      setShowSnackbar(true);
+      setShowMissingLocation(true);
     }
   };
 
@@ -69,22 +74,78 @@ export default function HomeScreen() {
   const start = 6;
   const end = 14;
 
-  useEffect(() =>
-  {
-    if(!currentRoute || (currentRoute.stops[0] != graph.nodes[start] || currentRoute.stops[currentRoute.stops.length - 1] != graph.nodes[end]))
-    {
+  useEffect(() => {
+    if (
+      !currentRoute ||
+      currentRoute.stops[0] != graph.nodes[start] ||
+      currentRoute.stops[currentRoute.stops.length - 1] != graph.nodes[end]
+    ) {
       const newRoute = route(state, graph.nodes[start], graph.nodes[end]);
 
-      if(newRoute == null)
-      {
+      if (newRoute == null) {
         dispatch(clearRoute());
-      }
-      else
-      {
+      } else {
         dispatch(setRoute(sanitize(newRoute)));
       }
     }
   }, []);
+
+  const handleCurrentAreaPress = () => {
+    if (!hasLocationPermissions()) {
+      // If we dont have permission for distance we cant use this feature, so we tell the user that.
+      setShowNeedLocationPermission(true);
+      return;
+    }
+    if (!location) return;
+
+    const gpsAcc = location.coords.accuracy ?? 9999;
+    const userLat = location.coords.latitude;
+    const userLon = location.coords.longitude;
+
+    console.log(`Location accuracy: ${gpsAcc.toFixed(2)} m`);
+    console.log(`Current location: ${userLat}, ${userLon}`);
+
+    let closestNode: { node: any; distanceM: number } | null = null;
+
+    for (const node of graph.nodes) {
+      // Calculate distance from user to node in meters using the haversine formula
+      const dM = haversineMeters(userLat, userLon, node.y, node.x);
+
+      // If there isnt a closest node or its closer than the current closest node, then set it as the closest node
+      if (!closestNode || dM < closestNode.distanceM) {
+        closestNode = { node, distanceM: dM };
+      }
+    }
+
+    if (!closestNode) return;
+
+    console.log(
+      `Closest node: ${closestNode.node.name} (id: ${closestNode.node.id}), distance: ${closestNode.distanceM.toFixed(1)} m`,
+    );
+
+    const MAX_ACCEPTABLE_ACC = 25; // don’t trust worse than this
+    const snapThresholdM = Math.max(10, gpsAcc * 1.5); // dynamic threshold
+
+    if (gpsAcc > MAX_ACCEPTABLE_ACC) {
+      console.log(`GPS too noisy to snap (acc=${gpsAcc.toFixed(1)}m).`);
+      setShowNotPerciseLocation(true); // Let the user know that their location is not precise enough to use current location feature
+      return;
+    }
+
+    if (closestNode.distanceM <= snapThresholdM) {
+      console.log(
+        `Snapping to node (threshold=${snapThresholdM.toFixed(1)}m).`,
+      );
+      // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
+      // we will need to come up for what the UI looks like for that.
+      setcurrLocationText(closestNode.node.name); // update text field to show assumed location
+    } else {
+      console.log(
+        `Not near any node (closest=${closestNode.distanceM.toFixed(1)}m, threshold=${snapThresholdM.toFixed(1)}m).`,
+      );
+      setShowTooFarAway(true);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -118,7 +179,7 @@ export default function HomeScreen() {
               onFocus={() => setIsCurrentMenuVisible(true)}
             />
           }
-          options={options}
+          options={graph.nodes.map((n) => n.name)}
           locationText={currLocationText}
           setLocationText={setcurrLocationText}
         />
@@ -137,7 +198,7 @@ export default function HomeScreen() {
               onFocus={() => setIsDestinationMenuVisible(true)}
             />
           }
-          options={options}
+          options={graph.nodes.map((n) => n.name)}
           locationText={destLocationText}
           setLocationText={setDestLocationText}
         />
@@ -149,6 +210,12 @@ export default function HomeScreen() {
         >
           Let's Go!
         </Button>
+        <TouchableOpacity
+          style={styles.currAreaButton}
+          onPress={handleCurrentAreaPress}
+        >
+          <TargetIcon width={24} height={24} color="#2e18be" />
+        </TouchableOpacity>
 
         {/* <View style={styles.compass}>
            Arrow 
@@ -160,12 +227,33 @@ export default function HomeScreen() {
       </View>
       {/* Small message to tell the user that they need to put both locations*/}
       <Snackbar
-        visible={showSnackbar}
-        onDismiss={() => setShowSnackbar(false)}
+        visible={showMissingLocation}
+        onDismiss={() => setShowMissingLocation(false)}
         duration={2000}
       >
         You need to enter both your currenet location and destination to start
         routing.
+      </Snackbar>
+      <Snackbar
+        visible={showNeedLocationPermission}
+        onDismiss={() => setShowNeedLocationPermission(false)}
+        duration={2000}
+      >
+        You need to enable location permissions to use this feature.
+      </Snackbar>
+      <Snackbar
+        visible={showNotPerciseLocation}
+        onDismiss={() => setShowNotPerciseLocation(false)}
+        duration={2000}
+      >
+        Your location is not precise enough to start routing.
+      </Snackbar>
+      <Snackbar
+        visible={showTooFarAway}
+        onDismiss={() => setShowTooFarAway(false)}
+        duration={2000}
+      >
+        Your are not close enough to a starting location.
       </Snackbar>
     </View>
   );
@@ -192,6 +280,15 @@ const styles = StyleSheet.create({
     fontSize: 24,
   },
   content: {},
+  currAreaButton: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    backgroundColor: "#E8000d",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
   button: {
     marginTop: 16,
     color: "#fff",
