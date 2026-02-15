@@ -1,25 +1,21 @@
 import LocationMenu from "@/components/ui/LocationMenu";
-import { graph } from "@/maps/graph";
-import { clearRoute, setRoute, useAppDispatch } from "@/redux/appState";
+import { graph, Node } from "@/maps/graph";
+import { setAccessiblePreference, setIndoorOutdoorPreference, setRoute, useAppDispatch, useAppSelector } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Snackbar, TextInput } from "react-native-paper";
+import { Button, Checkbox, RadioButton, Snackbar, TextInput } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
 import { route } from "../Utils/routing";
 import { haversineMeters, sanitize } from "../Utils/routingUtils";
-import { getRoute, getState } from "../Utils/state";
+import { getState } from "../Utils/state";
 
 export default function HomeScreen() {
-  // const motion = useOrientation();
-  // const alpha = motion?.rotation?.alpha ?? 0;
-  // const beta = motion?.rotation?.beta ?? 0;
-  // const gamma = motion?.rotation?.gamma ?? 0;
-  // const [heading, setHeading] = useState(0); // 0..360
-  // const headingRef = useRef(0);
-  const [currLocationText, setcurrLocationText] = useState("");
+  const [currLocation, setCurrLocation] = useState<Node | null>(null);
+  const [destLocation, setDestLocation] = useState<Node | null>(null);
+  const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
   const [showMissingLocation, setShowMissingLocation] = useState(false);
   const [showNeedLocationPermission, setShowNeedLocationPermission] =
@@ -29,8 +25,6 @@ export default function HomeScreen() {
   const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
   const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
     useState(false);
-
-  const options = ["Engineering", "Union", "Memorial Stadium"];
 
   const [locationPermissionStatus, requestLocationPermissions] =
     Location.useForegroundPermissions();
@@ -43,14 +37,38 @@ export default function HomeScreen() {
     null,
   );
 
-  // TODO: Once we have the actual routing we will need to call it here
-  // TODO: We will need to add a check that makes sure that the user put in valid locations
+  // read current values from Redux
+  const accessible = useAppSelector((s) => s.jayWalk.accessible);
+  const indoors = useAppSelector((s) => s.jayWalk.indoors);
+  useEffect(() => {
+  console.log("[filters] accessible:", accessible, "indoors:", indoors);
+}, [accessible, indoors]);
+
+
+  const [accessibility, setAccessibility] = useState(false);
+  const [environment, setEnvironment] = useState<
+  "outdoors" | "indoors" | "dontcare"
+>("dontcare");
+
+
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
-    if (currLocationText && destLocationText) {
-      console.log(`Routing from ${currLocationText} to ${destLocationText}...`);
+    if (currLocation && destLocation) {
+      // Before we start routing we need to know from and to for the algo to work
+      console.log(`Routing from ${currLocation.name} to ${destLocation.name}...`);
+      const calculatedRoute = route(state, currLocation, destLocation);
+
+      if(!calculatedRoute)
+      {
+        console.log("No route found!");
+        return;
+      }
+
+      dispatch(setRoute(sanitize(calculatedRoute)));
+
     } else {
+      // If they dont provide both we will show a message telling them to provide both.
       setShowMissingLocation(true);
     }
   };
@@ -69,26 +87,6 @@ export default function HomeScreen() {
 
   const state = getState();
   const dispatch = useAppDispatch();
-  const currentRoute = getRoute(state);
-
-  const start = 6;
-  const end = 14;
-
-  useEffect(() => {
-    if (
-      !currentRoute ||
-      currentRoute.stops[0] != graph.nodes[start] ||
-      currentRoute.stops[currentRoute.stops.length - 1] != graph.nodes[end]
-    ) {
-      const newRoute = route(state, graph.nodes[start], graph.nodes[end]);
-
-      if (newRoute == null) {
-        dispatch(clearRoute());
-      } else {
-        dispatch(setRoute(sanitize(newRoute)));
-      }
-    }
-  }, []);
 
   const handleCurrentAreaPress = () => {
     if (!hasLocationPermissions()) {
@@ -96,8 +94,11 @@ export default function HomeScreen() {
       setShowNeedLocationPermission(true);
       return;
     }
+    // If they havent given us a location we cant do anything so we just return.
+    // This also helps with typing the the const lines below as we know that location is not null.
     if (!location) return;
 
+    // Get the accuracy and coordinates of the location. We will use these to determine whether we can snap to a node and which node to snap to.
     const gpsAcc = location.coords.accuracy ?? 9999;
     const userLat = location.coords.latitude;
     const userLon = location.coords.longitude;
@@ -105,6 +106,7 @@ export default function HomeScreen() {
     console.log(`Location accuracy: ${gpsAcc.toFixed(2)} m`);
     console.log(`Current location: ${userLat}, ${userLon}`);
 
+    // Initalize closestNode to null, we will use it to keep track of the closesnt node to the user as we loop through the nodes.
     let closestNode: { node: any; distanceM: number } | null = null;
 
     for (const node of graph.nodes) {
@@ -117,6 +119,7 @@ export default function HomeScreen() {
       }
     }
 
+    // This covers the case where for some reason our graph has no nodes, it also helps with typing below.
     if (!closestNode) return;
 
     console.log(
@@ -126,20 +129,25 @@ export default function HomeScreen() {
     const MAX_ACCEPTABLE_ACC = 25; // don’t trust worse than this
     const snapThresholdM = Math.max(10, gpsAcc * 1.5); // dynamic threshold
 
+    // In the case that the GPS accuracy is really bad, we dont want to use that as the starting location as it is most likely not
+    // correct so we tell the user that and return/
     if (gpsAcc > MAX_ACCEPTABLE_ACC) {
       console.log(`GPS too noisy to snap (acc=${gpsAcc.toFixed(1)}m).`);
       setShowNotPerciseLocation(true); // Let the user know that their location is not precise enough to use current location feature
       return;
     }
 
+    // If the user is close enough to a node we will assume that that is there starting location and set that for them.
     if (closestNode.distanceM <= snapThresholdM) {
       console.log(
         `Snapping to node (threshold=${snapThresholdM.toFixed(1)}m).`,
       );
       // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
       // we will need to come up for what the UI looks like for that.
-      setcurrLocationText(closestNode.node.name); // update text field to show assumed location
+      setCurrLocationText(closestNode.node.name); // update text field to show assumed location
     } else {
+      // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
+      // So we tell the user that with a toast message.
       console.log(
         `Not near any node (closest=${closestNode.distanceM.toFixed(1)}m, threshold=${snapThresholdM.toFixed(1)}m).`,
       );
@@ -155,35 +163,40 @@ export default function HomeScreen() {
         <InfoIcon width={24} height={24} color="#fff" />
       </View>
       <View style={styles.content}>
-        {/* <Text> Orientation: {alpha.toFixed(2)}, {beta.toFixed(2)}, {gamma.toFixed(2)} </Text> */}
         <Text>
           Location: {location?.coords.latitude.toFixed(7) ?? "???"},{" "}
           {location?.coords.longitude.toFixed(7) ?? "???"}
         </Text>
         <Text style={styles.title}>Going Somewhere?</Text>
         <Text style={styles.subtitle}>Where I am:</Text>
+        {/* When the user looks for a location we populate and display a menu of locations for them to select. Making it easier to find there locaiton.*/}
         <LocationMenu
-          visible={isCurrentMenuVisible}
+          visible={isCurrentMenuVisible} // We only want to show the menu when the user is actively using the text field
           onDismiss={() => setIsCurrentMenuVisible(false)}
           anchor={
+            // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
             <TextInput
               label="Current location"
               value={currLocationText}
-              onChangeText={setcurrLocationText}
-              mode="flat"
+              onChangeText={setCurrLocationText}
+              mode="flat" // This makes the text input have an underline instead of an outline, I think it looks better for this use case
               activeUnderlineColor="#0015ba"
               textColor="#000"
               underlineColor="#000"
               placeholderTextColor="#000"
               style={styles.textField}
-              onFocus={() => setIsCurrentMenuVisible(true)}
+              onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
             />
           }
-          options={graph.nodes.map((n) => n.name)}
+          options={graph.nodes} // They are selecting from the nodes so we pass them here
+          // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
+          // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
           locationText={currLocationText}
-          setLocationText={setcurrLocationText}
+          setLocation={setCurrLocation}
+          setLocationText={setCurrLocationText}
         />
         <Text style={styles.subtitle}>Where I want to go:</Text>
+        {/*This is the same thing as above just for the destination location*/}
         <LocationMenu
           visible={isDestinationMenuVisible}
           onDismiss={() => setIsDestinationMenuVisible(false)}
@@ -198,42 +211,67 @@ export default function HomeScreen() {
               onFocus={() => setIsDestinationMenuVisible(true)}
             />
           }
-          options={graph.nodes.map((n) => n.name)}
+          options={graph.nodes}
           locationText={destLocationText}
+          setLocation={setDestLocation}
           setLocationText={setDestLocationText}
         />
+
+        <View style={{ padding: 16, gap: 8 }}>
+          <Text variant="titleMedium">Filters</Text>
+
+          <Checkbox.Item
+            label="Accessible"
+            status={accessible ? "checked" : "unchecked"}
+            onPress={() => dispatch(setAccessiblePreference(!accessible))}
+          />
+        </View>
+
+        <View style={{ paddingVertical: 12 }}>
+          <Text variant="titleMedium">Environment</Text>
+
+          <RadioButton.Group
+            value={indoors === "" ? "dontcare" : indoors}
+            onValueChange={(value) => {
+              if (value === "dontcare") dispatch(setIndoorOutdoorPreference(""));
+              else dispatch(setIndoorOutdoorPreference(value as "indoors" | "outdoors"));
+            }}
+          >
+            <RadioButton.Item label="Outdoors" value="outdoors" />
+            <RadioButton.Item label="Indoors" value="indoors" />
+            <RadioButton.Item label="Don't Care" value="dontcare" />
+          </RadioButton.Group>
+        </View>
+
+
+        {/* This is the start route button, it will call our routing algorithm if has two valid locations*/}
         <Button
           mode="contained"
           style={styles.button}
-          disabled={false} // will be if they havent put in both locations
+          disabled={!(currLocationText && destLocationText)} // if they havent put in both locations
           onPress={handleStartRoutingPress}
         >
           Let's Go!
         </Button>
+        {/*This is the button that will allows the user to use the current location as the starting location*/}
+        {/*TODO: Find a way to hide this for if a user is inside as we cannot use */}
         <TouchableOpacity
           style={styles.currAreaButton}
           onPress={handleCurrentAreaPress}
         >
           <TargetIcon width={24} height={24} color="#2e18be" />
         </TouchableOpacity>
-
-        {/* <View style={styles.compass}>
-           Arrow 
-          <Animated.View style={[styles.arrowWrap, rotateStyle]}>
-            <View style={styles.arrow} />
-            <View style={styles.arrowTail} />
-          </Animated.View>
-        </View> */}
       </View>
       {/* Small message to tell the user that they need to put both locations*/}
       <Snackbar
-        visible={showMissingLocation}
-        onDismiss={() => setShowMissingLocation(false)}
-        duration={2000}
+        visible={showMissingLocation} // The local state that controls whether this snackbar is visible or not
+        onDismiss={() => setShowMissingLocation(false)} // When the snackbar is dismissed we set the state to false so that it hides
+        duration={2000} // This makes the snackbar go away after 2 seconds
       >
         You need to enter both your currenet location and destination to start
         routing.
       </Snackbar>
+      {/* This is a snackbar that is shown when the user tries to use current location but hasnt given location permissions. */}
       <Snackbar
         visible={showNeedLocationPermission}
         onDismiss={() => setShowNeedLocationPermission(false)}
@@ -241,6 +279,7 @@ export default function HomeScreen() {
       >
         You need to enable location permissions to use this feature.
       </Snackbar>
+      {/* This is a snackbar that is shown when the user tries to use current location but their location is not precise enough. */}
       <Snackbar
         visible={showNotPerciseLocation}
         onDismiss={() => setShowNotPerciseLocation(false)}
@@ -248,6 +287,7 @@ export default function HomeScreen() {
       >
         Your location is not precise enough to start routing.
       </Snackbar>
+      {/* This is a snackbar that is shown when the user tries to use current location but is to far away. */}
       <Snackbar
         visible={showTooFarAway}
         onDismiss={() => setShowTooFarAway(false)}
@@ -307,37 +347,4 @@ const styles = StyleSheet.create({
     marginTop: 12,
     color: "#E8000d",
   },
-  // compass: {
-  //   marginTop: 24,
-  //   width: 240,
-  //   height: 240,
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  // },
-  // arrowWrap: {
-  //   width: 140,
-  //   height: 140,
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  // },
-  // arrow: {
-  //   width: 0,
-  //   height: 0,
-  //   borderLeftWidth: 14,
-  //   borderRightWidth: 14,
-  //   borderBottomWidth: 40,
-  //   borderLeftColor: "transparent",
-  //   borderRightColor: "transparent",
-  //   borderBottomColor: "white",
-  //   position: "absolute",
-  //   top: 10,
-  // },
-  // arrowTail: {
-  //   width: 6,
-  //   height: 60,
-  //   backgroundColor: "white",
-  //   borderRadius: 3,
-  //   position: "absolute",
-  //   top: 50,
-  // },
 });

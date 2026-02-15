@@ -12,24 +12,24 @@ export default function TabTwoScreen() {
   };
 
   // Make oulylines for our graph data
-  function makeDataLines(graph: Graph)
-  {
+  function makeDataLines(graph: Graph) {
     let i = 0;
 
-    let out = []
-    for(const edge of graph.edges)
-    {
-      out.push(<Polyline
-        coordinates={[
-          { latitude: edge.startNode.y, longitude: edge.startNode.x },
-          { latitude: edge.endNode.y, longitude: edge.endNode.x },
-        ]}
-        strokeColor="#ff00c3"
-        strokeWidth={5}
-        lineCap="round"
-        lineJoin="round"
-        key={"edge" + (i++).toString()}
-      />);
+    let out = [];
+    for (const edge of graph.edges) {
+      out.push(
+        <Polyline
+          coordinates={[
+            { latitude: edge.startNode.y, longitude: edge.startNode.x },
+            { latitude: edge.endNode.y, longitude: edge.endNode.x },
+          ]}
+          strokeColor="#ff00c3"
+          strokeWidth={5}
+          lineCap="round"
+          lineJoin="round"
+          key={"edge" + (i++).toString()}
+        />,
+      );
     }
 
     return out;
@@ -50,14 +50,15 @@ export default function TabTwoScreen() {
     <MapView
       ref={mapRef}
       style={{ flex: 1 }}
-      //minZoomLevel={14}
-      //maxZoomLevel={18} // Prevents zooming out so that they always look at just the campus
       initialRegion={KU} // This places them over the campus on load
-      showsUserLocation
+      showsUserLocation // This shows the user’s location as a blue dot on the map
+      // This is a callback that is called when the user moves the map. We use it to clamp the map to the bounds of the campus, so that they dont get lost.
       onRegionChangeComplete={(r) => {
         const lat = clamp(r.latitude, BOUNDS.south, BOUNDS.north);
         const lng = clamp(r.longitude, BOUNDS.west, BOUNDS.east);
 
+        // If the user has moved outside of the bounds, we animate the map back to the clamped position. This creates a sort of
+        // “rubber band” effect when they try to move outside of the bounds.
         if (lat !== r.latitude || lng !== r.longitude) {
           mapRef.current?.animateToRegion(
             { ...r, latitude: lat, longitude: lng },
@@ -66,6 +67,7 @@ export default function TabTwoScreen() {
         }
       }}
     >
+      {/*These are markers that are then placed on the map, we can put them at any lat long and we can label them anything */}
       <Marker
         coordinate={{ latitude: KU.latitude, longitude: KU.longitude }}
         title="KU Campus"
@@ -74,18 +76,8 @@ export default function TabTwoScreen() {
         coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
         title="Engineering Campus"
       />
+      {/* This displays the lines of the graph that we have collected data for */}
       {makeDataLines(graph)}
-      <Polyline
-        coordinates={[
-          { latitude: 38.95732, longitude: -95.252774 },
-          { latitude: 38.957419, longitude: -95.253358 },
-          { latitude: 38.957685, longitude: -95.253491 },
-        ]}
-        strokeColor="#ff00c3"
-        strokeWidth={5}
-        lineCap="round"
-        lineJoin="round"
-      />
     </MapView>
   );
 }
