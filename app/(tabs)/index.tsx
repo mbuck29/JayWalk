@@ -1,19 +1,21 @@
 import LocationMenu from "@/components/ui/LocationMenu";
-import { graph } from "@/maps/graph";
-import { clearRoute, setRoute, useAppDispatch, useAppSelector, setAccessiblePreference, setIndoorOutdoorPreference } from "@/redux/appState";
+import { graph, Node } from "@/maps/graph";
+import { setAccessiblePreference, setIndoorOutdoorPreference, setRoute, useAppDispatch, useAppSelector } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Snackbar, TextInput, Checkbox, RadioButton } from "react-native-paper";
+import { Button, Checkbox, RadioButton, Snackbar, TextInput } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
 import { route } from "../Utils/routing";
 import { haversineMeters, sanitize } from "../Utils/routingUtils";
-import { getRoute, getState } from "../Utils/state";
+import { getState } from "../Utils/state";
 
 export default function HomeScreen() {
-  const [currLocationText, setcurrLocationText] = useState("");
+  const [currLocation, setCurrLocation] = useState<Node | null>(null);
+  const [destLocation, setDestLocation] = useState<Node | null>(null);
+  const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
   const [showMissingLocation, setShowMissingLocation] = useState(false);
   const [showNeedLocationPermission, setShowNeedLocationPermission] =
@@ -49,14 +51,22 @@ export default function HomeScreen() {
 >("dontcare");
 
 
-  // TODO: Once we have the actual routing we will need to call it here
-  // TODO: We will need to add a check that makes sure that the user put in valid locations
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
-    if (currLocationText && destLocationText) {
+    if (currLocation && destLocation) {
       // Before we start routing we need to know from and to for the algo to work
-      console.log(`Routing from ${currLocationText} to ${destLocationText}...`);
+      console.log(`Routing from ${currLocation.name} to ${destLocation.name}...`);
+      const calculatedRoute = route(state, currLocation, destLocation);
+
+      if(!calculatedRoute)
+      {
+        console.log("No route found!");
+        return;
+      }
+
+      dispatch(setRoute(sanitize(calculatedRoute)));
+
     } else {
       // If they dont provide both we will show a message telling them to provide both.
       setShowMissingLocation(true);
@@ -77,26 +87,6 @@ export default function HomeScreen() {
 
   const state = getState();
   const dispatch = useAppDispatch();
-  const currentRoute = getRoute(state);
-
-  const start = 6;
-  const end = 14;
-
-  useEffect(() => {
-    if (
-      !currentRoute ||
-      currentRoute.stops[0] != graph.nodes[start] ||
-      currentRoute.stops[currentRoute.stops.length - 1] != graph.nodes[end]
-    ) {
-      const newRoute = route(state, graph.nodes[start], graph.nodes[end]);
-
-      if (newRoute == null) {
-        dispatch(clearRoute());
-      } else {
-        dispatch(setRoute(sanitize(newRoute)));
-      }
-    }
-  }, []);
 
   const handleCurrentAreaPress = () => {
     if (!hasLocationPermissions()) {
@@ -154,7 +144,7 @@ export default function HomeScreen() {
       );
       // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
       // we will need to come up for what the UI looks like for that.
-      setcurrLocationText(closestNode.node.name); // update text field to show assumed location
+      setCurrLocationText(closestNode.node.name); // update text field to show assumed location
     } else {
       // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
       // So we tell the user that with a toast message.
@@ -188,7 +178,7 @@ export default function HomeScreen() {
             <TextInput
               label="Current location"
               value={currLocationText}
-              onChangeText={setcurrLocationText}
+              onChangeText={setCurrLocationText}
               mode="flat" // This makes the text input have an underline instead of an outline, I think it looks better for this use case
               activeUnderlineColor="#0015ba"
               textColor="#000"
@@ -198,11 +188,12 @@ export default function HomeScreen() {
               onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
             />
           }
-          options={graph.nodes.map((n) => n.name)} // They are selecting from the nodes so we pass them here
+          options={graph.nodes} // They are selecting from the nodes so we pass them here
           // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
           // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
           locationText={currLocationText}
-          setLocationText={setcurrLocationText}
+          setLocation={setCurrLocation}
+          setLocationText={setCurrLocationText}
         />
         <Text style={styles.subtitle}>Where I want to go:</Text>
         {/*This is the same thing as above just for the destination location*/}
@@ -220,8 +211,9 @@ export default function HomeScreen() {
               onFocus={() => setIsDestinationMenuVisible(true)}
             />
           }
-          options={graph.nodes.map((n) => n.name)}
+          options={graph.nodes}
           locationText={destLocationText}
+          setLocation={setDestLocation}
           setLocationText={setDestLocationText}
         />
 

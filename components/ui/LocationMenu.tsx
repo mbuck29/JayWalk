@@ -1,3 +1,4 @@
+import { Node } from "@/maps/graph";
 import React from "react";
 import { Menu } from "react-native-paper";
 
@@ -5,8 +6,9 @@ type LocationMenuProps = {
   visible: boolean;
   onDismiss: () => void;
   anchor: React.ReactNode;
-  options: string[];
+  options: Node[];
   locationText: string;
+  setLocation: (node: Node) => void;
   setLocationText: (text: string) => void;
 };
 
@@ -16,6 +18,7 @@ export default function LocationMenu({
   anchor,
   options,
   locationText,
+  setLocation,
   setLocationText,
 }: LocationMenuProps) {
   return (
@@ -30,21 +33,22 @@ export default function LocationMenu({
       {options
         .filter(
           (o) =>
-            o.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
-            !o.includes("~"), // This filters out options that are not real locations,
+            o.name.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
+            !o.name.includes("~"), // This filters out options that are not real locations,
         )
         .slice(0, 5) // This limits the number of options shown to 5 so that it doesnt get too long
 
         // This takes those options and create an item for each of them
         .map((option) => (
           <Menu.Item
-            key={option}
+            key={option.name}
             // If the user selects an option then we set that as there input and close the menu
             onPress={() => {
-              setLocationText(option);
+              setLocation(option);
+              setLocationText(option.name);
               onDismiss();
             }}
-            title={option}
+            title={option.name}
           />
         ))}
     </Menu>
