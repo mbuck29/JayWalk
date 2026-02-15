@@ -8,7 +8,6 @@ type LocationMenuProps = {
   options: string[];
   locationText: string;
   setLocationText: (text: string) => void;
-  children?: React.ReactNode;
 };
 
 export default function LocationMenu({
@@ -18,13 +17,14 @@ export default function LocationMenu({
   options,
   locationText,
   setLocationText,
-  children,
 }: LocationMenuProps) {
   return (
+    // This is the menu that is shown when the user clicks on the text input to select a location.
+    // It shows a list of options that the user can select from based on their input.
     <Menu
       visible={visible}
       onDismiss={onDismiss}
-      anchor={anchor}
+      anchor={anchor} // This is the element that the menu is anchored to, in this case it will be the text input. The menu will appear below this element.
       style={{ marginTop: 55 }} // This makes the menu appear below the text input
     >
       {options
@@ -47,7 +47,6 @@ export default function LocationMenu({
             title={option}
           />
         ))}
-      {children}
     </Menu>
   );
 }
