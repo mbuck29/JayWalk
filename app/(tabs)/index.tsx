@@ -1,10 +1,10 @@
 import LocationMenu from "@/components/ui/LocationMenu";
 import { graph } from "@/maps/graph";
-import { clearRoute, setRoute, useAppDispatch } from "@/redux/appState";
+import { clearRoute, setRoute, useAppDispatch, useAppSelector, setAccessiblePreference, setIndoorOutdoorPreference } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Snackbar, TextInput } from "react-native-paper";
+import { Button, Snackbar, TextInput, Checkbox, RadioButton } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
@@ -42,6 +42,20 @@ export default function HomeScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
+
+  // read current values from Redux
+  const accessible = useAppSelector((s) => s.jayWalk.accessible);
+  const indoors = useAppSelector((s) => s.jayWalk.indoors);
+  useEffect(() => {
+  console.log("[filters] accessible:", accessible, "indoors:", indoors);
+}, [accessible, indoors]);
+
+
+  const [accessibility, setAccessibility] = useState(false);
+  const [environment, setEnvironment] = useState<
+  "outdoors" | "indoors" | "dontcare"
+>("dontcare");
+
 
   // TODO: Once we have the actual routing we will need to call it here
   // TODO: We will need to add a check that makes sure that the user put in valid locations
@@ -202,6 +216,34 @@ export default function HomeScreen() {
           locationText={destLocationText}
           setLocationText={setDestLocationText}
         />
+
+        <View style={{ padding: 16, gap: 8 }}>
+          <Text variant="titleMedium">Filters</Text>
+
+          <Checkbox.Item
+            label="Accessible"
+            status={accessible ? "checked" : "unchecked"}
+            onPress={() => dispatch(setAccessiblePreference(!accessible))}
+          />
+        </View>
+
+        <View style={{ paddingVertical: 12 }}>
+          <Text variant="titleMedium">Environment</Text>
+
+          <RadioButton.Group
+            value={indoors === "" ? "dontcare" : indoors}
+            onValueChange={(value) => {
+              if (value === "dontcare") dispatch(setIndoorOutdoorPreference(""));
+              else dispatch(setIndoorOutdoorPreference(value as "indoors" | "outdoors"));
+            }}
+          >
+            <RadioButton.Item label="Outdoors" value="outdoors" />
+            <RadioButton.Item label="Indoors" value="indoors" />
+            <RadioButton.Item label="Don't Care" value="dontcare" />
+          </RadioButton.Group>
+        </View>
+
+
         <Button
           mode="contained"
           style={styles.button}
