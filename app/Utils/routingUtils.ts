@@ -94,21 +94,41 @@ export function sanitize(route: Route): Route {
   };
 }
 
+/**
+ * Calculates the distance in meters between two points given their latitude and longitude using the Haversine formula.
+ * This treats Earth like a sphere and returns the shortest distance over its surface.
+ * @param lat1 The latitude of the first point
+ * @param lon1 The longitude of the first point
+ * @param lat2 The latitude of the second point
+ * @param lon2 The longitude of the second point
+ * @return The distance in meters between the two points
+ */
 export function haversineMeters(
   lat1: number,
   lon1: number,
   lat2: number,
   lon2: number,
 ) {
-  const R = 6371000; // meters
-  const toRad = (d: number) => (d * Math.PI) / 180;
+  const R = 6371000; // Earth’s radius in meters
+  const toRad = (d: number) => (d * Math.PI) / 180; // Convert degrees to radians
 
+  // Trig functions use radians, but GPS coords come in degrees. So here we convert the lat and long diff to radians
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
+  const lat1Rad = toRad(lat1);
+  const lat2Rad = toRad(lat2);
 
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  // 1st term is for the latitude difference, meaning the difference in north/south position.
+  const term1 = Math.sin(dLat / 2) ** 2;
 
+  // 2nd term is for the longitude difference, meaning the difference in east/west position. But longitude lines get closer together
+  // as you go towards the poles, so we have to multiply by the cosine of the latitudes to get the actual east/west distance.
+  const term2 = Math.cos(lat1Rad) * Math.cos(lat2Rad) * Math.sin(dLon / 2) ** 2;
+
+  // The Haversine formula combines these two terms to get the total distance between the points, accounting for the curvature of the Earth.
+  const a = term1 + term2;
+
+  // Finally, we convert this to a distance in meters by multiplying by the Earth’s radius and applying the arcsine function to get the angle between the points,
+  // which gives us the distance along the surface of the Earth.
   return 2 * R * Math.asin(Math.sqrt(a));
 }
