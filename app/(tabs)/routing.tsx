@@ -113,7 +113,7 @@ export default function TabTwoScreen() {
 
       {currentRoute && makeRoutePolyline(currentRoute.stops)}
 
-      {/* Simply map through the nodes and drop a pin for each one */}
+     {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
       {/*{graph.nodes.map((node) => (
         <Marker
           key={`node-${node.id}`}
