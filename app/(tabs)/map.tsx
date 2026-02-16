@@ -1,3 +1,10 @@
+/**
+ * File: map.tsx
+ * Purpose: The map tab of the app. Defines a map that the user can use to view the layout of campus.
+ * Authors: Michael B, C. Cooper
+ * Date Created: 2026-02-07
+ * Date Modified: 2026-02-14
+ */
 import { graph, Graph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
@@ -15,6 +22,7 @@ export default function TabTwoScreen() {
   function makeDataLines(graph: Graph) {
     let i = 0;
 
+    // Add a Polyline for each edge of the graph
     let out = [];
     for (const edge of graph.edges) {
       out.push(

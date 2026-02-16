@@ -1,7 +1,7 @@
 /**
  * File: routingUtils.ts
  * Purpose: Utilility functions for the routing algorithm and Route objects
- * Author: C. Cooper
+ * Author: C. Cooper, Michael B
  * Date Created: 2026-02-11
  */
 

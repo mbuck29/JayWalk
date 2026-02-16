@@ -1,6 +1,14 @@
+/**
+ * File: index.tsx
+ * Purpose: The home menu for the app; used for searhcing for locations and starting routes
+ * Author: Michael B, C. Cooper, Cole C
+ * Date Created: 2026-02-03
+ * Date Modified: 2026-02-15
+ */
+
 import LocationMenu from "@/components/ui/LocationMenu";
 import { graph, Node } from "@/maps/graph";
-import { setAccessiblePreference, setIndoorOutdoorPreference, setRoute, useAppDispatch, useAppSelector } from "@/redux/appState";
+import { clearRoute, setAccessiblePreference, setIndoorOutdoorPreference, setRoute, useAppDispatch, useAppSelector } from "@/redux/appState";
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -57,14 +65,19 @@ export default function HomeScreen() {
     if (currLocation && destLocation) {
       // Before we start routing we need to know from and to for the algo to work
       console.log(`Routing from ${currLocation.name} to ${destLocation.name}...`);
+
+      // Call the routing algorithm from the current to the destination nodes
       const calculatedRoute = route(state, currLocation, destLocation);
 
+      // If there is no route, log it and return
       if(!calculatedRoute)
       {
+        dispatch(clearRoute());
         console.log("No route found!");
         return;
       }
 
+      // Sanitize the route and then push it to the global state
       dispatch(setRoute(sanitize(calculatedRoute)));
 
     } else {
@@ -73,11 +86,13 @@ export default function HomeScreen() {
     }
   };
 
+  // Get the user's permission to use their location
   useEffect(() => {
     if (!hasLocationPermissions()) {
       requestLocationPermissions();
     }
 
+    // If we have location permissions, add a watcher for when they move
     if (hasLocationPermissions()) {
       watchLocation(setLocation, (errorReason) =>
         console.log("Location error: " + errorReason),

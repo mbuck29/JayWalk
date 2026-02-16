@@ -1,3 +1,11 @@
+/**
+ * File: _layout.tsx
+ * Purpose: Specify the tab layout of the app
+ * Author: Michael B, C. Cooper
+ * Date Created: 2026-02-03
+ * Date Modified: 2026-02-11
+ */
+
 import { Tabs } from "expo-router";
 import React from "react";
 

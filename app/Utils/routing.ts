@@ -182,6 +182,9 @@ function getBaseLength(edge: Edge)
     return Math.sqrt(Math.pow(edge.startNode.x - edge.endNode.x, 2) + Math.pow(edge.startNode.y - edge.endNode.y, 2)) * (edge.type == "stairs" ? 1.5 : 1) * 0.000009;
 }
 
+/**
+ * Node object for the heap data structure below
+ */
 interface HeapNode
 {
     index: number,
@@ -191,17 +194,26 @@ interface HeapNode
 
 /**
  * A basic min-heap
+ * For the purposes of the algorithm, the keys are the distances to each node in the heap
  */
 class Heap
 {
+    // The HeapNodes in the heap
     heap: HeapNode[] = []
+
+    // A map from a Node's id to its HeapNode
     nodeMap: Record<number, HeapNode> = {}
 
-    public add(node: Node, value: number)
+    /**
+     * Add the given node to the heap
+     * @param node The Node to add
+     * @param key The starting key of the node
+     */
+    public add(node: Node, key: number)
     {
         const newNode = {
             index: this.heap.length,
-            key: value,
+            key: key,
             value: node
         }
 
@@ -211,11 +223,20 @@ class Heap
         this.upHeap(newNode);
     }
 
+    /**
+     * Gets the key of the root node
+     * @returns The key of the root node, or -1 if there is no root
+     */
     public getRootKey(): number
     {
         return this.heap.length == 0 ? -1 : this.heap[0].key;
     }
 
+    /**
+     * Gets the key associated with the given Node
+     * @param node The Node to get the key of
+     * @returns The key of (distance to) the given node
+     */
     public getKey(node: Node): number
     {
         if(!this.has(node))
@@ -228,6 +249,11 @@ class Heap
         return heapNode.key;
     }
 
+    /**
+     * Reduces the key of the given Node
+     * @param node The Node to reduce the key of
+     * @param value The value to reduce the key to
+     */
     public reduceKey(node: Node, value: number)
     {
         if(!this.has(node))
@@ -244,11 +270,20 @@ class Heap
         }
     }
 
+    /**
+     * Checks whether the given Node is in the heap
+     * @param node The Node to check for
+     * @returns True if the Node is in the heap
+     */
     public has(node: Node): boolean
     {
         return node.id in this.nodeMap;
     }
 
+    /**
+     * Pops the top Node off the heap and updates it accordingly
+     * @returns The top Node on the heap, or null if the heap is empty
+     */
     public pop(): Node | null
     {
         if(this.heap.length == 0)
@@ -277,11 +312,19 @@ class Heap
         return root.value;
     }
     
+    /**
+     * Checks whether the heap is empty
+     * @returns True if the heap is empty
+     */
     public isEmpty(): boolean
     {
         return this.heap.length == 0;
     }
 
+    /**
+     * Upheaps (up-percolates) the given HeapNode
+     * @param node The HeapNode to upheap
+     */
     private upHeap(node: HeapNode)
     {
         while(node.index != 0)
@@ -299,6 +342,10 @@ class Heap
         }
     }
 
+    /**
+     * Downheaps (down-percolates) the given HeapNode
+     * @param node The HeapNode to downheap
+     */
     private downHeap(node: HeapNode)
     {
         while(true)
@@ -334,6 +381,11 @@ class Heap
         }
     }
 
+    /**
+     * Swaps the positions of the two given HeapNodes
+     * @param a One HeapNode
+     * @param b The other HeapNode
+     */
     private swap(a: HeapNode, b: HeapNode)
     {
         const aIndex = a.index;
@@ -343,17 +395,32 @@ class Heap
         this.heap[aIndex] = b;
     }
 
-    static parent(index: number): number
+    /**
+     * Gets the index of the parent of the given index
+     * @param index The index to get the parent of
+     * @returns The index of the parent of the given index
+     */
+    private static parent(index: number): number
     {
         return (index - 1) >> 1
     }
 
-    static left(index: number): number
+    /**
+     * Gets the index of the left child of the given index
+     * @param index The index to get the left child of
+     * @returns The index of the left child of the given index
+     */
+    private static left(index: number): number
     {
         return (index << 1) + 1
     }
 
-    static right(index: number): number
+    /**
+     * Gets the index of the right child of the given index
+     * @param index The index to get the right child of
+     * @returns The index of the right child of the given index
+     */
+    private static right(index: number): number
     {
         return (index << 1) + 2
     }

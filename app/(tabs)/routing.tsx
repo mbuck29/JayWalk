@@ -1,3 +1,11 @@
+/**
+ * File: routing.tsx
+ * Purpose: Specify the tab layout of the app
+ * Author: Delaney G, C. Cooper, Blake J
+ * Date Created: 2026-02-09
+ * Date Modified: 2026-02-14
+ */
+
 import { Edge } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Marker, Polyline } from "react-native-maps";
