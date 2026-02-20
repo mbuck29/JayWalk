@@ -8,9 +8,13 @@
 
 from json import dump, load
 from math import dist
+from multiprocessing import Pipe, Process
+from multiprocessing.connection import PipeConnection
 
-# The id of the building we are entering data for
-buildingId: int = -1
+from indoorMap import display
+
+building: dict | None = None
+floor: int = -1
 # The next free id for nodes
 nextNodeId: int = -1
 # The next free id for edges
@@ -22,6 +26,9 @@ lastEdgeType = ""
 lastEdgeAccess = True
 # Whether the last edge created was indoors
 lastEdgeIndoors = False
+
+pipe: PipeConnection | None = None
+showProcess: Process | None = None
 
 def main():
     edgeFile = open("edges.json", 'r')
@@ -36,6 +43,10 @@ def main():
 
     global nextNodeId
     global nextEdgeId
+    global floor
+    global building
+    global showProcess
+    global pipe
 
     # Load the next avaliable edge/node ids as the current respective max + 1
     nextEdgeId = max([edge["id"] for edge in edges]) + 1
@@ -45,9 +56,9 @@ def main():
         # Get the base command from the user
         whatDo = input("What would you like to do: ").strip().lower()
 
-        if whatDo == "add": # Add to the graph
+        if whatDo.startswith("add"): # Add to the graph
             start = getNode("Please enter the starting coordinates: ", nodes)
-            add(start, edges, nodes)
+            add(start, edges, nodes, whatDo.endswith("s"))
         elif whatDo == "save": # Save the graph
             edgeFile = open("edges.json", 'w')
             nodeFile = open("nodes.json", 'w')
@@ -55,7 +66,44 @@ def main():
             dump(nodes, nodeFile, indent=4)
             edgeFile.close()
             nodeFile.close()
-        elif whatDo == "stop": # Stop the program
+        elif whatDo == "building":
+            buildingName = input("Please enter the building name: ")
+            buildingFile = open("buildings.json", "r")
+            buildings: list[dict] = load(buildingFile)
+            buildingFile.close()
+
+            building = None
+
+            for b in buildings:
+                if b["name"].lower() != buildingName.lower():
+                    continue
+                building = b
+            
+            if building == None:
+                print("No building with that name")
+            else:
+                print(f"Entering {building["name"]}")
+        elif whatDo == "floor":
+            floor = int(input("Enter the floor number: "))
+        elif whatDo.startswith("show"):
+            if building == None:
+                print("Select a building first!")
+                continue
+            if pipe != None and showProcess != None and showProcess.is_alive():
+                print("Already showing!")
+                continue
+
+            b = building
+
+            parentPipe, childPipe = (None, None) if whatDo.endswith("d") else Pipe()
+
+            pipe = parentPipe
+
+            showProcess = Process(target = display, args=[f"{b["name"]}", floor, edges, nodes, childPipe])
+            showProcess.start()
+        elif whatDo == "stop":
+            if showProcess is not None and showProcess.is_alive():
+                showProcess.terminate()
             break
 
 def getCoords(message: str) -> tuple[float, float]:
@@ -67,7 +115,22 @@ def getCoords(message: str) -> tuple[float, float]:
     Returns:
         tuple[float, float]: A latitude, longitude coordinate pair
     """
-    cString = input(message)
+    global building
+    global pipe
+
+    cString = None
+
+    while cString is None and (building != None) and (pipe != None):
+        print("Select the point in the other window: ", end="", flush=True)
+        pipe.send("dataPls")
+        cString = pipe.recv()
+        print(cString, flush=True)
+        right = input("Is that right? ").strip().lower()
+        if right == "n" or right == "no":
+            cString = None
+
+    if cString is None:
+        cString = input(message)
 
     strings = cString.split(",")
 
@@ -84,17 +147,24 @@ def mergeNodeAsNeeded(node: dict, nodes: list[dict], epsilon: float = 0.000009 *
     Returns:
         dict: The given node if unmerged, or the node merged into of merged
     """
-    epsSquared = (epsilon * 100000) ** 2
-    nodeX: float = node["x"] * 100000
-    nodeY: float = node["y"] * 100000
+    global building
+    if building != None:
+        epsilon = 3
+
+    # Multiplying everything by 100000 to be sure that we don't lose anything to floating point precision
+    offset = 1 if building != None else 1000000
+
+    epsSquared = (epsilon * offset) ** 2
+    nodeX: float = node["x"] * offset
+    nodeY: float = node["y"] * offset
 
     closest = None
     closestDist = 1 << 31
 
     # Find the closest node
     for otherNode in nodes:
-        oX: float = otherNode["x"] * 100000
-        oY: float = otherNode["y"] * 100000
+        oX: float = otherNode["x"] * offset
+        oY: float = otherNode["y"] * offset
         dSquared = (nodeX - oX) ** 2 + (nodeY - oY) ** 2
         
         if dSquared < closestDist:
@@ -102,11 +172,16 @@ def mergeNodeAsNeeded(node: dict, nodes: list[dict], epsilon: float = 0.000009 *
             closestDist = dSquared
 
     # If the closest node is nearer than epsilon, request to merge
-    if closestDist < epsSquared and closest is not None:
+    merge = ""
+
+    while closestDist < epsSquared and closest is not None and merge == "":
         merge = input(f"Merge with node {closest["name"]} at {closest["y"]:0.4f}, {closest["x"]:0.4f}? ").strip().lower()
 
         if merge == "yes" or merge == "y":
             return closest
+        
+        if not (merge == "no" or merge == "n"):
+            merge = ""
     
     return node
 
@@ -121,7 +196,8 @@ def getNode(coordsMessage: str, nodes: list[dict]) -> dict:
         dict: A new node specified by the user
     """
     global nextNodeId
-    global buildingId
+    global building
+    global floor
 
     # Get coords from the user
     coords = getCoords(coordsMessage)
@@ -132,7 +208,8 @@ def getNode(coordsMessage: str, nodes: list[dict]) -> dict:
         "name": "",
         "x": coords[1],
         "y": coords[0],
-        "buildingId": buildingId,
+        "buildingId": -1 if building is None else int(building["nodeId"]),
+        "floor": -1000 if building is None else floor,
         "edgeIds": []
     }
 
@@ -182,12 +259,8 @@ def add(start: dict, edges: list[dict], nodes: list[dict], stay: bool = False):
         else:
             edgeAccess = (edgeAccess == "y") or (edgeAccess == "yes") or (edgeAccess == "true")
         
-        # Get whether the edge is indoors, defaulting to the value for the last edge
-        edgeIndoors = input("Is the path indoors? ").lower().strip()
-        if edgeIndoors == "":
-            edgeIndoors = lastEdgeIndoors
-        else:
-            edgeIndoors = (edgeIndoors == "y") or (edgeIndoors == "yes") or (edgeIndoors == "true")
+        global building
+        edgeIndoors = building != None
 
         lastEdgeType = edgeType
         lastEdgeAccess = edgeAccess
@@ -198,7 +271,7 @@ def add(start: dict, edges: list[dict], nodes: list[dict], stay: bool = False):
             "id": nextEdgeId,
             "startNodeId": start["id"],
             "endNodeId": next["id"],
-            "length": dist([start["x"], next["x"]], [start["y"], next["y"]]),
+            "length": dist([start["x"], start["y"]], [next["x"], next["y"]]),
             "type": edgeType,
             "accessible": edgeAccess,
             "indoors": edgeIndoors

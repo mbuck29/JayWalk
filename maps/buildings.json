@@ -1,0 +1,27 @@
+[
+    {
+        "name": "Eaton",
+        "nodeId": 10071,
+        "floors":
+        {
+            "0":
+            {
+                "originPixelX": 341,
+                "originPixelY": 343,
+                "metersPerPixel": 0.09583246798
+            },
+            "1":
+            {
+                "originPixelX": 367,
+                "originPixelY": 333,
+                "metersPerPixel": 0.09271935699
+            },
+            "2":
+            {
+                "originPixelX": 353,
+                "originPixelY": 333,
+                "metersPerPixel": 0.1051899696
+            }
+        }
+    }
+]

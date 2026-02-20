@@ -42,3 +42,4 @@ app-example
 /ios
 /android
 package-lock.json
+/maps/__pycache__

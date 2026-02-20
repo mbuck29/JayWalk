@@ -42,6 +42,7 @@ export interface DataNode
     y: number,
     /** The node id of the building the node is in. -1 if the node is outdoors. */
     buildingId: number,
+    floor: number | undefined,
     /** The unique ids for all of the edges with this node as one of their ends. */
     edgeIds: number[]
 }
