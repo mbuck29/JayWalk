@@ -1208,8 +1208,8 @@
     {
         "id": 140,
         "startNodeId": 10118,
-        "endNodeId": 10052,
-        "length": 5,
+        "endNodeId": 10127,
+        "length": 1,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1231,5 +1231,23 @@
         "type": "door",
         "accessible": true,
         "indoors": true
+    },
+    {
+        "id": 143,
+        "startNodeId": 10052,
+        "endNodeId": 10127,
+        "length": 0.00012093624813134117,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 144,
+        "startNodeId": 10127,
+        "endNodeId": 10051,
+        "length": 8.67917066665064e-05,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
     }
 ]
