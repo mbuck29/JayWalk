@@ -91,6 +91,7 @@ export function sanitize(route: Route): Route {
   return {
     route: sanitizedEdges,
     stops: sanitizedStops,
+    directions: route.directions
   };
 }
 

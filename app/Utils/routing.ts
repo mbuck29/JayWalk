@@ -7,6 +7,7 @@
 
 import { Edge, Node } from "@/maps/graph";
 import { JayWalkState } from "@/redux/appState";
+import { Direction, populateDirections } from "./directions";
 import { edgeOther } from "./routingUtils";
 import { getAccessiblePreference, getIndoorOutdoorPreference } from "./state";
 
@@ -22,7 +23,8 @@ export interface Route
     /** The edges that the user should follow */
     route: Edge[],
     /** The stops the user should visit along the route */
-    stops: Node[]
+    stops: Node[],
+    directions: Direction[]
 }
 
 /**
@@ -39,7 +41,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     // Trivial case if start and end are the same
     if(start == end)
     {
-        return {route: [], stops: [start]};
+        return {route: [], stops: [start], directions: []};
     }
 
     // Get the user-selected route preferences
@@ -165,10 +167,15 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
 
     outNodes.push(current);
 
-    return {
+    let route = {
         route: outEdges.reverse(),
-        stops: outNodes.reverse()
+        stops: outNodes.reverse(),
+        directions: []
     }
+
+    populateDirections(route);
+
+    return route;
 }
 
 /**

@@ -26,6 +26,7 @@ const appSlice = createSlice({
       state.route = sanitize(action.payload);
 
       console.log(stringifyRoute(state.route));
+      console.log(state.route.directions.map(dir => dir.direction).join("\n"));
 
       console.log(state.route == null ? "Cleared the route" : "Starting a new route from " + state.route.stops[0].name + " to " + state.route.stops[state.route.stops.length - 1].name);
     },
