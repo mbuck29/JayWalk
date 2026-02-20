@@ -10,6 +10,10 @@ import { JayWalkState } from "@/redux/appState";
 import { edgeOther } from "./routingUtils";
 import { getAccessiblePreference, getIndoorOutdoorPreference } from "./state";
 
+// Values for 38.598 degrees latitude calculated using https://www.starpath.com/calc/Distance%20Calculators/degree.html
+const METERS_PER_DEGREE_LAT = 111008
+const METERS_PER_DEGREE_LONG = 87114
+
 /**
  * The route that a user should take
  */
@@ -91,6 +95,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
         // If we have solved the end node, we are done
         if(current == end)
         {
+            console.log("Distance: " + distance + "m");
             break;
         }
 
@@ -171,7 +176,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
  * @param edge The edge
  * @returns The physical length of the edge
  */
-function getBaseLength(edge: Edge)
+export function getBaseLength(edge: Edge)
 {
     if(edge.indoors)
     {
@@ -179,7 +184,7 @@ function getBaseLength(edge: Edge)
     }
 
     // Calculate the length based on the end node coordinates, modifying it by *1.5 if it is stairs
-    return Math.sqrt(Math.pow(edge.startNode.x - edge.endNode.x, 2) + Math.pow(edge.startNode.y - edge.endNode.y, 2)) * (edge.type == "stairs" ? 1.5 : 1) * 0.000009;
+    return Math.sqrt(Math.pow((edge.startNode.x - edge.endNode.x) * METERS_PER_DEGREE_LONG, 2) + Math.pow((edge.startNode.y - edge.endNode.y) * METERS_PER_DEGREE_LONG, 2)) * (edge.type == "stairs" ? 1.2 : 1);
 }
 
 /**
