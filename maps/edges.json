@@ -1,14 +1,5 @@
 [
     {
-        "id": 0,
-        "startNodeId": 10000,
-        "endNodeId": 10001,
-        "length": 10,
-        "type": "sidewalk",
-        "accessible": true,
-        "indoors": false
-    },
-    {
         "id": 1,
         "startNodeId": 10002,
         "endNodeId": 10003,
@@ -691,5 +682,554 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
+    },
+    {
+        "id": 80,
+        "startNodeId": 10072,
+        "endNodeId": 10073,
+        "length": 2.78312560329853,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 81,
+        "startNodeId": 10073,
+        "endNodeId": 10074,
+        "length": 4.266098121594591,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 82,
+        "startNodeId": 10074,
+        "endNodeId": 10075,
+        "length": 19.84215902868907,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 83,
+        "startNodeId": 10075,
+        "endNodeId": 10076,
+        "length": 4.544194509905471,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 84,
+        "startNodeId": 10076,
+        "endNodeId": 10077,
+        "length": 8.085744617328702,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 85,
+        "startNodeId": 10077,
+        "endNodeId": 10078,
+        "length": 8.294107971532187,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 86,
+        "startNodeId": 10078,
+        "endNodeId": 10079,
+        "length": 7.605248384686695,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 87,
+        "startNodeId": 10079,
+        "endNodeId": 10080,
+        "length": 3.534298433976476,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 88,
+        "startNodeId": 10081,
+        "endNodeId": 10076,
+        "length": 3.15245813766,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 89,
+        "startNodeId": 10076,
+        "endNodeId": 10081,
+        "length": 3.0611432970536643,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 90,
+        "startNodeId": 10081,
+        "endNodeId": 10082,
+        "length": 10.108111041346708,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 91,
+        "startNodeId": 10082,
+        "endNodeId": 10083,
+        "length": 3.9293759011461047,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 93,
+        "startNodeId": 10083,
+        "endNodeId": 10085,
+        "length": 1.8567036767928973,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 94,
+        "startNodeId": 10085,
+        "endNodeId": 10082,
+        "length": 3.841984060198229,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 95,
+        "startNodeId": 10085,
+        "endNodeId": 10086,
+        "length": 7.603552614094129,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 96,
+        "startNodeId": 10086,
+        "endNodeId": 10087,
+        "length": 1.9821134620429917,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 97,
+        "startNodeId": 10087,
+        "endNodeId": 10085,
+        "length": 8.230638358343528,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 98,
+        "startNodeId": 10076,
+        "endNodeId": 10088,
+        "length": 4.551755570891317,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 99,
+        "startNodeId": 10088,
+        "endNodeId": 10077,
+        "length": 8.74958335725141,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 100,
+        "startNodeId": 10076,
+        "endNodeId": 10089,
+        "length": 5.556976691062821,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 102,
+        "startNodeId": 10088,
+        "endNodeId": 10090,
+        "length": 2.962670015883052,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 103,
+        "startNodeId": 10074,
+        "endNodeId": 10091,
+        "length": 7.815422345359241,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 104,
+        "startNodeId": 10091,
+        "endNodeId": 10092,
+        "length": 2.4948227416597506,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 105,
+        "startNodeId": 10092,
+        "endNodeId": 10093,
+        "length": 1.1728174050986155,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 106,
+        "startNodeId": 10093,
+        "endNodeId": 10094,
+        "length": 1.0241187712360142,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 107,
+        "startNodeId": 10094,
+        "endNodeId": 10095,
+        "length": 1.5870997429485167,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 108,
+        "startNodeId": 10095,
+        "endNodeId": 10096,
+        "length": 3.4356244101411084,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 109,
+        "startNodeId": 10096,
+        "endNodeId": 10097,
+        "length": 2.714318596014048,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 110,
+        "startNodeId": 10097,
+        "endNodeId": 10098,
+        "length": 1.1279796610642323,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 111,
+        "startNodeId": 10098,
+        "endNodeId": 10099,
+        "length": 2.2271953833664297,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 112,
+        "startNodeId": 10093,
+        "endNodeId": 10100,
+        "length": 2.22526456776,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 113,
+        "startNodeId": 10094,
+        "endNodeId": 10101,
+        "length": 2.874300066690001,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 114,
+        "startNodeId": 10095,
+        "endNodeId": 10102,
+        "length": 2.4124856873674183,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 115,
+        "startNodeId": 10096,
+        "endNodeId": 10103,
+        "length": 2.3346137556018043,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 116,
+        "startNodeId": 10097,
+        "endNodeId": 10104,
+        "length": 2.703210551648391,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 117,
+        "startNodeId": 10097,
+        "endNodeId": 10105,
+        "length": 2.039825853780002,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 118,
+        "startNodeId": 10098,
+        "endNodeId": 10106,
+        "length": 2.5961419957199965,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 119,
+        "startNodeId": 10098,
+        "endNodeId": 10107,
+        "length": 2.1345598972946873,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 120,
+        "startNodeId": 10099,
+        "endNodeId": 10108,
+        "length": 2.3198375707277545,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 121,
+        "startNodeId": 10099,
+        "endNodeId": 10109,
+        "length": 2.039825853780002,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 122,
+        "startNodeId": 10083,
+        "endNodeId": 10110,
+        "length": 3.52333556562,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 123,
+        "startNodeId": 10083,
+        "endNodeId": 10111,
+        "length": 2.7815807096999983,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 124,
+        "startNodeId": 10086,
+        "endNodeId": 10112,
+        "length": 3.4506054015904395,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 125,
+        "startNodeId": 10087,
+        "endNodeId": 10113,
+        "length": 2.5977971708933794,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 126,
+        "startNodeId": 10081,
+        "endNodeId": 10114,
+        "length": 3.8986257009374294,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 127,
+        "startNodeId": 10114,
+        "endNodeId": 10115,
+        "length": 11.028927565447242,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 128,
+        "startNodeId": 10115,
+        "endNodeId": 10087,
+        "length": 10.048400158319025,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 129,
+        "startNodeId": 10115,
+        "endNodeId": 10116,
+        "length": 4.173401152472014,
+        "type": "stairs",
+        "accessible": false,
+        "indoors": true
+    },
+    {
+        "id": 130,
+        "startNodeId": 10116,
+        "endNodeId": 10117,
+        "length": 4.547031381169142,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 131,
+        "startNodeId": 10117,
+        "endNodeId": 10118,
+        "length": 3.6112969535458377,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 132,
+        "startNodeId": 10118,
+        "endNodeId": 10119,
+        "length": 11.32619224784111,
+        "type": "room",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 133,
+        "startNodeId": 10119,
+        "endNodeId": 10120,
+        "length": 4.544194509905471,
+        "type": "ramp",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 134,
+        "startNodeId": 10120,
+        "endNodeId": 10114,
+        "length": 5.375324256164263,
+        "type": "ramp",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 135,
+        "startNodeId": 10078,
+        "endNodeId": 10121,
+        "length": 3.153821362864326,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 136,
+        "startNodeId": 10121,
+        "endNodeId": 10122,
+        "length": 3.0723563137080454,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 137,
+        "startNodeId": 10121,
+        "endNodeId": 10123,
+        "length": 2.972808735377531,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 138,
+        "startNodeId": 10079,
+        "endNodeId": 10124,
+        "length": 3.431868944187047,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 139,
+        "startNodeId": 10077,
+        "endNodeId": 10125,
+        "length": 6.122286594107329,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 140,
+        "startNodeId": 10118,
+        "endNodeId": 10052,
+        "length": 5,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 141,
+        "startNodeId": 10080,
+        "endNodeId": 10126,
+        "length": 4.451494857379152,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 142,
+        "startNodeId": 10126,
+        "endNodeId": 10059,
+        "length": 1,
+        "type": "door",
+        "accessible": true,
+        "indoors": true
     }
 ]
