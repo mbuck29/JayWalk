@@ -442,8 +442,8 @@
     },
     {
         "id": 52,
-        "startNodeId": 10046,
-        "endNodeId": 10047,
+        "startNodeId": 10047,
+        "endNodeId": 10046,
         "length": 0.00010538056859492394,
         "type": "stairs",
         "accessible": false,
@@ -451,8 +451,8 @@
     },
     {
         "id": 53,
-        "startNodeId": 10047,
-        "endNodeId": 10039,
+        "startNodeId": 10039,
+        "endNodeId": 10047,
         "length": 0.00016662473028958657,
         "type": "stairs",
         "accessible": false,
@@ -487,8 +487,8 @@
     },
     {
         "id": 57,
-        "startNodeId": 10050,
-        "endNodeId": 10045,
+        "startNodeId": 10045,
+        "endNodeId": 10050,
         "length": 8.590633538467901e-05,
         "type": "stairs",
         "accessible": false,
