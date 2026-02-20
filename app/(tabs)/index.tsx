@@ -201,6 +201,7 @@ export default function HomeScreen() {
               placeholderTextColor="#000"
               style={styles.textField}
               onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
+              onChange={() => setIsCurrentMenuVisible(true)}
             />
           }
           options={graph.nodes} // They are selecting from the nodes so we pass them here
@@ -224,6 +225,7 @@ export default function HomeScreen() {
               activeOutlineColor="#0015ba"
               style={styles.textField}
               onFocus={() => setIsDestinationMenuVisible(true)}
+              onChange={() => setIsDestinationMenuVisible(true)}
             />
           }
           options={graph.nodes}
