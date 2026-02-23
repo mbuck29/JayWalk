@@ -86,6 +86,15 @@ export default function TabTwoScreen() {
       />
       {/* This displays the lines of the graph that we have collected data for */}
       {makeDataLines(graph)}
+           {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
+      {graph.nodes.map((node) => (
+        <Marker
+          key={`node-${node.id}`}
+          coordinate={{ latitude: node.y, longitude: node.x }}
+          pinColor="blue"
+          title={`Node ID: ${node.id}`}
+        />
+      ))} 
     </MapView>
   );
 }

@@ -218,7 +218,8 @@
         "floor": -1,
         "edgeIds": [
             18,
-            19
+            19,
+            145
         ]
     },
     {
@@ -1500,6 +1501,146 @@
             143,
             144,
             140
+        ]
+    },
+    {
+        "id": 10128,
+        "name": "north of lindley 1",
+        "x": -95.25162557500877,
+        "y": 38.95883216280672,
+        "buildingId": -1,
+        "floor": -1,
+        "edgeIds": [
+            145,156
+        ]
+    },
+        {
+        "id": 10129,
+        "name": "north of lindley 2",
+        "x": -95.25130367348213,
+        "y": 38.958825708509224,
+        "buildingId": -1,
+        "floor": -1,
+        "edgeIds": [
+            146,156
+            
+        ]
+    },
+    {
+        "id": 10130,
+        "name": "fountain SW sidewalk south side",
+        "x": -95.25113911147287,
+        "y": 38.958830130908346,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            146,
+            147
+        ]
+    },
+    {
+        "id": 10131,
+        "name": "enter jayhawk blvd south",
+        "x": -95.25072001630974,
+        "y": 38.95887601585822,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            147,
+            148
+        ]
+    },
+    {
+        "id": 10132,
+        "name": "jayhawk blvd first crosswalk south",
+        "x": -95.25041625613517,
+        "y": 38.95878528876854,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            148,155
+        ]
+    },
+    {
+        "id": 10133,
+        "name": "marvin north entrance",
+        "x": -95.2500468406009,
+        "y": 38.95864867416642,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            148,155
+        ]
+    },
+    {
+        "id": 10134,
+        "name": "Marvin north east crosswalk jayhawk blvd",
+        "x": -95.24982505084039,
+        "y": 38.95859585604315,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            149,
+            150
+        ]
+    },
+    {
+        "id": 10135,
+        "name": "sidewalk east of marvin int",
+        "x": -95.24970544765283,
+        "y": 38.95853977228641,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            150,
+            151
+        ]
+    },
+    {
+        "id": 10136,
+        "name": "past marvin jayhawk 1",
+        "x": -95.24951176994864,
+        "y": 38.958468516764405,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            151,
+            152
+        ]
+    },
+    {
+        "id": 10137,
+        "name": "past marvin jayhawk 2",
+        "x": -95.24931175312084,
+        "y": 38.958396872927466,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            152,
+            153
+        ]
+    },
+    {
+        "id": 10138,
+        "name": "budig crosswalk 1 south",
+        "x": -95.24907120865366,
+        "y": 38.95833717282252,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            153,
+            154
+        ]
+    },
+    {
+        "id": 10139,
+        "name": "budig crosswalk 2 south",
+        "x": -95.2489088944477,
+        "y": 38.95828402919212,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            154
         ]
     }
 ]

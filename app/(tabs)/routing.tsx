@@ -121,16 +121,7 @@ export default function TabTwoScreen() {
 
       {currentRoute && makeRoutePolyline(currentRoute.stops)}
 
-     {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
-      {/*{graph.nodes.map((node) => (
-        <Marker
-          key={`node-${node.id}`}
-          coordinate={{ latitude: node.y, longitude: node.x }}
-          pinColor="blue"
-          title={`Node ID: ${node.id}`}
-        />
-      ))}
-      {makeDataLines(graph.edges)}*/}
+
 
     </MapView>
   );
