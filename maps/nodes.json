@@ -1511,21 +1511,21 @@
         "buildingId": -1,
         "floor": -1,
         "edgeIds": [
-            145,156
+            145,159
         ]
     },
-        {
+    {
         "id": 10129,
         "name": "north of lindley 2",
-        "x": -95.25130367348213,
-        "y": 38.958825708509224,
+        "x":  -95.25135531026451,
+        "y": 38.95882965068004,
         "buildingId": -1,
         "floor": -1,
         "edgeIds": [
-            146,156
-            
+            145,146,159
         ]
     },
+
     {
         "id": 10130,
         "name": "fountain SW sidewalk south side",
@@ -1558,18 +1558,18 @@
         "buildingId": -1,
         "floor": -1000,
         "edgeIds": [
-            148,155
+            148,158
         ]
     },
-    {
+     {
         "id": 10133,
         "name": "marvin north entrance",
-        "x": -95.2500468406009,
-        "y": 38.95864867416642,
+        "x": -95.25005475151463,
+        "y": 38.95865222905676,
         "buildingId": -1,
         "floor": -1000,
         "edgeIds": [
-            148,155
+            148,158
         ]
     },
     {
@@ -1640,7 +1640,53 @@
         "buildingId": -1,
         "floor": -1000,
         "edgeIds": [
-            154
+            154,160
+        ]
+    },
+    {
+        "id": 10140,
+        "name": "past budig 1",
+        "x":  -95.24853841845683,
+        "y": 38.95813641951671,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+           155,160
+        ]
+    },
+    {
+        "id": 10141,
+        "name": "past budig 2 bus stop",
+        "x": -95.24842120776071,
+        "y": 38.95808907013568,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            155,
+            156
+        ]
+    },
+    {
+        "id": 10142,
+        "name": "wescoe crosswalk to strong",
+        "x": -95.24798313360935,
+        "y": 38.95793395957674,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            156,
+            157
+        ]
+    },
+    {
+        "id": 10143,
+        "name": "past wescoe crosswalk entrance",
+        "x": -95.24689958381346,
+        "y": 38.95754919980244,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            157
         ]
     }
 ]

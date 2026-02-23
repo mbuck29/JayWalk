@@ -1339,21 +1339,57 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
-    }, 
+    },
     {
         "id": 155,
-        "startNodeId": 10132,
-        "endNodeId": 10133,
-        "length": 0.0003170199496249529,
+        "startNodeId": 10140,
+        "endNodeId": 10141,
+        "length": 0.00012347403321516582,
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
     },
     {
         "id": 156,
+        "startNodeId": 10141,
+        "endNodeId": 10142,
+        "length": 0.0004647238401291486,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 157,
+        "startNodeId": 10142,
+        "endNodeId": 10143,
+        "length": 0.0011498348768843969,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+     {
+        "id": 158,
+        "startNodeId": 10132,
+        "endNodeId": 10133,
+        "length": 0.0002284232728035133,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 159,
         "startNodeId": 10128,
         "endNodeId": 10129,
         "length": 8.67917066665064e-05,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+     {
+        "id": 160,
+        "startNodeId": 10139,
+        "endNodeId": 10140,
+        "length": 0.00012347403321516582,
         "type": "sidewalk",
         "accessible": true,
         "indoors": false

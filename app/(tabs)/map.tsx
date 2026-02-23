@@ -57,6 +57,7 @@ export default function TabTwoScreen() {
   return (
     <MapView
       ref={mapRef}
+      mapType="satellite"
       style={{ flex: 1 }}
       initialRegion={KU} // This places them over the campus on load
       showsUserLocation // This shows the user’s location as a blue dot on the map
