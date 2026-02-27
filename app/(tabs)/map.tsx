@@ -59,6 +59,11 @@ export default function TabTwoScreen() {
       ref={mapRef}
       mapType="satellite"
       style={{ flex: 1 }}
+      cameraZoomRange={{
+        // This is for limiting how far in and out the user can zoom. This might only work or apple users
+        minCenterCoordinateDistance: 12,
+        maxCenterCoordinateDistance: 7000,
+      }}
       initialRegion={KU} // This places them over the campus on load
       showsUserLocation // This shows the user’s location as a blue dot on the map
       // This is a callback that is called when the user moves the map. We use it to clamp the map to the bounds of the campus, so that they dont get lost.

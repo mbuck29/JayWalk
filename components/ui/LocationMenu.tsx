@@ -10,6 +10,7 @@ type LocationMenuProps = {
   locationText: string;
   setLocation: (node: Node) => void;
   setLocationText: (text: string) => void;
+  onSelect: () => void | undefined;
 };
 
 export default function LocationMenu({
@@ -20,6 +21,7 @@ export default function LocationMenu({
   locationText,
   setLocation,
   setLocationText,
+  onSelect,
 }: LocationMenuProps) {
   return (
     // This is the menu that is shown when the user clicks on the text input to select a location.
@@ -47,6 +49,7 @@ export default function LocationMenu({
               setLocation(option);
               setLocationText(option.name);
               onDismiss();
+              onSelect();
             }}
             title={option.name}
           />
