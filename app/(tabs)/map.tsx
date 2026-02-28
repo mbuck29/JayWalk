@@ -25,6 +25,11 @@ export default function TabTwoScreen() {
     // Add a Polyline for each edge of the graph
     let out = [];
     for (const edge of graph.edges) {
+      if(edge.indoors)
+      {
+        continue;
+      }
+
       out.push(
         <Polyline
           coordinates={[
@@ -81,15 +86,16 @@ export default function TabTwoScreen() {
         }
       }}
     >
-      {/*These are markers that are then placed on the map, we can put them at any lat long and we can label them anything */}
-      <Marker
-        coordinate={{ latitude: KU.latitude, longitude: KU.longitude }}
-        title="KU Campus"
-      />
-      <Marker
-        coordinate={{ latitude: 38.957419, longitude: -95.253358 }}
-        title="Engineering Campus"
-      />
+      
+      {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
+      {graph.nodes.map((node) => (
+        <Marker
+          key={`node-${node.id}`}
+          coordinate={{ latitude: node.y, longitude: node.x }}
+          pinColor="blue"
+          title={`${node.name} (${node.id})`}
+        />
+      ))}
       {/* This displays the lines of the graph that we have collected data for */}
       {makeDataLines(graph)}
            {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}

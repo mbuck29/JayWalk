@@ -8,9 +8,10 @@
 
 import EndRoute from "@/components/ui/EndRoue";
 import RouteSummary from "@/components/ui/RouteSummary";
-import { Edge, Node } from "@/maps/graph";
+import { Node } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Polyline } from "react-native-maps";
+import { Route } from "../Utils/routing";
 import { stringifyRoute } from "../Utils/routingUtils";
 import { getRoute, getState } from "../Utils/state";
 
@@ -55,33 +56,43 @@ export default function TabTwoScreen() {
         strokeWidth={5}
         lineCap="round"
         lineJoin="round"
+        key = {stops[0].name}
       />
     );
   }
 
-  //Old fucntion
-  // Make oulylines for our graph data
-  function makeDataLines(edges: Edge[]) {
-    let i = 0;
+  function makeRoutePolylines(route: Route)
+  {
+    const polylines = [];
 
-    let out = [];
-    for (const edge of edges) {
-      out.push(
-        <Polyline
-          coordinates={[
-            { latitude: edge.startNode.y, longitude: edge.startNode.x },
-            { latitude: edge.endNode.y, longitude: edge.endNode.x },
-          ]}
-          strokeColor="#ff00c3"
-          strokeWidth={5}
-          lineCap="round"
-          lineJoin="round"
-          key={"edge" + (i++).toString()}
-        />,
-      );
+    let base = 0;
+
+    for(let i = 1; i < route.stops.length; i++)
+    {
+      if(!route.route[i - 1].indoors)
+      {
+        if(base < 0)
+        {
+          base = i - 1;
+        }
+
+        continue;
+      }
+
+      if(base != i - 1)
+      {
+        polylines.push(makeRoutePolyline(route.stops.slice(base, i)));
+      }
+
+      base = -1;
     }
 
-    return out.length > 0 ? out : null;
+    if(base >= 0 && base != route.stops.length - 2)
+    {
+      polylines.push(makeRoutePolyline(route.stops.slice(base, route.stops.length - 1)));
+    }
+
+    return polylines.length > 0 ? polylines : null;
   }
 
   // The bounds of where the map will go. These are a rough measurement. If the user
@@ -121,7 +132,7 @@ export default function TabTwoScreen() {
           }
         }}
       >
-        {currentRoute && makeRoutePolyline(currentRoute.stops)}
+        {currentRoute && makeRoutePolylines(currentRoute)}
       </MapView>
       {!isRouteStarted && (
         <RouteSummary setIsRouteStarted={setIsRouteStarted} />
