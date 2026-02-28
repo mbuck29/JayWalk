@@ -12,7 +12,7 @@ import { clearRoute, setAccessiblePreference, setIndoorOutdoorPreference, setRou
 import * as Location from "expo-location";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Checkbox, RadioButton, Snackbar, TextInput } from "react-native-paper";
+import { Button, Checkbox, RadioButton, Snackbar, TextInput, Dialog, Portal, Text as PaperText } from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
@@ -33,6 +33,7 @@ export default function HomeScreen() {
   const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
   const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
     useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const [locationPermissionStatus, requestLocationPermissions] =
     Location.useForegroundPermissions();
@@ -174,8 +175,14 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.appTitle}>JayWalk</Text>
-        {/* TODO: Makes this clickable that shows a dialog explaining the app*/}
-        <InfoIcon width={24} height={24} color="#fff" />
+        <TouchableOpacity
+          onPress={() => setShowInfo(true)}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="App information"
+        >
+          <InfoIcon width={24} height={24} color="#fff" />
+        </TouchableOpacity>
       </View>
       <View style={styles.content}>
         <Text>
@@ -279,6 +286,30 @@ export default function HomeScreen() {
           <TargetIcon width={24} height={24} color="#2e18be" />
         </TouchableOpacity>
       </View>
+
+      <Portal>
+        <Dialog visible={showInfo} onDismiss={() => setShowInfo(false)}>
+          <Dialog.Title>About JayWalk</Dialog.Title>
+          <Dialog.Content>
+            <PaperText>
+              JayWalk helps you find routes between locations on campus.
+            </PaperText>
+            <PaperText style={{ marginTop: 8 }}>
+              • Use “Where I am” and “Where I want to go” to choose nodes.
+            </PaperText>
+            <PaperText>
+              • Filters let you prefer accessible routes and indoor/outdoor paths.
+            </PaperText>
+            <PaperText>
+              • The target button uses your GPS to snap to a nearby start location.
+            </PaperText>
+          </Dialog.Content>
+          <Dialog.Actions>
+            <Button onPress={() => setShowInfo(false)}>Close</Button>
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
+
       {/* Small message to tell the user that they need to put both locations*/}
       <Snackbar
         visible={showMissingLocation} // The local state that controls whether this snackbar is visible or not
