@@ -31,7 +31,7 @@
         "startNodeId": 10005,
         "endNodeId": 10006,
         "length": 10,
-        "type": "sidewalk",
+        "type": "bridge",
         "accessible": false,
         "indoors": false
     },
@@ -1206,15 +1206,6 @@
         "indoors": true
     },
     {
-        "id": 140,
-        "startNodeId": 10118,
-        "endNodeId": 10127,
-        "length": 1,
-        "type": "door",
-        "accessible": true,
-        "indoors": true
-    },
-    {
         "id": 141,
         "startNodeId": 10080,
         "endNodeId": 10126,
@@ -1225,7 +1216,7 @@
     },
     {
         "id": 142,
-        "startNodeId": 10126,
+        "startNodeId": 10144,
         "endNodeId": 10059,
         "length": 1,
         "type": "door",
@@ -1367,7 +1358,7 @@
         "accessible": true,
         "indoors": false
     },
-     {
+    {
         "id": 158,
         "startNodeId": 10132,
         "endNodeId": 10133,
@@ -1385,7 +1376,7 @@
         "accessible": true,
         "indoors": false
     },
-     {
+    {
         "id": 160,
         "startNodeId": 10139,
         "endNodeId": 10140,
@@ -1393,5 +1384,14 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
+    },
+    {
+        "id": 161,
+        "startNodeId": 10126,
+        "endNodeId": 10144,
+        "length": 0.563989830532118,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
     }
 ]

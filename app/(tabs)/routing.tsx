@@ -11,6 +11,7 @@ import RouteSummary from "@/components/ui/RouteSummary";
 import { Edge, Node } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Polyline } from "react-native-maps";
+import { stringifyRoute } from "../Utils/routingUtils";
 import { getRoute, getState } from "../Utils/state";
 
 export default function TabTwoScreen() {
@@ -18,7 +19,7 @@ export default function TabTwoScreen() {
 
   const state = getState(); // get the current state of app
   const currentRoute = getRoute(state); //get current route
-  console.log("Current route in TabTwoScreen:", currentRoute); // Log the current route for debugging
+  console.log("Current route in TabTwoScreen:", currentRoute ? stringifyRoute(currentRoute) : "[]"); // Log the current route for debugging
 
   const [isRouteStarted, setIsRouteStarted] = React.useState(false);
 

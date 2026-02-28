@@ -6,6 +6,8 @@
  * Date Modified: 2026-02-07
  */
 
+export type RouteType = "sidewalk" | "crosswalk" | "stairs" | "stairwell" | "elevator" | "hallway" | "room" | "ramp" | "door" | "doorway" | "bridge"
+
 /**
  * An edge (path) in the graph
  */
@@ -20,7 +22,7 @@ export interface DataEdge
     /** The length of the edge. Ignored if outdoors. */
     length: number
     /** The type of path the edge represents, such as "stairs" or "sidewalk". */
-    type: string
+    type: RouteType
     /** Whether the edge is accessible. */
     accessible: boolean
     /** Whether the edge is indoors. */
