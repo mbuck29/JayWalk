@@ -8,11 +8,34 @@
 
 import LocationMenu from "@/components/ui/LocationMenu";
 import { graph, Node } from "@/maps/graph";
-import { clearRoute, setAccessiblePreference, setIndoorOutdoorPreference, setRoute, useAppDispatch, useAppSelector } from "@/redux/appState";
+import {
+  clearRoute,
+  setAccessiblePreference,
+  setIndoorOutdoorPreference,
+  setRoute,
+  useAppDispatch,
+  useAppSelector,
+} from "@/redux/appState";
 import * as Location from "expo-location";
-import { useEffect, useState } from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Button, Checkbox, RadioButton, Snackbar, TextInput, Dialog, Portal, Text as PaperText } from "react-native-paper";
+import { navigate } from "expo-router/build/global-state/routing";
+import { useEffect, useRef, useState } from "react";
+import {
+  TextInput as RNTextInput,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+import {
+  Button,
+  Checkbox,
+  RadioButton,
+  Snackbar,
+  TextInput,
+  Portal,
+  Dialog,
+  Text as PaperText,
+} from "react-native-paper";
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
@@ -34,6 +57,8 @@ export default function HomeScreen() {
   const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
     useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const destInputRef = useRef<RNTextInput | null>(null);
+  const currLocInputRef = useRef<RNTextInput | null>(null);
 
   const [locationPermissionStatus, requestLocationPermissions] =
     Location.useForegroundPermissions();
@@ -50,29 +75,29 @@ export default function HomeScreen() {
   const accessible = useAppSelector((s) => s.jayWalk.accessible);
   const indoors = useAppSelector((s) => s.jayWalk.indoors);
   useEffect(() => {
-  console.log("[filters] accessible:", accessible, "indoors:", indoors);
-}, [accessible, indoors]);
-
+    console.log("[filters] accessible:", accessible, "indoors:", indoors);
+  }, [accessible, indoors]);
 
   const [accessibility, setAccessibility] = useState(false);
   const [environment, setEnvironment] = useState<
-  "outdoors" | "indoors" | "dontcare"
->("dontcare");
-
+    "outdoors" | "indoors" | "dontcare"
+  >("dontcare");
 
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
+    console.log("Start routing pressed.");
     if (currLocation && destLocation) {
       // Before we start routing we need to know from and to for the algo to work
-      console.log(`Routing from ${currLocation.name} to ${destLocation.name}...`);
+      console.log(
+        `Routing from ${currLocation.name} to ${destLocation.name}...`,
+      );
 
       // Call the routing algorithm from the current to the destination nodes
       const calculatedRoute = route(state, currLocation, destLocation);
 
       // If there is no route, log it and return
-      if(!calculatedRoute)
-      {
+      if (!calculatedRoute) {
         dispatch(clearRoute());
         console.log("No route found!");
         return;
@@ -81,6 +106,8 @@ export default function HomeScreen() {
       // Sanitize the route and then push it to the global state
       dispatch(setRoute(sanitize(calculatedRoute)));
 
+      // This will navigate them to the map screen where they can see the route we just calculated.
+      navigate("/routing");
     } else {
       // If they dont provide both we will show a message telling them to provide both.
       setShowMissingLocation(true);
@@ -198,6 +225,7 @@ export default function HomeScreen() {
           anchor={
             // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
             <TextInput
+              ref={currLocInputRef}
               label="Current location"
               value={currLocationText}
               onChangeText={setCurrLocationText}
@@ -217,6 +245,7 @@ export default function HomeScreen() {
           locationText={currLocationText}
           setLocation={setCurrLocation}
           setLocationText={setCurrLocationText}
+          onSelect={() => currLocInputRef.current?.blur()}
         />
         <Text style={styles.subtitle}>Where I want to go:</Text>
         {/*This is the same thing as above just for the destination location*/}
@@ -225,6 +254,7 @@ export default function HomeScreen() {
           onDismiss={() => setIsDestinationMenuVisible(false)}
           anchor={
             <TextInput
+              ref={destInputRef}
               label="Destination location"
               value={destLocationText}
               onChangeText={setDestLocationText}
@@ -239,6 +269,7 @@ export default function HomeScreen() {
           locationText={destLocationText}
           setLocation={setDestLocation}
           setLocationText={setDestLocationText}
+          onSelect={() => destInputRef.current?.blur()}
         />
 
         <View style={{ padding: 16, gap: 8 }}>
@@ -257,8 +288,12 @@ export default function HomeScreen() {
           <RadioButton.Group
             value={indoors === "" ? "dontcare" : indoors}
             onValueChange={(value) => {
-              if (value === "dontcare") dispatch(setIndoorOutdoorPreference(""));
-              else dispatch(setIndoorOutdoorPreference(value as "indoors" | "outdoors"));
+              if (value === "dontcare")
+                dispatch(setIndoorOutdoorPreference(""));
+              else
+                dispatch(
+                  setIndoorOutdoorPreference(value as "indoors" | "outdoors"),
+                );
             }}
           >
             <RadioButton.Item label="Outdoors" value="outdoors" />
@@ -266,7 +301,6 @@ export default function HomeScreen() {
             <RadioButton.Item label="Don't Care" value="dontcare" />
           </RadioButton.Group>
         </View>
-
 
         {/* This is the start route button, it will call our routing algorithm if has two valid locations*/}
         <Button

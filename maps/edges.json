@@ -31,7 +31,7 @@
         "startNodeId": 10005,
         "endNodeId": 10006,
         "length": 10,
-        "type": "sidewalk",
+        "type": "bridge",
         "accessible": false,
         "indoors": false
     },
@@ -1206,15 +1206,6 @@
         "indoors": true
     },
     {
-        "id": 140,
-        "startNodeId": 10118,
-        "endNodeId": 10127,
-        "length": 1,
-        "type": "door",
-        "accessible": true,
-        "indoors": true
-    },
-    {
         "id": 141,
         "startNodeId": 10080,
         "endNodeId": 10126,
@@ -1225,7 +1216,7 @@
     },
     {
         "id": 142,
-        "startNodeId": 10126,
+        "startNodeId": 10144,
         "endNodeId": 10059,
         "length": 1,
         "type": "door",
@@ -1339,23 +1330,68 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
-    }, 
+    },
     {
         "id": 155,
-        "startNodeId": 10132,
-        "endNodeId": 10133,
-        "length": 0.0003170199496249529,
+        "startNodeId": 10140,
+        "endNodeId": 10141,
+        "length": 0.00012347403321516582,
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
     },
     {
         "id": 156,
+        "startNodeId": 10141,
+        "endNodeId": 10142,
+        "length": 0.0004647238401291486,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 157,
+        "startNodeId": 10142,
+        "endNodeId": 10143,
+        "length": 0.0011498348768843969,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 158,
+        "startNodeId": 10132,
+        "endNodeId": 10133,
+        "length": 0.0002284232728035133,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 159,
         "startNodeId": 10128,
         "endNodeId": 10129,
         "length": 8.67917066665064e-05,
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
+    },
+    {
+        "id": 160,
+        "startNodeId": 10139,
+        "endNodeId": 10140,
+        "length": 0.00012347403321516582,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 161,
+        "startNodeId": 10126,
+        "endNodeId": 10144,
+        "length": 0.563989830532118,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
     }
 ]

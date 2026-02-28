@@ -5,7 +5,7 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-02-07
  */
-import { getEdges, getNodes } from "./data"
+import { RouteType, getEdges, getNodes } from "./data"
 
 /**
  * An edge (path) in the graph
@@ -21,7 +21,7 @@ export interface Edge
     /** The length of the edge. Ignored if outdoors. */
     length: number
     /** The type of path the edge represents, such as "stairs" or "sidewalk". */
-    type: string
+    type: RouteType
     /** Whether the edge is accessible. */
     accessible: boolean
     /** Whether the edge is indoors. */

@@ -11,11 +11,10 @@ import { Route } from "./routing";
 /**
  * Gets the global state of the app.
  * This must be called from within a function component that is a subcomponent of one of the tabs.
- * @returns The 
+ * @returns The
  */
-export function getState(): JayWalkState
-{
-    return useAppSelector((state) => state.jayWalk);
+export function getState(): JayWalkState {
+  return useAppSelector((state) => state.jayWalk);
 }
 
 /**
@@ -23,10 +22,12 @@ export function getState(): JayWalkState
  * @param state The app's global state. Does not need to be passed if called from a function component that is a subcomponent of one of the tabs.
  * @returns The Route object, or null if the user is not currently navigating.
  */
-export function getRoute(state: JayWalkState | undefined): Route | null
-{
-    state = state ?? getState();
-    return state.route;
+export function getRoute(state: JayWalkState | undefined): Route | null {
+  state = state ?? getState();
+  if (!state.route) {
+    return null;
+  }
+  return state.route;
 }
 
 /**
@@ -34,10 +35,11 @@ export function getRoute(state: JayWalkState | undefined): Route | null
  * @param state The app's global state. Does not need to be passed if called from a function component that is a subcomponent of one of the tabs.
  * @returns True if the user requires accessible routes or false otherwise.
  */
-export function getAccessiblePreference(state: JayWalkState | undefined): boolean
-{
-    state = state ?? getState();
-    return state.accessible;
+export function getAccessiblePreference(
+  state: JayWalkState | undefined,
+): boolean {
+  state = state ?? getState();
+  return state.accessible;
 }
 
 /**
@@ -45,8 +47,9 @@ export function getAccessiblePreference(state: JayWalkState | undefined): boolea
  * @param state The app's global state. Does not need to be passed if called from a function component that is a subcomponent of one of the tabs.
  * @returns "indoors" of the user prefers indoor routes, "outdoors" if they prefer outdoor routes, and "" if they have no preference.
  */
-export function getIndoorOutdoorPreference(state: JayWalkState | undefined): "indoors" | "outdoors" | ""
-{
-    state = state ?? getState();
-    return state.indoors;
+export function getIndoorOutdoorPreference(
+  state: JayWalkState | undefined,
+): "indoors" | "outdoors" | "" {
+  state = state ?? getState();
+  return state.indoors;
 }
