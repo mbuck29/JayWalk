@@ -24,7 +24,8 @@ export interface Route
     route: Edge[],
     /** The stops the user should visit along the route */
     stops: Node[],
-    directions: Direction[]
+    directions: Direction[],
+    length: number
 }
 
 /**
@@ -41,7 +42,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     // Trivial case if start and end are the same
     if(start == end)
     {
-        return {route: [], stops: [start], directions: []};
+        return {route: [], stops: [start], directions: [], length: 0};
     }
 
     // Get the user-selected route preferences
@@ -55,6 +56,8 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     const done: Set<number> = new Set();
     
     done.add(start.id);
+
+    let distance = 0;
 
     // Heap for the closest nodes thus far
     const heap = new Heap();
@@ -83,7 +86,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     while(!heap.isEmpty())
     {
         // Get the distance to the nearest unfinished node, and the node itself
-        const distance = heap.getRootKey();
+        distance = heap.getRootKey();
         const current = heap.pop();
 
         if(current == null) // Can never happen but necessary for typing
@@ -170,7 +173,8 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     let route = {
         route: outEdges.reverse(),
         stops: outNodes.reverse(),
-        directions: []
+        directions: [],
+        length: distance
     }
 
     populateDirections(route);
@@ -190,8 +194,10 @@ export function getBaseLength(edge: Edge)
         return edge.length;
     }
 
-    // Calculate the length based on the end node coordinates, modifying it by *1.5 if it is stairs
-    return Math.sqrt(Math.pow((edge.startNode.x - edge.endNode.x) * METERS_PER_DEGREE_LONG, 2) + Math.pow((edge.startNode.y - edge.endNode.y) * METERS_PER_DEGREE_LONG, 2)) * (edge.type == "stairs" ? 1.2 : 1);
+    // Calculate the length based on the end node coordinates, modifying it by *1.2 if it is stairs
+    return Math.sqrt(Math.pow((edge.startNode.x - edge.endNode.x) * METERS_PER_DEGREE_LONG, 2) + 
+                     Math.pow((edge.startNode.y - edge.endNode.y) * METERS_PER_DEGREE_LAT, 2)) 
+                     * (edge.type == "stairs" ? 1.2 : 1);
 }
 
 /**
