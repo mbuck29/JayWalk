@@ -49,6 +49,14 @@ export function populateDirections(route: Route)
         {
             const skipTo = populateDirectionsIndoors(route, i, !edgeIn.indoors);
             i = skipTo - 1;
+
+            continueFrom = null;
+            continueType = "ignore";
+            continue;
+        }
+
+        if(edgeOut.type == "ignore")
+        {
             continue;
         }
 
@@ -77,28 +85,30 @@ export function populateDirections(route: Route)
         const optionAngle = correctOption.relativeAngle;
         const optionTurn = getTurnType(optionAngle);
 
-        if(continueFrom && (optionTurn == "straight" || optionsAtThisStop.length == 0) && correctOption.type == continueType)
+        if(continueFrom && (optionTurn == "straight" || optionsAtThisStop.length == 1) && correctOption.type == continueType)
         {
             continue;
         }
 
-        if(continueFrom && (continueFrom.id != lastStop.id || i == 1))
+        if(continueFrom)
         {
+            const distance = getTensOfFeetOutdoors(continueFrom, thisStop);
+
             directions.push({
-                node: i - 1,
-                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id) + ` for ${getTensOfFeetOutdoors(continueFrom, thisStop)} feet`,
+                node: i,
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id) + (distance > 50 ? ` for ${distance} feet` : ""),
                 show: true,
                 prompt: false
             });
 
             continueFrom = null;
-            continueType = "elevator";
+            continueType = "ignore";
         }
 
         if(optionsAtThisStop.length == 1)
         {
             directions.push({
-                node: i - 1,
+                node: i,
                 direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
                 show: edgeIn.type != edgeOut.type,
                 prompt: false
@@ -119,7 +129,7 @@ export function populateDirections(route: Route)
             if(!couldBeConfused)
             {
                 directions.push({
-                    node: i - 1,
+                    node: i,
                     direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
                     show: true,
                     prompt: false
@@ -134,7 +144,7 @@ export function populateDirections(route: Route)
             if(optionsAtThisStop[0].type != optionsAtThisStop[1].type)
             {
                 directions.push({
-                    node: i - 1,
+                    node: i,
                     direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
                     show: true,
                     prompt: false
@@ -149,7 +159,7 @@ export function populateDirections(route: Route)
             const leftIsCorrect = optionIndex == 0;
 
             directions.push({
-                    node: i - 1,
+                    node: i,
                     direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection, leftIsCorrect ? "left" : "right"),
                     show: true,
                     prompt: false
@@ -186,7 +196,7 @@ export function populateDirections(route: Route)
         if(closest > THIRTY_DEGREES || duiplicateCount <= 0)
         {
             directions.push({
-                    node: i - 1,
+                    node: i,
                     direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
                     show: true,
                     prompt: false
@@ -224,6 +234,21 @@ export function populateDirections(route: Route)
         continueType = edgeOut.type;
     }
 
+    if(continueFrom)
+    {
+        const distance = getTensOfFeetOutdoors(continueFrom, stops[stops.length - 1]);
+
+        directions.push({
+            node: stops.length - 1,
+            direction: getRouteAction("straight", continueType, paths[paths.length - 1].endNode.id == stops[stops.length - 1].id) + (distance > 50 ? ` for ${distance} feet` : ""),
+            show: true,
+            prompt: false
+        });
+
+        continueFrom = null;
+        continueType = "ignore";
+    }
+
     directions.push({
         node: stops.length - 1,
         direction: "You have arrived at your destination!",
@@ -251,15 +276,21 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         startIndex++;
     }
 
+    while(paths[startIndex].type == "ignore")
+    {
+        startIndex++;
+    }
+
     let leftCount = 0;
     let rightCount = 0;
 
     let lastLeft: Node | null = null;
     let lastRight: Node | null = null;
 
+    let continueFrom: Node | null = stops[startIndex];
+    let continueType = paths[startIndex].type;
 
-    let continueFrom: Node | null = null;
-    let continueType = "";
+    startIndex++;
 
     for(let i = startIndex; i < paths.length; i++)
     {
@@ -273,6 +304,11 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         const nextStop = stops[i + 1];
         const edgeIn = paths[i - 1];
         const edgeOut = paths[i];
+
+        if(edgeOut.type == "ignore")
+        {
+            continue;
+        }
 
         const optionsAtThisStop = getOptions(lastStop, thisStop);
 
@@ -307,7 +343,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                     continue;
                 }
 
-                if(optionsAtThisStop[j].type != "door")
+                if(optionsAtThisStop[j].type == "hallway")
                 {
                     if(j < optionIndex)
                     {
@@ -338,7 +374,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         if(continueFrom && continueFrom != lastStop)
         {
             directions.push({
-                node: i - 1,
+                node: i,
                 direction: getRouteAction("straight", edgeIn.type, edgeIn.endNode.id == thisStop.id) + ` for ${getTensOfFeetIndoors(continueFrom, thisStop)} feet`,
                 show: true,
                 prompt: false
@@ -347,7 +383,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         else if(continueFrom)
         {
             directions.push({
-                node: i - 1,
+                node: i,
                 direction: getRouteAction("straight", edgeIn.type, edgeIn.endNode.id == thisStop.id),
                 show: true,
                 prompt: false
@@ -356,26 +392,27 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
         if((correctOption.type == "stairs" || correctOption.type == "stairwell" || correctOption.type == "elevator") && thisStop.floor != nextStop.floor)
         {
-            i = takeElevatorDirections(route, i, correctOption.type == "elevator" ? "elevator" : "stairs");
-            i--;
+            i = takeElevatorDirections(route, i, correctOption.type) + 1;
+            const destFloor = stops[i].floor;
+
+            while(stops[i].floor == destFloor)
+            {
+                i--;
+            }
+
+            leftCount = 0;
+            rightCount = 0;
+            lastLeft = null;
+            lastRight = null;
+            continueFrom = null;
+            continueType = "ignore";
+
             continue;
         }
 
-        if(turnType == "straight")
+        if(turnType == "straight" || Math.abs(correctOption.relativeAngle) < FIFTEEN_DEGREES + FIVE_DEGREES)
         {
-            directions.push({
-                node: i - 1,
-                direction: getRouteAction("straight", correctOption.type, edgeOut.startNode.id == thisStop.id),
-                show: true,
-                prompt: false
-            });
-
-            directions.push({
-                node: i - 1,
-                direction: getTakenRouteQuestion(correctOption.type),
-                show: true,
-                prompt: true
-            });
+            // Handled by continuefrom
         }
         else
         {
@@ -396,14 +433,14 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             instruction += getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id).toLowerCase();
 
             directions.push({
-                node: i - 1,
+                node: i,
                 direction: instruction,
                 show: true,
                 prompt: false
             });
 
             directions.push({
-                node: i - 1,
+                node: i,
                 direction: left ? "Have you turned left?" : "Have you turned right?",
                 show: true,
                 prompt: true
@@ -421,16 +458,16 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
     return stops.length;
 }
 
-function takeElevatorDirections(route: Route, startIndex: number, type: "elevator" | "stairs"): number
+function takeElevatorDirections(route: Route, startIndex: number, type: "elevator" | "stairs" | "stairwell"): number
 {
     let endIndex = startIndex;
 
     for(; route.route[endIndex].type == type; endIndex++);
 
     const startFloor = route.stops[startIndex].floor;
-    const endFloor = route.stops[endIndex - 1].floor;
+    const endFloor = route.stops[endIndex].floor;
 
-    const up = startFloor > endFloor;
+    const up = startFloor < endFloor;
 
     const directions = `Take the ${type} ${up ? "up" : "down"} to floor ${endFloor}.`;
 
@@ -448,7 +485,7 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
         prompt: true
     });
 
-    return endIndex - 1;
+    return endIndex;
 }
 
 
@@ -572,6 +609,9 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
             break;
         case "bridge":
             action = `Cross the ${specifier}bridge${specLit}`;
+            break;
+        case "atrium":
+            action = `Cross the atrium`;
             break;
         default:
             action = `Take the ${specifier}${routeType}${specLit}`;
