@@ -321,26 +321,135 @@ export default function HomeScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* 
+        Portal allows the Dialog to render above all other UI elements.
+        This ensures the modal appears on top of the entire screen.
+      */}
       <Portal>
+        {/* 
+          Dialog component from react-native-paper.
+          - visible controls whether the dialog is shown.
+          - onDismiss is called when the user taps outside the dialog or presses back.
+        */}
         <Dialog visible={showInfo} onDismiss={() => setShowInfo(false)}>
+
+          {/* Title displayed at the top of the dialog */}
           <Dialog.Title>About JayWalk</Dialog.Title>
+
+          {/* Main body content of the dialog */}
           <Dialog.Content>
+
+            {/* Introductory description of what the app does */}
+            <PaperText style={{ marginBottom: 8 }}>
+              JayWalk helps you navigate between campus locations with indoor step-by-step
+              directions and outdoor map routing.
+            </PaperText>
+
+            {/* Section header: Step 1 */}
+            <PaperText style={{ fontWeight: "600", marginTop: 8, marginBottom: 4 }}>
+              1) Choose your start & destination
+            </PaperText>
+
+            {/* Explanation of how to select starting location */}
             <PaperText>
-              JayWalk helps you find routes between locations on campus.
+              • Use <PaperText style={{ fontWeight: "600" }}>Current Location</PaperText> to pick
+              your starting location.
             </PaperText>
-            <PaperText style={{ marginTop: 8 }}>
-              • Use “Where I am” and “Where I want to go” to choose nodes.
-            </PaperText>
+
+            {/* Explanation of how to select destination */}
             <PaperText>
-              • Filters let you prefer accessible routes and indoor/outdoor paths.
+              • Use <PaperText style={{ fontWeight: "600" }}>Where I'm headed</PaperText>{" "}
+              to pick your destination.
             </PaperText>
+
+            {/* Extra tip explaining the GPS shortcut button behavior */}
+            <PaperText style={{ marginTop: 4 }}>
+              Tip: Tap the <PaperText style={{ fontWeight: "600" }}>target</PaperText>{" "}
+              button to use your current GPS location as your start (outdoors only). If
+              GPS accuracy is low or you’re too far from a known start point, JayWalk will
+              ask you to choose manually.
+            </PaperText>
+
+            {/* Section header: Step 2 */}
+            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+              2) Set your preferences (optional)
+            </PaperText>
+
+            {/* Description of accessibility filter */}
             <PaperText>
-              • The target button uses your GPS to snap to a nearby start location.
+              • <PaperText style={{ fontWeight: "600" }}>Accessible</PaperText>: prefers
+              wheelchair-friendly routes when available.
             </PaperText>
+
+            {/* Description of indoor/outdoor environment filter */}
+            <PaperText>
+              • <PaperText style={{ fontWeight: "600" }}>Environment</PaperText>: choose{" "}
+              <PaperText style={{ fontWeight: "600" }}>Indoors</PaperText>,{" "}
+              <PaperText style={{ fontWeight: "600" }}>Outdoors</PaperText>, or{" "}
+              <PaperText style={{ fontWeight: "600" }}>Don’t Care</PaperText>.
+            </PaperText>
+
+            {/* Section header: Step 3 */}
+            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+              3) Preview your route
+            </PaperText>
+
+            {/* Explanation of what happens after pressing "Let's Go!" */}
+            <PaperText>
+              Tap <PaperText style={{ fontWeight: "600" }}>Let’s Go!</PaperText> to build
+              a route and open the Route tab, where you’ll see a preview before starting.
+            </PaperText>
+
+            {/* Section header: Step 4 */}
+            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+              4) Start navigating
+            </PaperText>
+
+            {/* Explains how to begin active navigation */}
+            <PaperText>
+              • Tap <PaperText style={{ fontWeight: "600" }}>Start Route</PaperText> to
+              begin.
+            </PaperText>
+
+            {/* Indoor navigation instructions */}
+            <PaperText>
+              • Indoors, directions appear as steps and you use{" "}
+              <PaperText style={{ fontWeight: "600" }}>Previous</PaperText> /{" "}
+              <PaperText style={{ fontWeight: "600" }}>Next</PaperText> as you move.
+            </PaperText>
+
+            {/* Indoor floor plan feature explanation */}
+            <PaperText>
+              • Indoors, you can also open the{" "}
+              <PaperText style={{ fontWeight: "600" }}>Floor Plan</PaperText> at any time.
+            </PaperText>
+
+            {/* Map recenter explanation when user pans away */}
+            <PaperText style={{ marginTop: 4 }}>
+              If you pan around the map, use{" "}
+              <PaperText style={{ fontWeight: "600" }}>Target Button</PaperText> to jump back to
+              your position.
+            </PaperText>
+
+            {/* Section header: Ending navigation */}
+            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+              Ending early
+            </PaperText>
+
+            {/* Explains how to cancel an active route */}
+            <PaperText>
+              You can stop navigation anytime by tapping{" "}
+              <PaperText style={{ fontWeight: "600" }}>End Route</PaperText>.
+            </PaperText>
+
           </Dialog.Content>
+
+          {/* Action buttons shown at the bottom of the dialog */}
           <Dialog.Actions>
+            {/* Close button simply hides the dialog by updating state */}
             <Button onPress={() => setShowInfo(false)}>Close</Button>
           </Dialog.Actions>
+
         </Dialog>
       </Portal>
 
