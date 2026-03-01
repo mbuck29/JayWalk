@@ -6,7 +6,7 @@
  * Date Modified: 2026-02-07
  */
 
-export type RouteType = "sidewalk" | "crosswalk" | "stairs" | "stairwell" | "elevator" | "hallway" | "room" | "ramp" | "door" | "doorway" | "bridge"
+export type RouteType = "sidewalk" | "crosswalk" | "stairs" | "stairwell" | "elevator" | "hallway" | "room" | "ramp" | "door" | "doorway" | "bridge" | "atrium" | "ignore"
 
 /**
  * An edge (path) in the graph

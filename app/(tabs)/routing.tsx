@@ -110,6 +110,7 @@ export default function TabTwoScreen() {
     <>
       <MapView
         ref={mapRef}
+        mapType="satellite"
         style={{ flex: 1 }}
         cameraZoomRange={{
           // This is for limiting how far in and out the user can zoom. This might only work or apple users

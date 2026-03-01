@@ -81,7 +81,9 @@
         "buildingId": -1,
         "floor": -1,
         "edgeIds": [
-            6
+            6,
+            162,
+            164
         ]
     },
     {
@@ -168,7 +170,8 @@
         "floor": -1,
         "edgeIds": [
             14,
-            15
+            15,
+            166
         ]
     },
     {
@@ -180,7 +183,9 @@
         "floor": -1,
         "edgeIds": [
             15,
-            16
+            16,
+            165,
+            167
         ]
     },
     {
@@ -243,7 +248,8 @@
         "edgeIds": [
             20,
             21,
-            31
+            31,
+            166
         ]
     },
     {
@@ -500,7 +506,8 @@
         "floor": -1,
         "edgeIds": [
             48,
-            49
+            49,
+            168
         ]
     },
     {
@@ -836,10 +843,10 @@
     },
     {
         "id": 10071,
-        "name": "~Eaton Hall",
+        "name": "Eaton Hall",
         "x": -1,
         "y": -1,
-        "buildingId": 10071,
+        "buildingId": 10145,
         "edgeIds": []
     },
     {
@@ -889,7 +896,6 @@
         "edgeIds": [
             83,
             84,
-            88,
             89,
             98,
             100
@@ -1038,7 +1044,8 @@
         "edgeIds": [
             98,
             99,
-            102
+            102,
+            183
         ]
     },
     {
@@ -1049,7 +1056,8 @@
         "buildingId": 10071,
         "floor": 1,
         "edgeIds": [
-            100
+            100,
+            182
         ]
     },
     {
@@ -1703,6 +1711,208 @@
         "edgeIds": [
             161,
             142
+        ]
+    },
+    {
+        "id": 10145,
+        "name": "Eaton Hall Main Entrance",
+        "x": -95.25277723258246,
+        "y": 38.95735833536497,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            162,
+            163,
+            181
+        ]
+    },
+    {
+        "id": 10146,
+        "name": "~Top of Stairs to West of Eaton Entrance",
+        "x": -95.25281665277883,
+        "y": 38.957317856125236,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            163,
+            164,
+            165
+        ]
+    },
+    {
+        "id": 10147,
+        "name": "~SW of eaton corner",
+        "x": -95.25308052425542,
+        "y": 38.95736476182417,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            167,
+            168
+        ]
+    },
+    {
+        "id": 10149,
+        "name": "~Inside Eaton Main Door 2",
+        "x": -17.44150917236,
+        "y": 0.76665974384,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            169,
+            170,
+            180
+        ]
+    },
+    {
+        "id": 10150,
+        "name": "~Eaton Hall Floor 1 Foyer",
+        "x": -13.79987538912,
+        "y": 0.67082727586,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            170,
+            171,
+            177,
+            184,
+            186
+        ]
+    },
+    {
+        "id": 10151,
+        "name": "~Eaton Atrium Below Ramp",
+        "x": -9.39158186204,
+        "y": -1.62915195566,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            171,
+            172
+        ]
+    },
+    {
+        "id": 10152,
+        "name": "~Eaton Atrium Top of Ramp",
+        "x": -0.4791623399,
+        "y": -1.24582208374,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            172,
+            173
+        ]
+    },
+    {
+        "id": 10153,
+        "name": "Eaton Hall Floor 0 Elevator",
+        "x": 0.09583246798,
+        "y": 1.53331948768,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            173,
+            174,
+            182
+        ]
+    },
+    {
+        "id": 10154,
+        "name": "~Eaton Floor 0 Base of Wide Satairs",
+        "x": -0.19166493596,
+        "y": 4.40829352708,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            174,
+            175,
+            183,
+            185,
+            187
+        ]
+    },
+    {
+        "id": 10155,
+        "name": "~Bottom of tiny stairs in Eaton atrium",
+        "x": -4.69579093102,
+        "y": 3.8332987192,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            175,
+            176
+        ]
+    },
+    {
+        "id": 10156,
+        "name": "~In front of Lawr 2 Entrance",
+        "x": -13.4165455172,
+        "y": 3.9291311871800003,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            176,
+            177,
+            178
+        ]
+    },
+    {
+        "id": 10157,
+        "name": "~In fronter of Lawr 2 Entrance",
+        "x": -13.12904811326,
+        "y": 5.84578054678,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            178,
+            179
+        ]
+    },
+    {
+        "id": 10158,
+        "name": "Eaton 2 (Lawr 2)",
+        "x": -13.60821045316,
+        "y": 7.95409484234,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            179
+        ]
+    },
+    {
+        "id": 10159,
+        "name": "~Inside Eaton Main Door",
+        "x": -18.30400138418,
+        "y": 0.9583246798,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            180,
+            181
+        ]
+    },
+    {
+        "id": 10160,
+        "name": "~Bottom of tiny stairs in Eaton atrium 2",
+        "x": -3.64163378324,
+        "y": 1.82081689162,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            184,
+            185
+        ]
+    },
+    {
+        "id": 10161,
+        "name": "~Bottom of tiny stairs in Eaton atrium 3",
+        "x": -4.12079612314,
+        "y": 3.1624714433400003,
+        "buildingId": 10071,
+        "floor": 0,
+        "edgeIds": [
+            186,
+            187
         ]
     }
 ]
