@@ -1511,7 +1511,7 @@
     },
     {
         "id": 10128,
-        "name": "north of lindley 1",
+        "name": "~north of lindley 1",
         "x": -95.25162557500877,
         "y": 38.95883216280672,
         "buildingId": -1,
@@ -1523,7 +1523,7 @@
     },
     {
         "id": 10129,
-        "name": "north of lindley 2",
+        "name": "~north of lindley 2",
         "x": -95.25135531026451,
         "y": 38.95882965068004,
         "buildingId": -1,
@@ -1536,7 +1536,7 @@
     },
     {
         "id": 10130,
-        "name": "fountain SW sidewalk south side",
+        "name": "~fountain SW sidewalk south side",
         "x": -95.25113911147287,
         "y": 38.958830130908346,
         "buildingId": -1,
@@ -1548,7 +1548,7 @@
     },
     {
         "id": 10131,
-        "name": "enter jayhawk blvd south",
+        "name": "~enter jayhawk blvd south",
         "x": -95.25072001630974,
         "y": 38.95887601585822,
         "buildingId": -1,
@@ -1560,7 +1560,7 @@
     },
     {
         "id": 10132,
-        "name": "jayhawk blvd first crosswalk south",
+        "name": "~jayhawk blvd first crosswalk south",
         "x": -95.25041625613517,
         "y": 38.95878528876854,
         "buildingId": -1,
@@ -1572,7 +1572,7 @@
     },
     {
         "id": 10133,
-        "name": "marvin north entrance",
+        "name": "~marvin north entrance",
         "x": -95.25005475151463,
         "y": 38.95865222905676,
         "buildingId": -1,
@@ -1584,7 +1584,7 @@
     },
     {
         "id": 10134,
-        "name": "Marvin north east crosswalk jayhawk blvd",
+        "name": "~Marvin north east crosswalk jayhawk blvd",
         "x": -95.24982505084039,
         "y": 38.95859585604315,
         "buildingId": -1,
@@ -1596,7 +1596,7 @@
     },
     {
         "id": 10135,
-        "name": "sidewalk east of marvin int",
+        "name": "~sidewalk east of marvin int",
         "x": -95.24970544765283,
         "y": 38.95853977228641,
         "buildingId": -1,
@@ -1608,7 +1608,7 @@
     },
     {
         "id": 10136,
-        "name": "past marvin jayhawk 1",
+        "name": "~past marvin jayhawk 1",
         "x": -95.24951176994864,
         "y": 38.958468516764405,
         "buildingId": -1,
@@ -1620,7 +1620,7 @@
     },
     {
         "id": 10137,
-        "name": "past marvin jayhawk 2",
+        "name": "~past marvin jayhawk 2",
         "x": -95.24931175312084,
         "y": 38.958396872927466,
         "buildingId": -1,
@@ -1632,7 +1632,7 @@
     },
     {
         "id": 10138,
-        "name": "budig crosswalk 1 south",
+        "name": "~budig crosswalk 1 south",
         "x": -95.24907120865366,
         "y": 38.95833717282252,
         "buildingId": -1,
@@ -1644,7 +1644,7 @@
     },
     {
         "id": 10139,
-        "name": "budig crosswalk 2 south",
+        "name": "~budig crosswalk 2 south",
         "x": -95.2489088944477,
         "y": 38.95828402919212,
         "buildingId": -1,
@@ -1656,7 +1656,7 @@
     },
     {
         "id": 10140,
-        "name": "past budig 1",
+        "name": "~past budig 1",
         "x": -95.24853841845683,
         "y": 38.95813641951671,
         "buildingId": -1,
@@ -1668,7 +1668,7 @@
     },
     {
         "id": 10141,
-        "name": "past budig 2 bus stop",
+        "name": "~past budig 2 bus stop",
         "x": -95.24842120776071,
         "y": 38.95808907013568,
         "buildingId": -1,
@@ -1680,7 +1680,7 @@
     },
     {
         "id": 10142,
-        "name": "wescoe crosswalk to strong",
+        "name": "~wescoe crosswalk to strong",
         "x": -95.24798313360935,
         "y": 38.95793395957674,
         "buildingId": -1,
@@ -1692,7 +1692,7 @@
     },
     {
         "id": 10143,
-        "name": "past wescoe crosswalk entrance",
+        "name": "~past wescoe crosswalk entrance",
         "x": -95.24689958381346,
         "y": 38.95754919980244,
         "buildingId": -1,
