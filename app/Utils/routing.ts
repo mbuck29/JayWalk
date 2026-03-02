@@ -159,6 +159,8 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
 
     let current = end;
 
+    distance = 0;
+
     // Trace back the path to the end node and fill out the edge and node arrays
     while(current.id in edgeMap)
     {
@@ -166,6 +168,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
         const edge = edgeMap[current.id];
         outEdges.push(edge);
         current = edgeOther(edge, current);
+        distance += getBaseLength(edge);
     }
 
     outNodes.push(current);
