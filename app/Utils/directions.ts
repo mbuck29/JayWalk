@@ -357,12 +357,9 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         const edgeIn = paths[i - 1];
         const edgeOut = paths[i];
 
-        if(continueFrom && continueType == "ignore")
-        {
-            continueFrom = null;
-        }
+        const changingBuildings = thisStop.building?.id != nextStop.building?.id;
 
-        if(edgeOut.type == "ignore")
+        if(edgeOut.type == "ignore" && !changingBuildings)
         {
             continue;
         }
@@ -395,8 +392,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         const turnType = getTurnType(correctOption.relativeAngle)
 
 
-        // Merge together same-type edges in a straight mine
-        if(turnType == "straight" && correctOption.type == continueType)
+        // Merge together same-type edges in a straight line
+        if((turnType == "straight" || turnType == "slight left" || turnType == "slight right") && correctOption.type == continueType && !changingBuildings)
         {
             // Keep track of the number of halls to the left/right along with landmarks
             for(let j = 0; j < optionsAtThisStop.length; j++)
@@ -439,7 +436,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         {
             directions.push({
                 node: i,
-                direction: getRouteAction("straight", edgeIn.type, edgeIn.endNode.id == thisStop.id) + ` for ${getTensOfFeetIndoors(continueFrom, thisStop)} feet`,
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id) + ` for ${getTensOfFeetIndoors(continueFrom, thisStop)} feet`,
                 show: true,
                 prompt: false
             });
@@ -448,10 +445,31 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         {
             directions.push({
                 node: i,
-                direction: getRouteAction("straight", edgeIn.type, edgeIn.endNode.id == thisStop.id),
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id),
                 show: true,
                 prompt: false
             });
+        }
+
+        if(changingBuildings)
+        {
+            directions.push({
+                node: i+1,
+                direction: `Entering ${nextStop.building?.name ?? "a new building"}`,
+                show: true,
+                prompt: false
+            });
+
+            i++;
+
+            leftCount = 0;
+            rightCount = 0;
+            lastLeft = null;
+            lastRight = null;
+            continueFrom = null;
+            continueType = "ignore";
+
+            continue;
         }
 
         // Handle swapping floors
@@ -479,7 +497,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             continue;
         }
 
-        if(turnType == "straight" || Math.abs(correctOption.relativeAngle) < FIFTEEN_DEGREES + FIVE_DEGREES)
+        if(turnType == "straight" || turnType == "slight left" || turnType == "slight right")
         {
             // Handled by continuefrom
         }
@@ -493,7 +511,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const waypoint = left ? lastLeft : lastRight;
             const count = left ? leftCount : rightCount;
 
-            instruction = `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} and `;
+            instruction = `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} at ${thisStop.name} and `;
 
             if(waypoint)
             {
