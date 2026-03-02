@@ -90,11 +90,6 @@ export default function HomeScreen() {
     console.log("[filters] accessible:", accessible, "indoors:", indoors);
   }, [accessible, indoors]);
 
-  const [accessibility, setAccessibility] = useState(false);
-  const [environment, setEnvironment] = useState<
-    "outdoors" | "indoors" | "nopreference"
-  >("nopreference");
-
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
@@ -200,6 +195,7 @@ export default function HomeScreen() {
       // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
       // we will need to come up for what the UI looks like for that.
       setCurrLocationText(closestNode.node.name); // update text field to show assumed location
+      setCurrLocation(closestNode.node);
     } else {
       // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
       // So we tell the user that with a toast message.
