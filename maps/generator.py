@@ -58,6 +58,8 @@ def main():
 
         if whatDo.startswith("add"): # Add to the graph
             start = getNode("Please enter the starting coordinates: ", nodes)
+            if not (start in nodes):
+                nodes.append(start)
             add(start, edges, nodes, whatDo.endswith("s"))
         elif whatDo == "save": # Save the graph
             edgeFile = open("edges.json", 'w')
@@ -163,6 +165,9 @@ def mergeNodeAsNeeded(node: dict, nodes: list[dict], epsilon: float = 0.000009 *
 
     # Find the closest node
     for otherNode in nodes:
+        if node["buildingId"] != otherNode["buildingId"] or getFloor(node) != getFloor(otherNode):
+            continue
+
         oX: float = otherNode["x"] * offset
         oY: float = otherNode["y"] * offset
         dSquared = (nodeX - oX) ** 2 + (nodeY - oY) ** 2
@@ -184,6 +189,12 @@ def mergeNodeAsNeeded(node: dict, nodes: list[dict], epsilon: float = 0.000009 *
             merge = ""
     
     return node
+
+def getFloor(node: dict) -> int:
+    if not ("floor" in node):
+        return -1
+    
+    return int(node["floor"])
 
 def getNode(coordsMessage: str, nodes: list[dict]) -> dict:
     """Prompt the user to enter a node

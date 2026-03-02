@@ -43,6 +43,8 @@ export interface Node
     y: number,
     /** The Node for the building the node is in. undefined if the node is outdoors. */
     building: Node | undefined,
+    /** The floor the Node is on, or -1 if it is outdoors. */
+    floor: number
     /** All of the edges with this node as one of their ends. */
     edges: Edge[]
 }
@@ -90,6 +92,7 @@ function loadGraph(): Graph
             x: data.x,
             y: data.y,
             building: nodes.find(n => n.id == data.buildingId),
+            floor: data.floor ?? -1,
             edges: []
         };
 

@@ -12,7 +12,7 @@ import { Node } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Polyline } from "react-native-maps";
 import { Route } from "../Utils/routing";
-import { stringifyRoute } from "../Utils/routingUtils";
+import { haversineMeters, stringifyRoute } from "../Utils/routingUtils";
 import { getRoute, getState } from "../Utils/state";
 
 export default function TabTwoScreen() {
@@ -20,6 +20,9 @@ export default function TabTwoScreen() {
 
   const state = getState(); // get the current state of app
   const currentRoute = getRoute(state); //get current route
+  const currentLocation = currentRoute?.stops[0]?.name ?? "Current Location";
+  const destination = currentRoute?.stops[currentRoute.stops.length - 1]?.name ?? "Destination";
+
   console.log("Current route in TabTwoScreen:", currentRoute ? stringifyRoute(currentRoute) : "[]"); // Log the current route for debugging
 
   const [isRouteStarted, setIsRouteStarted] = React.useState(false);
@@ -34,6 +37,16 @@ export default function TabTwoScreen() {
     latitudeDelta: 0.001, // smaller = more zoomed in
     longitudeDelta: 0.004, // smaller = more zoomed in
   };
+
+//total distance for distance and duration
+  const totalDistanceM = currentRoute
+  ? currentRoute.stops.reduce((acc, stop, i) => {
+      if (i === 0) return 0;
+      return acc + haversineMeters(currentRoute.stops[i - 1].y, currentRoute.stops[i - 1].x, stop.y, stop.x);
+    }, 0)
+  : 0;
+  const totalFeet = Math.round(totalDistanceM * 3.281);
+  const totalMinutes = Math.round(totalDistanceM / 83); 
 
   // route for testing
   //const currentRoute = { stops: [graph.nodes[0], graph.nodes[1], graph.nodes[2]] };
@@ -110,6 +123,7 @@ export default function TabTwoScreen() {
     <>
       <MapView
         ref={mapRef}
+        mapType="satellite"
         style={{ flex: 1 }}
         cameraZoomRange={{
           // This is for limiting how far in and out the user can zoom. This might only work or apple users
@@ -135,7 +149,12 @@ export default function TabTwoScreen() {
         {currentRoute && makeRoutePolylines(currentRoute)}
       </MapView>
       {!isRouteStarted && (
-        <RouteSummary setIsRouteStarted={setIsRouteStarted} />
+        <RouteSummary setIsRouteStarted={setIsRouteStarted} 
+          currentLocation={currentLocation}
+          destination={destination}
+          duration={String(totalMinutes)}
+          distance={String(totalFeet)}
+        />
       )}
       {isRouteStarted && <EndRoute setIsRouteStarted={setIsRouteStarted} />}
     </>

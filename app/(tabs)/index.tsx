@@ -1,13 +1,14 @@
 /**
  * File: index.tsx
  * Purpose: The home menu for the app; used for searhcing for locations and starting routes
- * Author: Michael B, C. Cooper, Cole C
+ * Author: Michael B, C. Cooper, Cole C, Delaney G.
  * Date Created: 2026-02-03
- * Date Modified: 2026-02-15
+ * Date Modified: 2026-02-28
  */
 
 import LocationMenu from "@/components/ui/LocationMenu";
 import { graph, Node } from "@/maps/graph";
+
 import {
   clearRoute,
   setAccessiblePreference,
@@ -16,26 +17,32 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@/redux/appState";
+
+import { useFonts } from "expo-font";
 import * as Location from "expo-location";
 import { navigate } from "expo-router/build/global-state/routing";
 import { useEffect, useRef, useState } from "react";
+
 import {
+  Image,
   TextInput as RNTextInput,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+
 import {
   Button,
-  Checkbox,
-  RadioButton,
+  Menu,
+  Text as PaperText,
   Snackbar,
   TextInput,
   Portal,
   Dialog,
-  Text as PaperText,
 } from "react-native-paper";
+
 import InfoIcon from "../../assets/images/icons/info.svg";
 import TargetIcon from "../../assets/images/icons/target.svg";
 import { watchLocation } from "../Utils/location";
@@ -43,7 +50,14 @@ import { route } from "../Utils/routing";
 import { haversineMeters, sanitize } from "../Utils/routingUtils";
 import { getState } from "../Utils/state";
 
+
+
 export default function HomeScreen() {
+
+  const [menuVisible, setMenuVisible] = useState(false);
+const [selectedEnvironment, setSelectedEnvironment] = useState<"outdoors" | "indoors" | "nopreference">("nopreference");
+  const accessible = useAppSelector((s) => s.jayWalk.accessible ?? false);
+    
   const [currLocation, setCurrLocation] = useState<Node | null>(null);
   const [destLocation, setDestLocation] = useState<Node | null>(null);
   const [currLocationText, setCurrLocationText] = useState("");
@@ -72,7 +86,6 @@ export default function HomeScreen() {
   );
 
   // read current values from Redux
-  const accessible = useAppSelector((s) => s.jayWalk.accessible);
   const indoors = useAppSelector((s) => s.jayWalk.indoors);
   useEffect(() => {
     console.log("[filters] accessible:", accessible, "indoors:", indoors);
@@ -80,8 +93,8 @@ export default function HomeScreen() {
 
   const [accessibility, setAccessibility] = useState(false);
   const [environment, setEnvironment] = useState<
-    "outdoors" | "indoors" | "dontcare"
-  >("dontcare");
+    "outdoors" | "indoors" | "nopreference"
+  >("nopreference");
 
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
@@ -197,70 +210,152 @@ export default function HomeScreen() {
       setShowTooFarAway(true);
     }
   };
+//get fonts files from utils
+  const [fontsLoaded] = useFonts({
+    "MuseoModerno-Regular" : require("../../assets/fonts/MuseoModerno.ttf"),
+    "MuseoModerno-Bold" : require("../../assets/fonts/MuseoModerno-Bold.ttf"),
+    "OrelegaOne" : require("../../assets/fonts/OrelegaOne-Regular.ttf"), 
+  });
 
+  if (!fontsLoaded) {
+    return null; 
+  }
+//Title
   return (
-    <View style={styles.container}>
+    <View style={styles.background}>
+
       <View style={styles.header}>
-        <Text style={styles.appTitle}>JayWalk</Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Text style={styles.appTitle}>JayWalk</Text>
+
         <TouchableOpacity
           onPress={() => setShowInfo(true)}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           accessibilityRole="button"
           accessibilityLabel="App information"
         >
-          <InfoIcon width={24} height={24} color="#fff" />
+          <InfoIcon width={24} height={24} color="#fff" style={{ marginLeft: 8 }} />
         </TouchableOpacity>
       </View>
-      <View style={styles.content}>
-        <Text>
-          Location: {location?.coords.latitude.toFixed(7) ?? "???"},{" "}
-          {location?.coords.longitude.toFixed(7) ?? "???"}
-        </Text>
-        <Text style={styles.title}>Going Somewhere?</Text>
-        <Text style={styles.subtitle}>Where I am:</Text>
-        {/* When the user looks for a location we populate and display a menu of locations for them to select. Making it easier to find there locaiton.*/}
-        <LocationMenu
-          visible={isCurrentMenuVisible} // We only want to show the menu when the user is actively using the text field
-          onDismiss={() => setIsCurrentMenuVisible(false)}
-          anchor={
-            // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
-            <TextInput
+    </View>
+
+{/* campanile logo */}
+      <Image
+        source={require("../../assets/images/JayWalk-Logo1.png")}
+        style={styles.heroImage}
+        resizeMode="cover"
+      />
+    
+{/* background and white box with text  */}
+      <View style={styles.whiteBox}>
+        <View style={styles.content}>
+
+{/* Current Location label */}
+          <View style={{ position: "absolute", 
+                        top: 160,
+                        width: 316, 
+                        height: 70,
+                        left: "50%",
+                        transform: [{translateX: -159}],
+                        
+                        }}>
+            <Text style=
+            {[styles.subtitle, {marginBottom: 8}]}
+            >Current Location:
+            </Text>
+{/* Text input with LocationMenu */}
+                {/* When the user looks for a location we populate and display a 
+                menu of locations for them to select. Making it easier to find there
+                locaiton.*/}
+            <LocationMenu
+            visible={isCurrentMenuVisible} // We only want to show the menu 
+                                          //when the user is actively using the text field
+            onDismiss={() => setIsCurrentMenuVisible(false)}
+            anchor={ // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
+//current location box
+              <TextInput
               ref={currLocInputRef}
-              label="Current location"
               value={currLocationText}
-              onChangeText={setCurrLocationText}
-              mode="flat" // This makes the text input have an underline instead of an outline, I think it looks better for this use case
-              activeUnderlineColor="#0015ba"
-              textColor="#000"
-              underlineColor="#000"
-              placeholderTextColor="#000"
-              style={styles.textField}
+              activeUnderlineColor="transparent"
+              underlineColor="transparent"
+              textColor= "#356EC4"
+              mode="outlined"
+              theme= {{ roundness: 44}}
+              outlineColor="transparent"
+              
+
+              onChangeText={setCurrLocationText} 
+
+              style={{
+                backgroundColor: "#C2DCF0",
+                borderRadius: 44,
+                borderTopEndRadius:44,
+                borderTopStartRadius: 44,
+                height: 68,
+                width: 316,
+                paddingHorizontal: 16,
+                justifyContent: "center",
+                fontSize: 18,
+              }}
+                contentStyle={{
+                  fontFamily: "OrelegaOne",
+                }}
               onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
               onChange={() => setIsCurrentMenuVisible(true)}
             />
           }
           options={graph.nodes} // They are selecting from the nodes so we pass them here
-          // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
-          // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
+                                // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
+                                // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
           locationText={currLocationText}
           setLocation={setCurrLocation}
           setLocationText={setCurrLocationText}
           onSelect={() => currLocInputRef.current?.blur()}
         />
-        <Text style={styles.subtitle}>Where I want to go:</Text>
-        {/*This is the same thing as above just for the destination location*/}
+        </View>
+
+{/* Destination label and box*/}
+        <View style={{ position: "absolute", 
+                        top: 265, 
+                        left: "50%",
+                        transform: [{translateX: -158}],
+                        width: 316, 
+                        height: 68
+                    
+                        }}
+        >
+        <Text style={[styles.subtitle, {marginBottom: 8}]}>Destination:</Text>
+
         <LocationMenu
           visible={isDestinationMenuVisible}
           onDismiss={() => setIsDestinationMenuVisible(false)}
           anchor={
             <TextInput
               ref={destInputRef}
-              label="Destination location"
               value={destLocationText}
-              onChangeText={setDestLocationText}
+              activeUnderlineColor="transparent"
+              activeOutlineColor="#356EC4"
+              underlineColor="transparent"
+              textColor= "#356EC4"
               mode="outlined"
-              activeOutlineColor="#0015ba"
-              style={styles.textField}
+              theme= {{ roundness: 44}}
+              outlineColor="transparent"
+              onChangeText={setDestLocationText}
+
+              style={{
+                backgroundColor: "#C2DCF0",
+                borderRadius: 44,
+                borderTopEndRadius:44,
+                borderTopStartRadius: 44,
+                height: 68,
+                width: 316,
+                paddingHorizontal: 16,
+                justifyContent: "center",
+                fontSize: 18,
+              }}
+                contentStyle={{
+                  fontFamily: "OrelegaOne",
+                }}
               onFocus={() => setIsDestinationMenuVisible(true)}
               onChange={() => setIsDestinationMenuVisible(true)}
             />
@@ -271,46 +366,161 @@ export default function HomeScreen() {
           setLocationText={setDestLocationText}
           onSelect={() => destInputRef.current?.blur()}
         />
-
-        <View style={{ padding: 16, gap: 8 }}>
-          <Text variant="titleMedium">Filters</Text>
-
-          <Checkbox.Item
-            label="Accessible"
-            status={accessible ? "checked" : "unchecked"}
-            onPress={() => dispatch(setAccessiblePreference(!accessible))}
-          />
         </View>
 
-        <View style={{ paddingVertical: 12 }}>
-          <Text variant="titleMedium">Environment</Text>
 
-          <RadioButton.Group
-            value={indoors === "" ? "dontcare" : indoors}
-            onValueChange={(value) => {
-              if (value === "dontcare")
-                dispatch(setIndoorOutdoorPreference(""));
-              else
-                dispatch(
-                  setIndoorOutdoorPreference(value as "indoors" | "outdoors"),
-                );
-            }}
-          >
-            <RadioButton.Item label="Outdoors" value="outdoors" />
-            <RadioButton.Item label="Indoors" value="indoors" />
-            <RadioButton.Item label="Don't Care" value="dontcare" />
-          </RadioButton.Group>
-        </View>
+{/* Accessible Path label */}
+<PaperText
+  variant="titleMedium"
+  style={{
+    position: "absolute",
+    top: 369, 
+    left: 36,
+    fontFamily: "OrelegaOne",
+    fontSize: 20,
+    color: "#000",
+  }}
+>
+  Accessible:
+</PaperText>
 
+{/* container for toggle & environment button */}
+<View
+  style={{
+    position: "absolute",
+    top: 370, 
+    left: 68,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    
+    gap: 60, // space between toggle and button
+  }}
+>
+
+
+{/* Accessible toggle */}
+
+  <Switch
+    value={accessible}
+    onValueChange={(newValue: boolean) => {
+      dispatch(setAccessiblePreference(newValue));
+    }}
+    trackColor={{
+      false: "#0A2145",
+      true: "#356EC4",
+  }}
+  thumbColor="#ffffff"
+  ios_backgroundColor="#0A2145" 
+    style={{
+      transform: [{ scaleX: 2.2 }, { scaleY: 2.2 }], marginTop: 51,
+    
+    }}
+     
+  />
+
+  {/* Environment dropdown + label container */}
+  <View style={{ flexDirection: "column" }}>
+
+{/* Environment label */}
+    <PaperText
+      variant="titleMedium"
+      style={{
+        fontFamily: "OrelegaOne",
+        fontSize: 20,
+        color: "#000",
+        marginBottom: 8, 
+      }}
+    >
+      Environment:
+    </PaperText>
+
+{/* Environment button */}
+    <Menu
+      visible={menuVisible}
+      onDismiss={() => setMenuVisible(false)}
+      anchor={
+        <Button
+          mode="contained"
+          onPress={() => setMenuVisible(true)}
+          style={{
+            width: 170,
+            backgroundColor: "#C2DCF0",
+            borderRadius: 44,
+          }}
+          contentStyle={{ height: 68 }}
+          labelStyle={{
+            color: "#356EC4",
+            fontSize: 18,
+            fontFamily: "OrelegaOne",
+          }}
+        >
+          {selectedEnvironment === "nopreference"
+            ? "Select Filter"
+            : selectedEnvironment.charAt(0).toUpperCase() +
+              selectedEnvironment.slice(1)}
+        </Button>
+      }
+    >
+      <Menu.Item
+        onPress={() => {
+          setSelectedEnvironment("outdoors");
+          dispatch(setIndoorOutdoorPreference("outdoors"));
+          setMenuVisible(false);
+        }}
+        title="Outdoors"
+      />
+      <Menu.Item
+        onPress={() => {
+          setSelectedEnvironment("indoors");
+          dispatch(setIndoorOutdoorPreference("indoors"));
+          setMenuVisible(false);
+        }}
+        title="Indoors"
+      />
+      <Menu.Item
+        onPress={() => {
+          setSelectedEnvironment("nopreference");
+          dispatch(setIndoorOutdoorPreference(""));
+          setMenuVisible(false);
+        }}
+        title="No Preference"
+      />
+    </Menu>
+  </View>
+</View>
+
+{/* LETS GO */}
         {/* This is the start route button, it will call our routing algorithm if has two valid locations*/}
         <Button
           mode="contained"
-          style={styles.button}
+          style={{
+            ...styles.button,
+            position: "absolute",
+            width: 288,
+            borderRadius: 44,
+            top: 485,
+            alignSelf: "center",
+          }}
+          contentStyle={{
+          justifyContent: "center",
+          height: 69,
+
+          }}
+          labelStyle={{
+          fontFamily: "OrelegaOne", 
+          fontSize: 20,            
+          color: "#fff",
+          }}
+
           disabled={!(currLocationText && destLocationText)} // if they havent put in both locations
           onPress={handleStartRoutingPress}
         >
-          Let's Go!
+          LET'S GO!
         </Button>
+
+ {/*get curr location*/}
+
         {/*This is the button that will allows the user to use the current location as the starting location*/}
         {/*TODO: Find a way to hide this for if a user is inside as we cannot use */}
         <TouchableOpacity
@@ -331,123 +541,152 @@ export default function HomeScreen() {
           - visible controls whether the dialog is shown.
           - onDismiss is called when the user taps outside the dialog or presses back.
         */}
-        <Dialog visible={showInfo} onDismiss={() => setShowInfo(false)}>
+        <Dialog
+          visible={showInfo}
+          onDismiss={() => setShowInfo(false)}
+          style={{
+            borderRadius: 28,
+            backgroundColor: "#ffffff",
+          }}
+        >
+          {/* Custom header */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingTop: 10,
+            }}
+          >
+            <Dialog.Title
+              style={{
+                fontFamily: "MuseoModerno-Bold",
+                fontSize: 22,
+                color: "#0A2145",
+              }}
+            >
+              About JayWalk
+            </Dialog.Title>
 
-          {/* Title displayed at the top of the dialog */}
-          <Dialog.Title>About JayWalk</Dialog.Title>
+            <Image
+              source={require("../../assets/images/JayWalk-Logo1.png")}
+              style={{ width: 36, height: 36 }}
+              resizeMode="contain"
+            />
+          </View>
 
           {/* Main body content of the dialog */}
           <Dialog.Content>
 
             {/* Introductory description of what the app does */}
-            <PaperText style={{ marginBottom: 8 }}>
+            <PaperText style={styles.infoBodyText}>
               JayWalk helps you navigate between campus locations with indoor step-by-step
               directions and outdoor map routing.
             </PaperText>
 
             {/* Section header: Step 1 */}
-            <PaperText style={{ fontWeight: "600", marginTop: 8, marginBottom: 4 }}>
+            <PaperText style={ styles.infoSectionTitle }>
               1) Choose your start & destination
             </PaperText>
 
             {/* Explanation of how to select starting location */}
-            <PaperText>
-              • Use <PaperText style={{ fontWeight: "600" }}>Current Location</PaperText> to pick
-              your starting location.
+            <PaperText style={styles.infoBodyText}>
+              • Use the first search bar to pick your starting location.
             </PaperText>
 
             {/* Explanation of how to select destination */}
-            <PaperText>
-              • Use <PaperText style={{ fontWeight: "600" }}>Where I'm headed</PaperText>{" "}
-              to pick your destination.
+            <PaperText style={styles.infoBodyText}>
+              • Use the second search bar to pick your destination.
             </PaperText>
 
             {/* Extra tip explaining the GPS shortcut button behavior */}
-            <PaperText style={{ marginTop: 4 }}>
-              Tip: Tap the <PaperText style={{ fontWeight: "600" }}>target</PaperText>{" "}
-              button to use your current GPS location as your start (outdoors only). If
+            <PaperText style={styles.infoBodyText}>
+              Tip: Tap the target button in the first search bar to use your current GPS location as your starting point (outdoors only). If
               GPS accuracy is low or you’re too far from a known start point, JayWalk will
               ask you to choose manually.
             </PaperText>
 
             {/* Section header: Step 2 */}
-            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+            <PaperText style={ styles.infoSectionTitle }>
               2) Set your preferences (optional)
             </PaperText>
 
             {/* Description of accessibility filter */}
-            <PaperText>
-              • <PaperText style={{ fontWeight: "600" }}>Accessible</PaperText>: prefers
-              wheelchair-friendly routes when available.
+            <PaperText style={styles.infoBodyText}>
+              • Accessible: Specify whether the route should be accessible (when available).
             </PaperText>
 
             {/* Description of indoor/outdoor environment filter */}
-            <PaperText>
-              • <PaperText style={{ fontWeight: "600" }}>Environment</PaperText>: choose{" "}
-              <PaperText style={{ fontWeight: "600" }}>Indoors</PaperText>,{" "}
-              <PaperText style={{ fontWeight: "600" }}>Outdoors</PaperText>, or{" "}
-              <PaperText style={{ fontWeight: "600" }}>Don’t Care</PaperText>.
+            <PaperText style={styles.infoBodyText}>
+              • Environment: Choose if you want your route to prefer indoor paths, outdoor paths, or if you don’t care.
             </PaperText>
 
             {/* Section header: Step 3 */}
-            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+            <PaperText style={ styles.infoSectionTitle }>
               3) Preview your route
             </PaperText>
 
             {/* Explanation of what happens after pressing "Let's Go!" */}
-            <PaperText>
-              Tap <PaperText style={{ fontWeight: "600" }}>Let’s Go!</PaperText> to build
-              a route and open the Route tab, where you’ll see a preview before starting.
+            <PaperText style={styles.infoBodyText}>
+              Tap Let’s Go! to build a route and open the Route tab, where you’ll see a preview before starting.
             </PaperText>
 
             {/* Section header: Step 4 */}
-            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+            <PaperText style={ styles.infoSectionTitle }>
               4) Start navigating
             </PaperText>
 
             {/* Explains how to begin active navigation */}
-            <PaperText>
-              • Tap <PaperText style={{ fontWeight: "600" }}>Start Route</PaperText> to
-              begin.
+            <PaperText style={styles.infoBodyText}>
+              • Tap Start Route to begin.
             </PaperText>
 
             {/* Indoor navigation instructions */}
-            <PaperText>
-              • Indoors, directions appear as steps and you use{" "}
-              <PaperText style={{ fontWeight: "600" }}>Previous</PaperText> /{" "}
-              <PaperText style={{ fontWeight: "600" }}>Next</PaperText> as you move.
+            <PaperText style={styles.infoBodyText}>
+              • When indoors, directions appear as sequential steps and you use Previous/Next buttons to navigate through them.
             </PaperText>
 
             {/* Indoor floor plan feature explanation */}
-            <PaperText>
-              • Indoors, you can also open the{" "}
-              <PaperText style={{ fontWeight: "600" }}>Floor Plan</PaperText> at any time.
+            <PaperText style={styles.infoBodyText}>
+              Tip: While indoors, you can also open the a floor plan of the building at any time.
             </PaperText>
 
             {/* Map recenter explanation when user pans away */}
-            <PaperText style={{ marginTop: 4 }}>
-              If you pan around the map, use{" "}
-              <PaperText style={{ fontWeight: "600" }}>Target Button</PaperText> to jump back to
-              your position.
+            <PaperText style={styles.infoBodyText}>
+              If you pan around the map, use the target button to jump back to your position.
             </PaperText>
 
             {/* Section header: Ending navigation */}
-            <PaperText style={{ fontWeight: "600", marginTop: 12, marginBottom: 4 }}>
+            <PaperText style={ styles.infoSectionTitle }>
               Ending early
             </PaperText>
 
             {/* Explains how to cancel an active route */}
-            <PaperText>
-              You can stop navigation anytime by tapping{" "}
-              <PaperText style={{ fontWeight: "600" }}>End Route</PaperText>.
+            <PaperText style={styles.infoBodyText}>
+              You can stop navigation anytime by tapping End Route.
             </PaperText>
 
           </Dialog.Content>
 
           {/* Action buttons shown at the bottom of the dialog */}
-          <Dialog.Actions>
-            {/* Close button simply hides the dialog by updating state */}
-            <Button onPress={() => setShowInfo(false)}>Close</Button>
+          <Dialog.Actions style={{ padding: 16 }}>
+            <Button
+              mode="contained"
+              onPress={() => setShowInfo(false)}
+              style={{
+                backgroundColor: "#356EC4",
+                borderRadius: 44,
+                paddingHorizontal: 16,
+              }}
+              labelStyle={{
+                fontFamily: "OrelegaOne",
+                fontSize: 16,
+                color: "#fff",
+              }}
+            >
+              Close
+            </Button>
           </Dialog.Actions>
 
         </Dialog>
@@ -487,43 +726,68 @@ export default function HomeScreen() {
         Your are not close enough to a starting location.
       </Snackbar>
     </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  background: {
     flex: 1,
     gap: 8,
-    backgroundColor: "#fafafa",
+    backgroundColor: "#0A2145",
   },
   header: {
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-    backgroundColor: "#0015BA",
+    backgroundColor: "#0A2145",
     paddingHorizontal: 30,
     paddingBottom: 10,
     height: 90,
-    width: 400,
   },
   appTitle: {
     color: "#fff",
     fontSize: 24,
+    fontFamily: "MuseoModerno-Bold",
+  },
+
+  heroImage:{
+    position: "absolute",
+    top: 96,
+    left: 94,
+    right: 0,
+    height: 240,
+    width: 211,
+    zIndex: 1,
+  },
+  whiteBox: {
+    position: "absolute",
+    top: 177,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
+    padding: 16,
+
   },
   content: {},
+
   currAreaButton: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
-    backgroundColor: "#E8000d",
-    borderRadius: 8,
+    top: 202,
+    right: 47,
+    backgroundColor: "#356EC4",
+    borderRadius: 44,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
   button: {
     marginTop: 16,
     color: "#fff",
-    backgroundColor: "#E8000d",
+    fontFamily: "OrelagaOne",
+    backgroundColor: "#356EC4",
     borderRadius: 8,
     width: 120,
   },
@@ -533,9 +797,24 @@ const styles = StyleSheet.create({
     backgroundColor: "transparent",
   },
   subtitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginTop: 12,
-    color: "#E8000d",
+    fontSize: 20,
+    color: "#000000",
+    fontFamily: "OrelegaOne",
   },
+
+  infoBodyText: {
+  fontFamily: "OrelegaOne",
+  fontSize: 15,
+  color: "#0A2145",
+  marginBottom: 6,
+},
+
+infoSectionTitle: {
+  fontFamily: "OrelegaOne",
+  fontSize: 18,
+  color: "#356EC4",
+  marginTop: 14,
+  marginBottom: 6,
+},
+  
 });

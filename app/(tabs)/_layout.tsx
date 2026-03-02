@@ -3,82 +3,79 @@
  * Purpose: Specify the tab layout of the app
  * Author: Michael B, C. Cooper
  * Date Created: 2026-02-03
- * Date Modified: 2026-02-11
+ * Date Modified: 2026-02-28
  */
 
+import { useAppSelector } from "@/redux/appState";
+import { useFonts } from "expo-font";
 import { Tabs } from "expo-router";
 import React, { useEffect, useState } from "react";
-
-import { HapticTab } from "@/components/haptic-tab";
-
-import { useAppSelector } from "@/redux/appState";
-import { navigate } from "expo-router/build/global-state/routing";
-import { TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import HouseIcon from "../../assets/images/icons/house.svg";
 import MapIcon from "../../assets/images/icons/map.svg";
 import RouteIcon from "../../assets/images/icons/route.svg";
 
 export default function TabLayout() {
   const route = useAppSelector((state) => state.jayWalk.route);
-  const [hasRoute, setHasRoute] = useState(false); // Determine if routing is enabled based on the presence of a route in the state
+  const [hasRoute, setHasRoute] = useState(false);
+
+  const [fontsLoaded] = useFonts({
+    OrelegaOne: require("../../assets/fonts/OrelegaOne-Regular.ttf"),
+  });
 
   useEffect(() => {
     setHasRoute(!!route);
   }, [route]);
+
+  if (!fontsLoaded) return null; // wait for font to load
+
+  const renderTab = (
+    Icon: any,
+    label: string,
+    enabled = true,
+    iconSize = 48
+  ) => (props: any) => (
+    <TouchableOpacity
+      {...props} 
+      disabled={!enabled}
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Icon width={iconSize} height={iconSize} color={enabled ? "#fff" : "#888"} />
+      <Text
+        style={{
+          marginTop: 6,
+          fontSize: 12,
+          color: enabled ? "#fff" : "#888",
+          fontFamily: "OrelegaOne",
+        }}
+      >
+        {label}
+      </Text>
+    </TouchableOpacity>
+  );
+
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { backgroundColor: "#0015BA" },
-        tabBarActiveTintColor: "#ffffff",
-        tabBarInactiveTintColor: "#888888",
+        tabBarStyle: { backgroundColor: "#0A2145", height: 110, paddingBottom: 10 },
         headerShown: false,
-        tabBarButton: HapticTab,
       }}
     >
       <Tabs.Screen
         name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: () => (
-            <HouseIcon width={28} height={28} color="#ffffff" />
-          ),
-        }}
+        options={{ tabBarButton: renderTab(HouseIcon, "HOME") }}
       />
       <Tabs.Screen
         name="routing"
-        options={{
-          title: "Routing",
-          tabBarIcon: () => (
-            <RouteIcon
-              width={28}
-              height={28}
-              color={hasRoute ? "#ffffff" : "#888888"}
-            />
-          ),
-          tabBarButton: (props) => {
-            return (
-              <TouchableOpacity
-                disabled={!hasRoute}
-                style={{
-                  opacity: hasRoute ? 1 : 0.5,
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginTop: 7,
-                }}
-                onPress={() => navigate("/routing")}
-              >
-                {props.children}
-              </TouchableOpacity>
-            );
-          },
-        }}
+        options={{ tabBarButton: renderTab(RouteIcon, "ROUTE", !!hasRoute, 50) }}
       />
       <Tabs.Screen
         name="map"
-        options={{
-          title: "Map",
-          tabBarIcon: () => <MapIcon width={28} height={28} color="#ffffff" />,
-        }}
+        options={{ tabBarButton: renderTab(MapIcon, "MAP") }}
       />
     </Tabs>
   );

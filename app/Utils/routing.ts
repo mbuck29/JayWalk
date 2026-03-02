@@ -195,9 +195,13 @@ export function getBaseLength(edge: Edge)
     }
 
     // Calculate the length based on the end node coordinates, modifying it by *1.2 if it is stairs
-    return Math.sqrt(Math.pow((edge.startNode.x - edge.endNode.x) * METERS_PER_DEGREE_LONG, 2) + 
-                     Math.pow((edge.startNode.y - edge.endNode.y) * METERS_PER_DEGREE_LAT, 2)) 
-                     * (edge.type == "stairs" ? 1.2 : 1);
+    return getDistanceMeters(edge.startNode, edge.endNode) * (edge.type == "stairs" ? 1.2 : 1);
+}
+
+export function getDistanceMeters(a: Node, b: Node)
+{
+    return Math.sqrt(Math.pow((a.x - b.x) * METERS_PER_DEGREE_LONG, 2) + 
+                     Math.pow((a.y - b.y) * METERS_PER_DEGREE_LAT, 2))
 }
 
 /**
