@@ -38,7 +38,9 @@ import {
   Menu,
   Text as PaperText,
   Snackbar,
-  TextInput
+  TextInput,
+  Portal,
+  Dialog,
 } from "react-native-paper";
 
 import InfoIcon from "../../assets/images/icons/info.svg";
@@ -68,6 +70,7 @@ const [selectedEnvironment, setSelectedEnvironment] = useState<"outdoors" | "ind
   const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
   const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
     useState(false);
+  const [showInfo, setShowInfo] = useState(false);
   const destInputRef = useRef<RNTextInput | null>(null);
   const currLocInputRef = useRef<RNTextInput | null>(null);
 
@@ -224,9 +227,17 @@ const [selectedEnvironment, setSelectedEnvironment] = useState<"outdoors" | "ind
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.appTitle}>JayWalk</Text>
+
+        <TouchableOpacity
+          onPress={() => setShowInfo(true)}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+          accessibilityRole="button"
+          accessibilityLabel="App information"
+        >
           <InfoIcon width={24} height={24} color="#fff" style={{ marginLeft: 8 }} />
-        </View>
+        </TouchableOpacity>
       </View>
+    </View>
 
 {/* campanile logo */}
       <Image
@@ -519,6 +530,168 @@ const [selectedEnvironment, setSelectedEnvironment] = useState<"outdoors" | "ind
           <TargetIcon width={24} height={24} color="#2e18be" />
         </TouchableOpacity>
       </View>
+
+      {/* 
+        Portal allows the Dialog to render above all other UI elements.
+        This ensures the modal appears on top of the entire screen.
+      */}
+      <Portal>
+        {/* 
+          Dialog component from react-native-paper.
+          - visible controls whether the dialog is shown.
+          - onDismiss is called when the user taps outside the dialog or presses back.
+        */}
+        <Dialog
+          visible={showInfo}
+          onDismiss={() => setShowInfo(false)}
+          style={{
+            borderRadius: 28,
+            backgroundColor: "#ffffff",
+          }}
+        >
+          {/* Custom header */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              paddingHorizontal: 20,
+              paddingTop: 10,
+            }}
+          >
+            <Dialog.Title
+              style={{
+                fontFamily: "MuseoModerno-Bold",
+                fontSize: 22,
+                color: "#0A2145",
+              }}
+            >
+              About JayWalk
+            </Dialog.Title>
+
+            <Image
+              source={require("../../assets/images/JayWalk-Logo1.png")}
+              style={{ width: 36, height: 36 }}
+              resizeMode="contain"
+            />
+          </View>
+
+          {/* Main body content of the dialog */}
+          <Dialog.Content>
+
+            {/* Introductory description of what the app does */}
+            <PaperText style={styles.infoBodyText}>
+              JayWalk helps you navigate between campus locations with indoor step-by-step
+              directions and outdoor map routing.
+            </PaperText>
+
+            {/* Section header: Step 1 */}
+            <PaperText style={ styles.infoSectionTitle }>
+              1) Choose your start & destination
+            </PaperText>
+
+            {/* Explanation of how to select starting location */}
+            <PaperText style={styles.infoBodyText}>
+              • Use the first search bar to pick your starting location.
+            </PaperText>
+
+            {/* Explanation of how to select destination */}
+            <PaperText style={styles.infoBodyText}>
+              • Use the second search bar to pick your destination.
+            </PaperText>
+
+            {/* Extra tip explaining the GPS shortcut button behavior */}
+            <PaperText style={styles.infoBodyText}>
+              Tip: Tap the target button in the first search bar to use your current GPS location as your starting point (outdoors only). If
+              GPS accuracy is low or you’re too far from a known start point, JayWalk will
+              ask you to choose manually.
+            </PaperText>
+
+            {/* Section header: Step 2 */}
+            <PaperText style={ styles.infoSectionTitle }>
+              2) Set your preferences (optional)
+            </PaperText>
+
+            {/* Description of accessibility filter */}
+            <PaperText style={styles.infoBodyText}>
+              • Accessible: Specify whether the route should be accessible (when available).
+            </PaperText>
+
+            {/* Description of indoor/outdoor environment filter */}
+            <PaperText style={styles.infoBodyText}>
+              • Environment: Choose if you want your route to prefer indoor paths, outdoor paths, or if you don’t care.
+            </PaperText>
+
+            {/* Section header: Step 3 */}
+            <PaperText style={ styles.infoSectionTitle }>
+              3) Preview your route
+            </PaperText>
+
+            {/* Explanation of what happens after pressing "Let's Go!" */}
+            <PaperText style={styles.infoBodyText}>
+              Tap Let’s Go! to build a route and open the Route tab, where you’ll see a preview before starting.
+            </PaperText>
+
+            {/* Section header: Step 4 */}
+            <PaperText style={ styles.infoSectionTitle }>
+              4) Start navigating
+            </PaperText>
+
+            {/* Explains how to begin active navigation */}
+            <PaperText style={styles.infoBodyText}>
+              • Tap Start Route to begin.
+            </PaperText>
+
+            {/* Indoor navigation instructions */}
+            <PaperText style={styles.infoBodyText}>
+              • When indoors, directions appear as sequential steps and you use Previous/Next buttons to navigate through them.
+            </PaperText>
+
+            {/* Indoor floor plan feature explanation */}
+            <PaperText style={styles.infoBodyText}>
+              Tip: While indoors, you can also open the a floor plan of the building at any time.
+            </PaperText>
+
+            {/* Map recenter explanation when user pans away */}
+            <PaperText style={styles.infoBodyText}>
+              If you pan around the map, use the target button to jump back to your position.
+            </PaperText>
+
+            {/* Section header: Ending navigation */}
+            <PaperText style={ styles.infoSectionTitle }>
+              Ending early
+            </PaperText>
+
+            {/* Explains how to cancel an active route */}
+            <PaperText style={styles.infoBodyText}>
+              You can stop navigation anytime by tapping End Route.
+            </PaperText>
+
+          </Dialog.Content>
+
+          {/* Action buttons shown at the bottom of the dialog */}
+          <Dialog.Actions style={{ padding: 16 }}>
+            <Button
+              mode="contained"
+              onPress={() => setShowInfo(false)}
+              style={{
+                backgroundColor: "#356EC4",
+                borderRadius: 44,
+                paddingHorizontal: 16,
+              }}
+              labelStyle={{
+                fontFamily: "OrelegaOne",
+                fontSize: 16,
+                color: "#fff",
+              }}
+            >
+              Close
+            </Button>
+          </Dialog.Actions>
+
+        </Dialog>
+      </Portal>
+
       {/* Small message to tell the user that they need to put both locations*/}
       <Snackbar
         visible={showMissingLocation} // The local state that controls whether this snackbar is visible or not
@@ -628,5 +801,20 @@ const styles = StyleSheet.create({
     color: "#000000",
     fontFamily: "OrelegaOne",
   },
+
+  infoBodyText: {
+  fontFamily: "OrelegaOne",
+  fontSize: 15,
+  color: "#0A2145",
+  marginBottom: 6,
+},
+
+infoSectionTitle: {
+  fontFamily: "OrelegaOne",
+  fontSize: 18,
+  color: "#356EC4",
+  marginTop: 14,
+  marginBottom: 6,
+},
   
 });
