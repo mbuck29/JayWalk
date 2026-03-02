@@ -23,5 +23,43 @@
                 "metersPerPixel": 0.1051899696
             }
         }
+    },
+    {
+        "name": "Learned",
+        "nodeId": 10260,
+        "floors":
+        {
+            "2":
+            {
+                "originPixelX": 916,
+                "originPixelY": 992,
+                "metersPerPixel": 0.04943928571
+            }
+        }
+    },
+    {
+        "name": "LEEP2",
+        "nodeId": 10261,
+        "floors":
+        {
+            "0":
+            {
+                "originPixelX": 1790,
+                "originPixelY": 413,
+                "metersPerPixel": 0.06018695652
+            },
+            "1":
+            {
+                "originPixelX": 1594,
+                "originPixelY": 606,
+                "metersPerPixel": 0.05033818181
+            },
+            "2":
+            {
+                "originPixelX": 1732,
+                "originPixelY": 554,
+                "metersPerPixel": 0.04692542372
+            }
+        }
     }
 ]

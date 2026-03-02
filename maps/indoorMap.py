@@ -58,14 +58,20 @@ def display(buildingName: str, floor: int, dEdges: list[dict], dNodes: list[dict
     originX = int(floorDict["originPixelX"])
     originY = int(floorDict["originPixelY"])
 
+    image: Image.Image = Image.open(path)
+    
+    if image.width >= 2000:
+        image = image.resize((image.width // 2, image.height // 2))
+        originX //= 2
+        originY //=2
+        metersPerPixel *= 2
+
     def handleClick(event: tk.Event):
         pyperclip.copy(f"{(event.y - originY) * metersPerPixel}, {(event.x - originX) * metersPerPixel}")
 
         if (pipe != None) and pipe.poll():
             pipe.recv()
             pipe.send(f"{(event.y - originY) * metersPerPixel}, {(event.x - originX) * metersPerPixel}")
-
-    image: Image.Image = Image.open(path)
 
     def coordsToImage(xWorld: float, yWorld: float) -> tuple[int, int]:
         return (round(xWorld / metersPerPixel) + originX, round(yWorld / metersPerPixel) + originY)
