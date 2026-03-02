@@ -11,8 +11,9 @@ import RouteSummary from "@/components/ui/RouteSummary";
 import { Node } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
 import MapView, { Polyline } from "react-native-maps";
+import { metersToFeet } from "../Utils/directions";
 import { Route } from "../Utils/routing";
-import { haversineMeters, stringifyRoute } from "../Utils/routingUtils";
+import { stringifyRoute } from "../Utils/routingUtils";
 import { getRoute, getState } from "../Utils/state";
 
 export default function TabTwoScreen() {
@@ -39,14 +40,8 @@ export default function TabTwoScreen() {
   };
 
 //total distance for distance and duration
-  const totalDistanceM = currentRoute
-  ? currentRoute.stops.reduce((acc, stop, i) => {
-      if (i === 0) return 0;
-      return acc + haversineMeters(currentRoute.stops[i - 1].y, currentRoute.stops[i - 1].x, stop.y, stop.x);
-    }, 0)
-  : 0;
-  const totalFeet = Math.round(totalDistanceM * 3.281);
-  const totalMinutes = Math.round(totalDistanceM / 83); 
+  const totalFeet = Math.round(metersToFeet(currentRoute?.length ?? 0));
+  const totalMinutes = Math.round((currentRoute?.length ?? 0) / 83); 
 
   // route for testing
   //const currentRoute = { stops: [graph.nodes[0], graph.nodes[1], graph.nodes[2]] };
