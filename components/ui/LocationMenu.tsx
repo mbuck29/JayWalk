@@ -11,6 +11,7 @@ type LocationMenuProps = {
   setLocation: (node: Node) => void;
   setLocationText: (text: string) => void;
   onSelect: () => void | undefined;
+  oppisiteValue: Node | null;
 };
 
 export default function LocationMenu({
@@ -22,6 +23,7 @@ export default function LocationMenu({
   setLocation,
   setLocationText,
   onSelect,
+  oppisiteValue,
 }: LocationMenuProps) {
   return (
     // This is the menu that is shown when the user clicks on the text input to select a location.
@@ -36,7 +38,8 @@ export default function LocationMenu({
         .filter(
           (o) =>
             o.name.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
-            !o.name.includes("~"), // This filters out options that are not real locations,
+            !o.name.includes("~") && // This filters out options that are not real locations,
+            o.id !== oppisiteValue?.id, // This filters out the opposite value so that the user doesn't select the same location for both current and destination
         )
         .slice(0, 5) // This limits the number of options shown to 5 so that it doesnt get too long
 

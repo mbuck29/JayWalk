@@ -1,69 +1,69 @@
-import { useFonts } from "expo-font";
+/**
+ * File: RouteSummary.tsx
+ * Purpose: A bottom sheet type view to summarize the route
+ * Author: Michael B
+ * Date Created: 2026-03-01
+ */
+
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import DashedLine from "react-native-dashed-line";
+import { calculateRouteTime } from "../../app/Utils/routingUtils";
 
 interface RouteSummaryProps {
   setIsRouteStarted: (isStarted: boolean) => void;
-  duration?: string;
-  distance?: string;
-  currentLocation?: string;
-  destination?: string;
+  startingLocation?: string;
+  endingLocation?: string;
+  routeLength: number;
 }
 
 export default function RouteSummary(props: RouteSummaryProps) {
-  const {setIsRouteStarted, 
-    duration = "XX", 
-    distance = "XX", 
-    currentLocation = "Current Location", 
-    destination = "Destination"  } = props;
-  
-  const [fontsLoaded] = useFonts({
-    "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"),
-    "OrelegaOne": require("../../assets/fonts/OrelegaOne-Regular.ttf"),
-  });
-
-  if (!fontsLoaded) return null;
+  const { setIsRouteStarted } = props;
+  const routeLengthMiles = props.routeLength / 1609.344; // the length from the route is in meters so we need to make into miles
+  const timeOfTrip = calculateRouteTime(props.routeLength); // Use our util to get the time it may take on avg
 
   return (
     <View style={styles.container}>
-      
-      {/* Directions header */}
-      <Text style={styles.heading}>Directions:</Text>
-
-      {/* Stops card */}
-      <View style={styles.stopsCard}>
-        <View style={styles.stopRow}>
-          <View style={styles.dot} />
-          <Text style={styles.stopText}>{currentLocation}</Text>
+      <Text style={styles.title}>Directions:</Text>
+      <View style={styles.startAndFinish}>
+        <View style={styles.locationRow}>
+          <View style={styles.bulletPoint} />
+          <Text style={styles.locationText}>{props.startingLocation}</Text>
         </View>
-
-        {/* Dashed line between stops */}
-        <View style={styles.dashedLineContainer}>
-        {[...Array(4)].map((_, i) => (
-        <View key={i} style={styles.dashedDot} />
-        ))}
-        </View>
-        <View style={styles.stopRow}>
-          <View style={styles.dot} />
-          <Text style={styles.stopText}>{destination}</Text>
+        <DashedLine
+          dashLength={4}
+          dashGap={4}
+          dashThickness={1}
+          dashColor="#356EC4"
+          style={{
+            width: "33%",
+            transform: [{ rotate: "90deg" }],
+            alignSelf: "flex-start",
+            marginLeft: -30, // Move 10 pixels to the left
+          }}
+        />
+        <View style={styles.locationRow}>
+          <View style={styles.bulletPoint} />
+          <Text style={styles.locationText}>{props.endingLocation}</Text>
         </View>
       </View>
-
-      {/* Bottom row: time/distance + start button */}
-      <View style={styles.bottomRow}>
-        <View style={styles.timeContainer}>
-          <Text style={styles.timeText}>{duration} min</Text>
-          <Text style={styles.distanceText}>{distance} ft </Text>
+      <View style={styles.TimeAndStart}>
+        <View style={styles.timeSection}>
+          <Text style={[styles.timeText, { fontSize: 24 }]}>
+            {timeOfTrip.toFixed(0)} min{" "}
+            {/* We are using toFixed in these two locations to make the numbers more readable */}
+          </Text>
+          <Text style={styles.timeText}>
+            {routeLengthMiles.toFixed(2)} miles
+          </Text>
         </View>
-
         <TouchableOpacity
           style={styles.startButton}
           onPress={() => setIsRouteStarted(true)}
         >
-          <Text style={styles.startButtonText}>START ROUTE</Text>
+          <Text style={styles.startButtonText}>Start Route</Text>
         </TouchableOpacity>
       </View>
-
     </View>
   );
 }
@@ -73,87 +73,81 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     left: 0,
-    right: 0,
-    backgroundColor: "#fff",
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 30,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: -3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 10,
+    flex: 1,
+    width: "100%",
+    backgroundColor: "#ffffff",
+    opacity: 1,
+    padding: 10,
+    borderTopLeftRadius: 10,
+    borderTopRightRadius: 10,
   },
-  heading: {
-    fontFamily: "OrelegaOne",
-    fontSize: 26,
-    color: "#0A2145",
-    marginBottom: 16,
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    marginBottom: 10,
+    fontFamily: "Orelega One",
   },
- stopsCard: {
-    backgroundColor: "#C2DCF0",
-    borderRadius: 24,
-    paddingHorizontal: 24,
-    paddingVertical: 28,
-    marginBottom: 20,
-  },
-  stopRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 14,
-  },
-  dot: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: "#356EC4",
-  },
-  stopText: {
-    fontFamily: "OrelegaOne",
-    fontSize: 25,
-    color: "#356EC4",
-  },
-  dashedLineContainer: {
-    paddingLeft: 7,
-    paddingVertical: 6,
-    gap: 6,
-  },
-  dashedDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 999,
-    backgroundColor: "#356EC4",
-  },
-  bottomRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  timeContainer: {
+  startAndFinish: {
     flexDirection: "column",
+    alignSelf: "center",
+    gap: 20,
+    backgroundColor: "#C2DCF0",
+    borderRadius: 49,
+    padding: 20,
+    marginBottom: 20,
+    width: "80%",
+  },
+  TimeAndStart: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  timeSection: {
+    fontSize: 18,
+    backgroundColor: "#C2DCF0",
+    fontFamily: "Orelega One",
+    flexDirection: "column",
+    marginLeft: -10,
+    paddingVertical: 10,
+    paddingLeft: 50,
+    width: "70%",
+    height: 60,
   },
   timeText: {
-    fontFamily: "OrelegaOne",
-    fontSize: 28,
+    fontSize: 18,
+    fontFamily: "Orelega One",
     color: "#356EC4",
   },
-  distanceText: {
-    fontFamily: "OrelegaOne",
-    fontSize: 16,
+  locationRow: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  bulletPoint: {
+    height: 25,
+    width: 25,
+    borderRadius: 12.5,
+    backgroundColor: "#356EC4",
+  },
+  locationText: {
+    marginLeft: 10,
+    fontSize: 24,
     color: "#356EC4",
+    fontFamily: "Orelega One",
   },
   startButton: {
     backgroundColor: "#356EC4",
+    padding: 10,
     borderRadius: 44,
-    paddingHorizontal: 28,
-    paddingVertical: 20,
+    height: 65,
+    width: "40%",
+    alignItems: "center",
+    justifyContent: "center",
+    marginLeft: -30,
   },
   startButtonText: {
     fontFamily: "OrelegaOne",
     fontSize: 24,
     color: "#fff",
-    letterSpacing: 0.5,
   },
 });

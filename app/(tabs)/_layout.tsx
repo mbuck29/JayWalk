@@ -6,10 +6,11 @@
  * Date Modified: 2026-02-28
  */
 
-import { useAppSelector } from "@/redux/appState";
 import { useFonts } from "expo-font";
 import { Tabs } from "expo-router";
 import React, { useEffect, useState } from "react";
+
+import { useAppSelector } from "@/redux/appState";
 import { Text, TouchableOpacity } from "react-native";
 import HouseIcon from "../../assets/images/icons/house.svg";
 import MapIcon from "../../assets/images/icons/map.svg";
@@ -29,39 +30,44 @@ export default function TabLayout() {
 
   if (!fontsLoaded) return null; // wait for font to load
 
-  const renderTab = (
-    Icon: any,
-    label: string,
-    enabled = true,
-    iconSize = 48
-  ) => (props: any) => (
-    <TouchableOpacity
-      {...props} 
-      disabled={!enabled}
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Icon width={iconSize} height={iconSize} color={enabled ? "#fff" : "#888"} />
-      <Text
+  const renderTab =
+    (Icon: any, label: string, enabled = true, iconSize = 48) =>
+    (props: any) => (
+      <TouchableOpacity
+        {...props}
+        disabled={!enabled}
         style={{
-          marginTop: 6,
-          fontSize: 12,
-          color: enabled ? "#fff" : "#888",
-          fontFamily: "OrelegaOne",
+          flex: 1,
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        {label}
-      </Text>
-    </TouchableOpacity>
-  );
+        <Icon
+          width={iconSize}
+          height={iconSize}
+          color={enabled ? "#fff" : "#888"}
+        />
+        <Text
+          style={{
+            marginTop: 6,
+            fontSize: 12,
+            color: enabled ? "#fff" : "#888",
+            fontFamily: "OrelegaOne",
+          }}
+        >
+          {label}
+        </Text>
+      </TouchableOpacity>
+    );
 
   return (
     <Tabs
       screenOptions={{
-        tabBarStyle: { backgroundColor: "#0A2145", height: 110, paddingBottom: 10 },
+        tabBarStyle: {
+          backgroundColor: "#0A2145",
+          height: 110,
+          paddingBottom: 10,
+        },
         headerShown: false,
       }}
     >
@@ -71,7 +77,9 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="routing"
-        options={{ tabBarButton: renderTab(RouteIcon, "ROUTE", !!hasRoute, 50) }}
+        options={{
+          tabBarButton: renderTab(RouteIcon, "ROUTE", !!hasRoute, 50),
+        }}
       />
       <Tabs.Screen
         name="map"
