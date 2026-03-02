@@ -196,7 +196,7 @@ export default function TabTwoScreen() {
 
     if (base >= 0 && base != route.stops.length - 2) {
       polylines.push(
-        makeRoutePolyline(route.stops.slice(base, route.stops.length - 1)),
+        makeRoutePolyline(route.stops.slice(base, route.stops.length)),
       );
     }
 
