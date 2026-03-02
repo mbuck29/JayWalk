@@ -9,6 +9,16 @@ import { Edge, Node } from "@/maps/graph";
 import { Route } from "./routing";
 
 /**
+ * Determines the amount of time the route will take in minuets.
+ * Based on an average walking speed of 1.4 m/s, which is about 5 km/h or 3.1 mph.
+ * @param route The route to calculate the time for
+ * @returns The estimated time in minuets that it will take to walk the route
+ */
+export function calculateRouteTime(routeLength: number): number {
+  return routeLength / 1.4 / 60; // Convert meters to minutes at 1.4 m/s
+}
+
+/**
  * Creates a string representation of the given route.
  * Form: [Stop 0] -> [Stop 1] -> ... -> [Stop N]
  * @param route The route to stringify.
@@ -92,7 +102,7 @@ export function sanitize(route: Route): Route {
     route: sanitizedEdges,
     stops: sanitizedStops,
     directions: route.directions,
-    length: route.length
+    length: route.length,
   };
 }
 
