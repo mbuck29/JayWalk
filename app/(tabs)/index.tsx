@@ -270,6 +270,7 @@ export default function HomeScreen() {
                   ref={currLocInputRef}
                   value={currLocationText}
                   activeUnderlineColor="transparent"
+                  activeOutlineColor="#356EC4"
                   underlineColor="transparent"
                   textColor="#356EC4"
                   mode="outlined"
