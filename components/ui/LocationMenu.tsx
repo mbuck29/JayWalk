@@ -49,8 +49,8 @@ export default function LocationMenu({
             key={option.name}
             // If the user selects an option then we set that as there input and close the menu
             onPress={() => {
-              setLocation(option);
-              setLocationText(option.name);
+              setLocation(option.building && option.floor < -100 ? option.building : option);
+              setLocationText(option.building && option.floor < -100 ? option.building.name : option.name);
               onDismiss();
               onSelect();
             }}

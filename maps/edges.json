@@ -2977,6 +2977,23 @@
         "type": "door",
         "accessible": true,
         "indoors": true
+    },
+    {
+        "id": 338,
+        "startNodeId": 10163,
+        "endNodeId": 10166,
+        "length": 1.4726595743999997,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 339,
+        "startNodeId": 10163,
+        "endNodeId": 10164,
+        "length": 5.680258358400001,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
     }
-    
 ]

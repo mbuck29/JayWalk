@@ -92,7 +92,7 @@ function loadGraph(): Graph
             x: data.x,
             y: data.y,
             building: nodes.find(n => n.id == data.buildingId),
-            floor: data.floor ?? -1,
+            floor: data.floor ?? -1000,
             edges: []
         };
 

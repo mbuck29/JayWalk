@@ -62,6 +62,15 @@ export function edgeOther(edge: Edge, known: Node): Node {
   return edge.startNode.id === known.id ? edge.endNode : edge.startNode;
 }
 
+function sanitizeNode(node: Node): Node
+{
+  return {
+      ...node,
+      building: node.building ? {...node.building, building: undefined} : undefined,
+      edges: [],
+    };
+}
+
 /**
  * Creates a sanitized copy of the given Route for storage in the global state by shallow-copying the Edge and Node objects without recursive references
  * @param route The route to sanitize
@@ -74,14 +83,8 @@ export function sanitize(route: Route): Route {
     // Create a copy of the edge except that the nodes don't point to their edges so that there isn't any recursion
     const newEdge: Edge = {
       ...edge,
-      startNode: {
-        ...edge.startNode,
-        edges: [],
-      },
-      endNode: {
-        ...edge.endNode,
-        edges: [],
-      },
+      startNode: sanitizeNode(edge.startNode),
+      endNode: sanitizeNode(edge.endNode),
     };
 
     sanitizedEdges.push(newEdge);
@@ -90,10 +93,7 @@ export function sanitize(route: Route): Route {
   // Sanitize the nodes
   const sanitizedStops = [];
   for (const stop of route.stops) {
-    const newStop: Node = {
-      ...stop,
-      edges: [],
-    };
+    const newStop: Node = sanitizeNode(stop);
 
     sanitizedStops.push(newStop);
   }

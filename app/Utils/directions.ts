@@ -45,6 +45,11 @@ export function populateDirections(route: Route)
         const edgeIn = paths[i - 1];
         const edgeOut = paths[i];
 
+        if(continueFrom && continueType == "ignore")
+        {
+            continueFrom = null;
+        }
+
         if(edgeOut.indoors)
         {
             const skipTo = populateDirectionsIndoors(route, i, !edgeIn.indoors);
@@ -305,6 +310,11 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         const edgeIn = paths[i - 1];
         const edgeOut = paths[i];
 
+        if(continueFrom && continueType == "ignore")
+        {
+            continueFrom = null;
+        }
+
         if(edgeOut.type == "ignore")
         {
             continue;
@@ -392,7 +402,11 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
         if((correctOption.type == "stairs" || correctOption.type == "stairwell" || correctOption.type == "elevator") && thisStop.floor != nextStop.floor)
         {
-            i = takeElevatorDirections(route, i, correctOption.type) + 1;
+            i = takeElevatorDirections(route, i, correctOption.type);
+            while(i > stops.length)
+            {
+                i--;
+            }
             const destFloor = stops[i].floor;
 
             while(stops[i].floor == destFloor)
@@ -462,7 +476,7 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
 {
     let endIndex = startIndex;
 
-    for(; route.route[endIndex].type == type; endIndex++);
+    for(; endIndex < route.route.length && route.route[endIndex].type == type; endIndex++);
 
     const startFloor = route.stops[startIndex].floor;
     const endFloor = route.stops[endIndex].floor;
