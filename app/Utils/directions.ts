@@ -1,3 +1,11 @@
+/**
+ * File: directions.ts
+ * Purpose: handle generating directions for the user
+ * Author: C. Cooper
+ * Date Created: 2026-02-20
+ * Date Modified: 2026-03-01
+ */
+
 import { RouteType } from "@/maps/data";
 import { Node } from "@/maps/graph";
 import { getDistanceMeters, Route } from "./routing";
@@ -6,6 +14,7 @@ import { edgeHas, edgeOther } from "./routingUtils";
 type TurnType = "sharp left" | "left" | "slight left" | "straight" | "slight right" | "right" | "sharp right";
 type IntersectionType = "intersection" | "T" | "fork" | "branch" | ""
 
+// Degrees in radians
 const FIVE_DEGREES = 5 / 180 * Math.PI;
 const TEN_DEGREES = 10 / 180 * Math.PI;
 const FIFTEEN_DEGREES = 15 / 180 * Math.PI;
@@ -14,14 +23,24 @@ const FORTY_FIVE_DEGREES = 45 / 180 * Math.PI;
 const NINETY_DEGREES = 90 / 180 * Math.PI;
 const ONE_HUNDRED_EIGHTY_DEGREES = 180 / 180 * Math.PI;
 
+/**
+ * A direction at a given navigation step
+ */
 export interface Direction
 {
+    /** The node this direction leads to */
     node: number;
+    /** The text to show the user */
     direction: string;
     show: boolean;
     prompt: boolean;
 }
 
+/**
+ * Fills in the directions list for the given route
+ * @param route The route to populate the list for
+
+ */
 export function populateDirections(route: Route)
 {
     const paths = route.route;
@@ -37,6 +56,7 @@ export function populateDirections(route: Route)
     let continueFrom: Node | null = stops[0];
     let continueType: RouteType = paths[0].type;
 
+    // For each node,
     for(let i = 1; i < paths.length; i++)
     {
         const lastStop = stops[i - 1];
@@ -50,6 +70,7 @@ export function populateDirections(route: Route)
             continueFrom = null;
         }
 
+        // If it is indoors, move to the indoor handler
         if(edgeOut.indoors)
         {
             const skipTo = populateDirectionsIndoors(route, i, !edgeIn.indoors);
@@ -65,11 +86,13 @@ export function populateDirections(route: Route)
             continue;
         }
 
+        // Get all of the edges we could take out
         const optionsAtThisStop = getOptions(lastStop, thisStop);
 
         let optionIndex = -1;
         let correctOption;
 
+        // Get the option we need to take
         for(let j = 0; j < optionsAtThisStop.length; j++)
         {
             const option = optionsAtThisStop[j];
@@ -90,11 +113,13 @@ export function populateDirections(route: Route)
         const optionAngle = correctOption.relativeAngle;
         const optionTurn = getTurnType(optionAngle);
 
+        // Merge together same-type nodes in a line
         if(continueFrom && (optionTurn == "straight" || optionsAtThisStop.length == 1) && correctOption.type == continueType)
         {
             continue;
         }
 
+        // Make the directions for any merged nodes
         if(continueFrom)
         {
             const distance = getTensOfFeetOutdoors(continueFrom, thisStop);
@@ -110,6 +135,7 @@ export function populateDirections(route: Route)
             continueType = "ignore";
         }
 
+        // If we only have one option, populate its directions
         if(optionsAtThisStop.length == 1)
         {
             directions.push({
@@ -127,10 +153,12 @@ export function populateDirections(route: Route)
 
         const intersection = true ? "" : getIntersectionType(optionsAtThisStop);
 
+        // If se have two directions,
         if(optionsAtThisStop.length == 2)
         {
             const couldBeConfused = Math.abs(optionsAtThisStop[0].relativeAngle - optionsAtThisStop[1].relativeAngle) < THIRTY_DEGREES + FIVE_DEGREES;
 
+            // If they couldn't be confused, populate theiir directions basically
             if(!couldBeConfused)
             {
                 directions.push({
@@ -146,6 +174,7 @@ export function populateDirections(route: Route)
                 continue;
             }
 
+            // If they could be confused but have different types, populate their directions basically
             if(optionsAtThisStop[0].type != optionsAtThisStop[1].type)
             {
                 directions.push({
@@ -163,6 +192,7 @@ export function populateDirections(route: Route)
 
             const leftIsCorrect = optionIndex == 0;
 
+            // If they could be confused and have the same type, specify to choose the left or right one
             directions.push({
                     node: i,
                     direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection, leftIsCorrect ? "left" : "right"),
@@ -176,8 +206,10 @@ export function populateDirections(route: Route)
             continue;
         }
 
+        // If there are more than two options,
         let closest = 100;
 
+        // Gte the closest two options
         if(optionIndex > 0)
         {
             closest = Math.min(closest, Math.abs(correctOption.relativeAngle - optionsAtThisStop[optionIndex - 1].relativeAngle));
@@ -190,6 +222,7 @@ export function populateDirections(route: Route)
 
         let duiplicateCount = -1;
 
+        // Check how many options of the same type there are
         for(const option of optionsAtThisStop)
         {
             if(option.type == correctOption.type)
@@ -198,6 +231,7 @@ export function populateDirections(route: Route)
             }
         }
 
+        // If they coundn't be confused, give basic direcitons
         if(closest > THIRTY_DEGREES || duiplicateCount <= 0)
         {
             directions.push({
@@ -215,6 +249,7 @@ export function populateDirections(route: Route)
 
         let left = false;
 
+        // Check if the potential confution is on the left
         for(const option of optionsAtThisStop)
         {
             if(option == correctOption)
@@ -228,6 +263,7 @@ export function populateDirections(route: Route)
             }
         }
 
+        // Give a direction specifying which route (L/R) to take
         directions.push({
             node: i - 1,
             direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection, left ? "right" : "left"),
@@ -239,6 +275,7 @@ export function populateDirections(route: Route)
         continueType = edgeOut.type;
     }
 
+    // If there is still a continueFrom, flush it
     if(continueFrom)
     {
         const distance = getTensOfFeetOutdoors(continueFrom, stops[stops.length - 1]);
@@ -262,6 +299,13 @@ export function populateDirections(route: Route)
     });
 }
 
+/**
+ * Handle making directions indoors
+ * @param route The route to add directions to
+ * @param startIndex The node index to start from
+ * @param wasOutdoors Whether we are coming from outdoors
+ * @returns The index of the next node to start from
+ */
 function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors: boolean): number
 {
     const paths = route.route;
@@ -269,6 +313,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
     const directions: Direction[] = route.directions;
 
+    // Handle going through the door to come in if coming from outdoors
     if(wasOutdoors)
     {
         directions.push({
@@ -297,8 +342,10 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
     startIndex++;
 
+    // For each stop,
     for(let i = startIndex; i < paths.length; i++)
     {
+        // If we are outdoors, quit
         if(!paths[i - 1].indoors)
         {
             return i;
@@ -320,11 +367,13 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             continue;
         }
 
+        // Get all the options we could do
         const optionsAtThisStop = getOptions(lastStop, thisStop);
 
         let optionIndex = -1;
         let correctOption;
 
+        // Get the correct option
         for(let j = 0; j < optionsAtThisStop.length; j++)
         {
             const option = optionsAtThisStop[j];
@@ -342,10 +391,14 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             continue;
         }
 
+        // Get the correct turn type
         const turnType = getTurnType(correctOption.relativeAngle)
 
+
+        // Merge together same-type edges in a straight mine
         if(turnType == "straight" && correctOption.type == continueType)
         {
+            // Keep track of the number of halls to the left/right along with landmarks
             for(let j = 0; j < optionsAtThisStop.length; j++)
             {
                 if(j == optionIndex)
@@ -381,6 +434,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             continue;
         }
 
+        // Add directions for the continueFrom
         if(continueFrom && continueFrom != lastStop)
         {
             directions.push({
@@ -400,6 +454,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             });
         }
 
+        // Handle swapping floors
         if((correctOption.type == "stairs" || correctOption.type == "stairwell" || correctOption.type == "elevator") && thisStop.floor != nextStop.floor)
         {
             i = takeElevatorDirections(route, i, correctOption.type);
@@ -430,6 +485,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         }
         else
         {
+            // Handle telling the user to turn based on landmarks
             const left = correctOption.relativeAngle < 0;
 
             let instruction = "";
@@ -472,19 +528,31 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
     return stops.length;
 }
 
+/**
+ * Handle directions that span multiple floors
+ * @param route The route to add directions to
+ * @param startIndex The index to start from
+ * @param type The type of route we are handling
+ * @returns The index of the next node to start from
+ */
 function takeElevatorDirections(route: Route, startIndex: number, type: "elevator" | "stairs" | "stairwell"): number
 {
     let endIndex = startIndex;
 
+    // Move endIndex to the last edge of this type
     for(; endIndex < route.route.length && route.route[endIndex].type == type; endIndex++);
 
+    // Get the start/end floors
     const startFloor = route.stops[startIndex].floor;
     const endFloor = route.stops[endIndex].floor;
 
+    // Get whether the route is going up
     const up = startFloor < endFloor;
 
+    // Get the direction string
     const directions = `Take the ${type} ${up ? "up" : "down"} to floor ${endFloor}.`;
 
+    // Add the directions
     route.directions.push({
         node: endIndex - 1,
         direction: directions,
@@ -502,14 +570,25 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
     return endIndex;
 }
 
-
+/**
+ * Get the angle of the edge between two nodes in the global coordiante system
+ * @param node1 The first node
+ * @param node2 The second node
+ * @returns The angle of the edge between two nodes in the global coordiante system
+ */
 function getAngle(node1: Node, node2: Node): number
 {
     let angle = Math.atan2(node1.y - node2.y, node1.x - node2.x);
 
+    // Normalize -180 to 180
     return normalizeAngle(angle);
 }
 
+/**
+ * Normalize the given angle -180 to 180
+ * @param angle The angle to nromalize
+ * @returns The equivelant angle bwteen -180 degrees and 180 degrees
+ */
 function normalizeAngle(angle: number): number
 {
     if(angle < -Math.PI)
@@ -524,6 +603,11 @@ function normalizeAngle(angle: number): number
     return angle;
 }
 
+/**
+ * Gets the intersection type based on the edge options
+ * @param options The pathes the user could take
+ * @returns The intersection type 
+ */
 function getIntersectionType(options: Option[]): IntersectionType
 {
     if(options.length <= 1)
@@ -558,15 +642,27 @@ function getIntersectionType(options: Option[]): IntersectionType
     return "intersection";
 }
 
+/**
+ * Get the action string for the described route edge
+ * @param turnType How the user is turning
+ * @param routeType The route type
+ * @param forwards Whether the route is going startNode to endNode
+ * @param intersectionLocation The intersection type
+ * @param specifier The specifier L/R
+ * @param specifierLiteral Whether the specifier is literal
+ * @returns The action string
+ */
 function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: boolean, intersectionLocation: IntersectionType = "", specifier: string = "", specifierLiteral: boolean = false): string
 {
     let output = "";
 
+    // Add the intersection
     if(intersectionLocation != "")
     {
         output += "At the " + intersectionLocation + ", "
     }
 
+    // Add the turn
     let turnText = getTurnAction(turnType);
 
     if(output != "")
@@ -595,6 +691,7 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
 
     let action = "";
 
+    // Add the action
     switch(routeType)
     {
         case "stairs":
@@ -641,7 +738,12 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
     return output;
 }
 
-function getTurnType(angle: number)
+/**
+ * Get the turn type based on a turn angle
+ * @param angle The angle to get the type of
+ * @returns The turn type string
+ */
+function getTurnType(angle: number): TurnType
 {
     if(angle > NINETY_DEGREES + TEN_DEGREES)
     {
@@ -673,6 +775,12 @@ function getTurnType(angle: number)
     }
 }
 
+/**
+ * Gets the action string for a given turn type
+ * @param turnType The turn to get the string for
+ * @param intersection Whether we are at an intersection
+ * @returns The action string for the turn
+ */
 function getTurnAction(turnType: TurnType, intersection: boolean = false)
 {
     switch(turnType)
@@ -694,30 +802,11 @@ function getTurnAction(turnType: TurnType, intersection: boolean = false)
     }
 }
 
-function getTakenRouteQuestion(routeType: RouteType)
-{
-    switch(routeType)
-    {
-        case "door":
-            return "Have you gone through the door?";
-        case "doorway":
-            return "Have you gone through the doorway?";
-        case "elevator":
-            return "Have you taken the elevator?";
-        case "hallway":
-            return "Have you gone down the hallway?";
-        case "ramp":
-            return "Have you taken the ramp?";
-        case "room":
-            return "Have you crossed the room?";
-        case "stairs":
-        case "stairwell":
-            return "Have you taken the stairs?";
-        default:
-            return `Have you taken the ${routeType}?`;
-    }
-}
-
+/**
+ * Gets the ordinal name for a given number
+ * @param n The number
+ * @returns The ordinal string
+ */
 function getOrdinalName(n: number): string
 {
     switch(n)
@@ -747,6 +836,9 @@ function getOrdinalName(n: number): string
     }
 }
 
+/**
+ * An option that a user could take at a given node
+ */
 interface Option
 {
     relativeAngle: number;
@@ -754,12 +846,19 @@ interface Option
     node: Node;
 }
 
+/**
+ * Gets the options that the user could take at the given node
+ * @param nodeIn The node we are coming from
+ * @param node The current node
+ * @returns The Options at this Node
+ */
 function getOptions(nodeIn: Node, node: Node): Option[]
 {
     const baseAngle = getAngle(nodeIn, node);
 
     const options: Option[] = [];
 
+    // Get the option for each edge that we aren't coming from
     for(const edge of node.edges)
     {
         if(edgeHas(edge, nodeIn))
@@ -771,6 +870,7 @@ function getOptions(nodeIn: Node, node: Node): Option[]
 
         let angle = getAngle(node, otherNode);
 
+        // Offset the angle by this edge's angle so it is relative
         angle -= baseAngle;
 
         angle = normalizeAngle(angle);
@@ -782,16 +882,28 @@ function getOptions(nodeIn: Node, node: Node): Option[]
         });
     }
 
+    // Sort the options by their relative angles
     options.sort((a, b) => a.relativeAngle - b.relativeAngle);
 
     return options;
 }
 
+/**
+ * Converts meters to feet
+ * @param meters The amount of meters
+ * @returns An amount of feet
+ */
 export function metersToFeet(meters: number): number
 {
     return meters * 3.28084;
 }
 
+/**
+ * Gets the number of feet between the given nodes indoors, rounded to the nearest ten
+ * @param a The first Node
+ * @param b The second Node
+ * @returns The number of feet between the given nodes, rounded to the nearest ten
+ */
 function getTensOfFeetIndoors(a: Node, b: Node): number
 {
     const xDiff = a.x - b.x;
@@ -802,6 +914,12 @@ function getTensOfFeetIndoors(a: Node, b: Node): number
     return feet - (feet % 10);
 }
 
+/**
+ * Gets the number of feet between the given nodes outdoors, rounded to the nearest ten
+ * @param a The first Node
+ * @param b The second Node
+ * @returns The number of feet between the given nodes, rounded to the nearest ten
+ */
 function getTensOfFeetOutdoors(a: Node, b: Node): number
 {
     let dist = getDistanceMeters(a, b);
