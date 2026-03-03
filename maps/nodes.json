@@ -2012,7 +2012,7 @@
     },
     {
         "id": 10169,
-        "name": "stairs down to level 1",
+        "name": "~stairs down to level 1",
         "x": 24.4040729472,
         "y": -2.4193693008,
         "buildingId": 10071,
@@ -2052,7 +2052,7 @@
     },
     {
         "id": 10172,
-        "name": "2013 entrance",
+        "name": "~2013 entrance",
         "x": -14.726595744,
         "y": 5.1543085104,
         "buildingId": 10071,
@@ -2367,7 +2367,7 @@
     },
     {
         "id": 10196,
-        "name": "north stairs entrance",
+        "name": "~north stairs entrance",
         "x": 38.1839589648,
         "y": -1.9986094224,
         "buildingId": 10071,
@@ -2391,7 +2391,7 @@
     },
     {
         "id": 10198,
-        "name": "south stairs",
+        "name": "~south stairs",
         "x": -18.3030547104,
         "y": -1.6830395136,
         "buildingId": 10071,

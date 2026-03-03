@@ -12,7 +12,7 @@ class Node:
         self.x = x
         self.y = y
         self.id = id
-        self.connected: set[Node] = set()
+        self.connected: set[tuple[Node, str]] = set()
         self.name = name
 
 hasWindow = False
@@ -98,13 +98,13 @@ def display(buildingName: str, floor: int, dEdges: list[dict], dNodes: list[dict
         if len(first) == 0 or len(last) == 0:
             continue
 
-        first[0].connected.add(last[0])
+        first[0].connected.add((last[0], "red" if edge["accessible"] == True else "black"))
 
     draw = ImageDraw.Draw(image)
 
     for node in nodes:
-        for other in node.connected:
-            draw.line((node.x, node.y, other.x, other.y), "red", 1)
+        for other, color in node.connected:
+            draw.line((node.x, node.y, other.x, other.y), color, 1)
     
     font = ImageFont.truetype("arial", 8)
 

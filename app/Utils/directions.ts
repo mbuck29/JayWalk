@@ -53,7 +53,7 @@ export function populateDirections(route: Route)
 
     const directions: Direction[] = route.directions;
 
-    let continueFrom: Node | null = stops[0];
+    let continueFrom: Node | null = canBeMerged(paths[0].type) ? stops[0] : null;
     let continueType: RouteType = paths[0].type;
 
     // For each node,
@@ -86,8 +86,10 @@ export function populateDirections(route: Route)
             continue;
         }
 
+        const distance = getTensOfFeetOutdoors(thisStop, nextStop);
+
         // Get all of the edges we could take out
-        const optionsAtThisStop = getOptions(lastStop, thisStop);
+        const optionsAtThisStop = getOptions(lastStop, thisStop, nextStop);
 
         let optionIndex = -1;
         let correctOption;
@@ -122,11 +124,11 @@ export function populateDirections(route: Route)
         // Make the directions for any merged nodes
         if(continueFrom)
         {
-            const distance = getTensOfFeetOutdoors(continueFrom, thisStop);
+            const continueDistance = getTensOfFeetOutdoors(continueFrom, thisStop);
 
             directions.push({
                 node: i,
-                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id) + (distance > 50 ? ` for ${distance} feet` : ""),
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
             });
@@ -140,12 +142,12 @@ export function populateDirections(route: Route)
         {
             directions.push({
                 node: i,
-                direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
+                direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance),
                 show: edgeIn.type != edgeOut.type,
                 prompt: false
             });
 
-            continueFrom = thisStop;
+            continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
             continue;
@@ -153,22 +155,22 @@ export function populateDirections(route: Route)
 
         const intersection = true ? "" : getIntersectionType(optionsAtThisStop);
 
-        // If se have two directions,
+        // If we have two directions,
         if(optionsAtThisStop.length == 2)
         {
             const couldBeConfused = Math.abs(optionsAtThisStop[0].relativeAngle - optionsAtThisStop[1].relativeAngle) < THIRTY_DEGREES + FIVE_DEGREES;
 
-            // If they couldn't be confused, populate theiir directions basically
+            // If they couldn't be confused, populate their directions basically
             if(!couldBeConfused)
             {
                 directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
                     show: true,
                     prompt: false
                 });
 
-                continueFrom = thisStop;
+                continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
 
                 continue;
@@ -179,12 +181,12 @@ export function populateDirections(route: Route)
             {
                 directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
                     show: true,
                     prompt: false
                 });
 
-                continueFrom = thisStop;
+                continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
 
                 continue;
@@ -195,12 +197,12 @@ export function populateDirections(route: Route)
             // If they could be confused and have the same type, specify to choose the left or right one
             directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection, leftIsCorrect ? "left" : "right"),
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection, leftIsCorrect ? "left" : "right"),
                     show: true,
                     prompt: false
                 });
 
-            continueFrom = thisStop;
+            continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
             continue;
@@ -209,7 +211,7 @@ export function populateDirections(route: Route)
         // If there are more than two options,
         let closest = 100;
 
-        // Gte the closest two options
+        // Get the closest two options
         if(optionIndex > 0)
         {
             closest = Math.min(closest, Math.abs(correctOption.relativeAngle - optionsAtThisStop[optionIndex - 1].relativeAngle));
@@ -236,12 +238,12 @@ export function populateDirections(route: Route)
         {
             directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection),
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
                     show: true,
                     prompt: false
                 });
 
-            continueFrom = thisStop;
+            continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
             continue;
@@ -266,12 +268,12 @@ export function populateDirections(route: Route)
         // Give a direction specifying which route (L/R) to take
         directions.push({
             node: i - 1,
-            direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, intersection, left ? "right" : "left"),
+            direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection, left ? "right" : "left"),
             show: true,
             prompt: false
         });
 
-        continueFrom = thisStop;
+        continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
         continueType = edgeOut.type;
     }
 
@@ -282,7 +284,7 @@ export function populateDirections(route: Route)
 
         directions.push({
             node: stops.length - 1,
-            direction: getRouteAction("straight", continueType, paths[paths.length - 1].endNode.id == stops[stops.length - 1].id) + (distance > 50 ? ` for ${distance} feet` : ""),
+            direction: getRouteAction("straight", continueType, paths[paths.length - 1].endNode.id == stops[stops.length - 1].id, distance),
             show: true,
             prompt: false
         });
@@ -337,10 +339,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
     let lastLeft: Node | null = null;
     let lastRight: Node | null = null;
 
-    let continueFrom: Node | null = stops[startIndex];
+    let continueFrom: Node | null = canBeMerged(paths[startIndex].type) ? stops[startIndex] : null;
     let continueType = paths[startIndex].type;
-
-    startIndex++;
 
     // For each stop,
     for(let i = startIndex; i < paths.length; i++)
@@ -365,7 +365,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         }
 
         // Get all the options we could do
-        const optionsAtThisStop = getOptions(lastStop, thisStop);
+        const optionsAtThisStop = getOptions(lastStop, thisStop, nextStop);
 
         let optionIndex = -1;
         let correctOption;
@@ -434,18 +434,22 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         // Add directions for the continueFrom
         if(continueFrom && continueFrom != lastStop)
         {
+            const continueDistance = getTensOfFeetIndoors(continueFrom, thisStop);
+
             directions.push({
                 node: i,
-                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id) + ` for ${getTensOfFeetIndoors(continueFrom, thisStop)} feet`,
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
             });
         }
         else if(continueFrom)
         {
+            const continueDistance = getTensOfFeetIndoors(continueFrom, thisStop);
+
             directions.push({
                 node: i,
-                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id),
+                direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
             });
@@ -453,9 +457,31 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
         if(changingBuildings)
         {
+            if(edgeOut.type != "ignore")
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
+                    prompt: false
+                });
+            }
+
+            if(!nextStop.building)
+            {
+                directions.push({
+                    node: i,
+                    direction: `Leaving ${thisStop.building?.name ?? "the building"}`,
+                    show: true,
+                    prompt: false
+                });
+
+                return i + 1;
+            }
+
             directions.push({
                 node: i+1,
-                direction: `Entering ${nextStop.building?.name ?? "a new building"}`,
+                direction: `Entering ${nextStop.building.name}`,
                 show: true,
                 prompt: false
             });
@@ -499,7 +525,15 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
         if(turnType == "straight" || turnType == "slight left" || turnType == "slight right")
         {
-            // Handled by continuefrom
+            if(!canBeMerged(edgeOut.type))
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction(turnType, edgeOut.type, edgeOut.startNode.id == thisStop.id, getTensOfFeetIndoors(thisStop, nextStop)),
+                    show: true,
+                    prompt: false
+                });
+            }
         }
         else
         {
@@ -511,7 +545,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const waypoint = left ? lastLeft : lastRight;
             const count = left ? leftCount : rightCount;
 
-            instruction = `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} at ${thisStop.name} and `;
+            instruction = `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} to `;
 
             if(waypoint)
             {
@@ -526,16 +560,9 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                 show: true,
                 prompt: false
             });
-
-            directions.push({
-                node: i,
-                direction: left ? "Have you turned left?" : "Have you turned right?",
-                show: true,
-                prompt: true
-            });
         }
 
-        continueFrom = thisStop;
+        continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
         continueType = edgeOut.type;
         leftCount = 0;
         rightCount = 0;
@@ -576,13 +603,6 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
         direction: directions,
         show: true,
         prompt: false
-    });
-
-    route.directions.push({
-        node: endIndex - 1,
-        direction: `Have you arrived at floor ${endFloor}?`,
-        show: true,
-        prompt: true
     });
 
     return endIndex;
@@ -670,7 +690,7 @@ function getIntersectionType(options: Option[]): IntersectionType
  * @param specifierLiteral Whether the specifier is literal
  * @returns The action string
  */
-function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: boolean, intersectionLocation: IntersectionType = "", specifier: string = "", specifierLiteral: boolean = false): string
+function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: boolean, distance = -1, intersectionLocation: IntersectionType = "", specifier: string = "", specifierLiteral: boolean = false): string
 {
     let output = "";
 
@@ -752,6 +772,11 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
     }
 
     output += action;
+
+    if(distance > 0 && turnType == "straight" && shouldShowDistance(routeType))
+    {
+        output += ` for ${distance} feet`
+    }
 
     return output;
 }
@@ -870,9 +895,9 @@ interface Option
  * @param node The current node
  * @returns The Options at this Node
  */
-function getOptions(nodeIn: Node, node: Node): Option[]
+function getOptions(nodeIn: Node, node: Node, nodeOut: Node): Option[]
 {
-    const baseAngle = getAngle(nodeIn, node);
+    const baseAngle = nodeIn.building == node.building ? getAngle(nodeIn, node) : getAngle(node, nodeOut);
 
     const options: Option[] = [];
 
@@ -927,7 +952,7 @@ function getTensOfFeetIndoors(a: Node, b: Node): number
     const xDiff = a.x - b.x;
     const yDiff = a.y - b.y;
 
-    const feet = Math.round(metersToFeet(Math.sqrt(xDiff * xDiff + yDiff * yDiff)));
+    const feet = Math.round(metersToFeet(Math.sqrt(xDiff * xDiff + yDiff * yDiff))) + 5;
 
     return feet - (feet % 10);
 }
@@ -945,4 +970,34 @@ function getTensOfFeetOutdoors(a: Node, b: Node): number
     dist = dist % 10 >= 5 ? dist + (10 - (dist % 10)) : dist - (dist % 10);
 
     return dist;
+}
+
+function shouldShowDistance(type: RouteType): boolean
+{
+    switch(type)
+    {
+        case "bridge":
+        case "door":
+        case "doorway":
+        case "elevator":
+        case "ignore":
+        case "stairwell":
+        case "steps":
+            return false;
+    }
+
+    return true;
+}
+
+function canBeMerged(type: RouteType): boolean
+{
+    switch(type)
+    {
+        case "door":
+        case "doorway":
+        case "ignore":
+            return false;
+    }
+
+    return true;
 }
