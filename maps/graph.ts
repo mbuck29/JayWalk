@@ -91,7 +91,7 @@ function loadGraph(): Graph
             name: data.name,
             x: data.x,
             y: data.y,
-            building: nodes.find(n => n.id == data.buildingId),
+            building: undefined,
             floor: data.floor ?? -1000,
             edges: []
         };
@@ -100,6 +100,23 @@ function loadGraph(): Graph
 
         // Add the node object to the node map
         nodeMap.set(node.id, node);
+    }
+
+    // Fill the building fields for the nodes
+    for(const data of nodeData)
+    {
+        if(data.buildingId == -1)
+        {
+            continue;
+        }
+
+        const node = nodeMap.get(data.id);
+        const building = nodeMap.get(data.buildingId);
+
+        if(node && building)
+        {
+            node.building = building;
+        }
     }
 
     // Parse the EdgeData objects into Edge objects

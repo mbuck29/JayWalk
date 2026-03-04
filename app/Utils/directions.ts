@@ -56,8 +56,24 @@ export function populateDirections(route: Route)
     let continueFrom: Node | null = canBeMerged(paths[0].type) ? stops[0] : null;
     let continueType: RouteType = paths[0].type;
 
+    let i = 1;
+
+    if(paths[0].indoors)
+    {
+        i = populateDirectionsIndoors(route, 0, false);
+    }
+    else if(!continueFrom)
+    {
+        directions.push({
+            node: 0,
+            direction: getRouteAction("straight", continueType, stops[0].id == paths[0].startNode.id, getTensOfFeetOutdoors(paths[0].startNode, paths[0].endNode)),
+            show: true,
+            prompt: false
+        });
+    }
+
     // For each node,
-    for(let i = 1; i < paths.length; i++)
+    for(; i < paths.length; i++)
     {
         const lastStop = stops[i - 1];
         const thisStop = stops[i];
@@ -140,12 +156,15 @@ export function populateDirections(route: Route)
         // If we only have one option, populate its directions
         if(optionsAtThisStop.length == 1)
         {
-            directions.push({
-                node: i,
-                direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance),
-                show: edgeIn.type != edgeOut.type,
-                prompt: false
-            });
+            if(optionTurn != "straight" || !canBeMerged(edgeOut.type))
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
+                    show: edgeIn.type != edgeOut.type,
+                    prompt: false
+                });
+            }
 
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
@@ -163,12 +182,15 @@ export function populateDirections(route: Route)
             // If they couldn't be confused, populate their directions basically
             if(!couldBeConfused)
             {
-                directions.push({
-                    node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
-                    show: true,
-                    prompt: false
-                });
+                if(optionTurn != "straight" || !canBeMerged(edgeOut.type))
+                {
+                    directions.push({
+                        node: i,
+                        direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
+                        show: edgeIn.type != edgeOut.type,
+                        prompt: false
+                    });
+                }
 
                 continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
@@ -179,12 +201,15 @@ export function populateDirections(route: Route)
             // If they could be confused but have different types, populate their directions basically
             if(optionsAtThisStop[0].type != optionsAtThisStop[1].type)
             {
-                directions.push({
-                    node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
-                    show: true,
-                    prompt: false
-                });
+                if(optionTurn != "straight" || !canBeMerged(edgeOut.type))
+                {
+                    directions.push({
+                        node: i,
+                        direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
+                        show: edgeIn.type != edgeOut.type,
+                        prompt: false
+                    });
+                }
 
                 continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
@@ -197,7 +222,7 @@ export function populateDirections(route: Route)
             // If they could be confused and have the same type, specify to choose the left or right one
             directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection, leftIsCorrect ? "left" : "right"),
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, -1, intersection, leftIsCorrect ? "left" : "right"),
                     show: true,
                     prompt: false
                 });
@@ -236,12 +261,15 @@ export function populateDirections(route: Route)
         // If they coundn't be confused, give basic direcitons
         if(closest > THIRTY_DEGREES || duiplicateCount <= 0)
         {
-            directions.push({
+            if(optionTurn != "straight" || !canBeMerged(edgeOut.type))
+            {
+                directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection),
-                    show: true,
+                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
+                    show: edgeIn.type != edgeOut.type,
                     prompt: false
                 });
+            }
 
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
@@ -328,11 +356,6 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         startIndex++;
     }
 
-    while(paths[startIndex].type == "ignore")
-    {
-        startIndex++;
-    }
-
     let leftCount = 0;
     let rightCount = 0;
 
@@ -341,6 +364,22 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
     let continueFrom: Node | null = canBeMerged(paths[startIndex].type) ? stops[startIndex] : null;
     let continueType = paths[startIndex].type;
+
+    if(startIndex == 0 && continueFrom)
+    {
+        startIndex++;
+    }
+    else if(startIndex == 0)
+    {
+        directions.push({
+            node: 0,
+            direction: getRouteAction("straight", continueType, stops[0].id == paths[0].startNode.id, getTensOfFeetOutdoors(paths[0].startNode, paths[0].endNode)),
+            show: true,
+            prompt: false
+        });
+
+        startIndex++;
+    }
 
     // For each stop,
     for(let i = startIndex; i < paths.length; i++)
@@ -545,9 +584,9 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const waypoint = left ? lastLeft : lastRight;
             const count = left ? leftCount : rightCount;
 
-            instruction = `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} to `;
+            instruction = count > 1 ? `Take the ${getOrdinalName(count + 1)} ${left ? "left" : "right"} to ` : `Turn ${left ? "left" : "right"} to `;
 
-            if(waypoint)
+            if(waypoint && getTensOfFeetIndoors(thisStop, waypoint) <= 20)
             {
                 instruction += `(after passing ${waypoint.name} on your ${left ? "left" : "right"}) `
             }
@@ -595,7 +634,7 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
     const up = startFloor < endFloor;
 
     // Get the direction string
-    const directions = `Take the ${type} ${up ? "up" : "down"} to floor ${endFloor}.`;
+    const directions = `Take the ${type} ${up ? "up" : "down"} to floor ${endFloor}`;
 
     // Add the directions
     route.directions.push({
@@ -743,6 +782,9 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
             break;
         case "sidewalk":
             action = `Continue along the ${specifier}sidewalk${specLit}`;
+            break;
+        case "steps":
+            action = forwards ? `Go up the ${specifier}steps${specLit}` : `Go down the ${specifier}steps${specLit}`;
             break;
         case "hallway":
             action = `Continue down the ${specifier}hall${specLit}`;

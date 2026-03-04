@@ -107,6 +107,26 @@ export function sanitize(route: Route): Route {
 }
 
 /**
+ * Checks whether the given edge connects two different buildings (or a building to outside)
+ * @param edge The Edge
+ * @returns Whether the given edge connects two different buildings (or a building to outside)
+ */
+export function connectsBuildings(edge: Edge): boolean
+{
+  return edge.startNode.building?.id != edge.startNode.building?.id;
+}
+
+/**
+ * Checks whether the given edge connects different floors within a building
+ * @param edge The Edge
+ * @returns Whether the given edge connects different floors within a building
+ */
+export function connectsFloors(edge: Edge): boolean
+{
+  return edge.startNode.building?.id == edge.startNode.building?.id && edge.startNode.floor == edge.startNode.floor;
+}
+
+/**
  * Calculates the distance in meters between two points given their latitude and longitude using the Haversine formula.
  * This treats Earth like a sphere and returns the shortest distance over its surface.
  * @param lat1 The latitude of the first point
