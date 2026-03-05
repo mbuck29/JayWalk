@@ -26,8 +26,14 @@ import { Route } from "../Utils/routing";
 import { haversineMeters } from "../Utils/routingUtils";
 import { getRoute } from "../Utils/state";
 
-const NEAR_STOP_METERS = 15; // tweak 10–25
-const CONFIRM_HITS = 2; // consecutive updates needed
+const BACK_WINDOW = 1; // allow recovery 1 stop behind
+const FORWARD_WINDOW = 3; // allow catch-up up to 3 stops ahead
+const NEAR_METERS = 18; // “you are at this stop”
+const SWITCH_HYST = 8; // must be this many meters closer than current stop
+const CONFIRM_HITS = 2; // consecutive confirmations
+const MAX_ACC = 50; // ignore worse accuracy than this
+const MAX_FORWARD_JUMP = 2; // prevent huge skips unless extremely near
+const SUPER_NEAR = 8; // allow bigger jump if you're REALLY close
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
@@ -46,14 +52,16 @@ export default function TabTwoScreen() {
   const safeIndoors = !!currentRoute?.route?.[currentNode]?.indoors;
   const [isCurrNodeInDoors, setIsCurrNodeInDoors] =
     useState<boolean>(safeIndoors);
+  const [mapReady, setMapReady] = useState(false);
 
   // Simple boolean to represent if we have the users location
   const hasFix =
     (location?.coords?.latitude ?? 0) !== 0 &&
     (location?.coords?.longitude ?? 0) !== 0;
 
-  const nearHitsRef = useRef(0); // Will use to track if we have gotten enough hits in a row to update current node
-  const lastAdvanceAtRef = useRef(0); // track the users last known locatoin
+  const candidateRef = useRef<number | null>(null);
+  const hitsRef = useRef(0);
+  const lastSetAtRef = useRef(0);
 
   useEffect(() => {
     if (!isRouteStarted) return; // only track location and advance if the route has started
@@ -62,45 +70,102 @@ export default function TabTwoScreen() {
     if (isCurrNodeInDoors) return; // only track outdoors here
 
     const now = Date.now();
+    if (now - lastSetAtRef.current < 800) return; // small cooldown between polling the locaiton
 
-    // small cooldown so you can't advance twice in the same second from GPS jitter
-    if (now - lastAdvanceAtRef.current < 1000) return;
-
-    // Grab the next possible node if it exists
-    const nextIdx = currentNode + 1;
-    if (nextIdx >= currentRoute.stops.length) return;
-
-    const userLat = location.coords.latitude;
-    const userLng = location.coords.longitude;
-
-    const nextStop = currentRoute.stops[nextIdx]; // Get the next node
-    const distToNext = haversineMeters(
-      // Use our util function to get the difference
-      userLat,
-      userLng,
-      nextStop.y,
-      nextStop.x,
-    );
-
-    // ignore very inaccurate readings
-    // (Expo Location gives accuracy in meters; smaller is better)
+    // Grab the users gps accuracy to see if its to bad to use
     const acc = location.coords.accuracy ?? 999;
-    if (acc > 40) return;
+    if (acc > MAX_ACC) return;
 
-    // if we're within the threshold distance to the next stop, count a "hit"
-    if (distToNext <= NEAR_STOP_METERS) {
-      nearHitsRef.current += 1;
-      if (nearHitsRef.current >= CONFIRM_HITS) {
-        // if we've had enough hits in a row, advance to the next stop
-        // Advance index to next node
-        dispatch(setCurrentNode(nextIdx));
+    // Get the users cordiantes
+    const { latitude: userLat, longitude: userLng } = location.coords;
 
-        // Reset hit count and update last advance time
-        nearHitsRef.current = 0;
-        lastAdvanceAtRef.current = now;
+    const n = currentRoute.stops.length;
+    if (!n) return; // Small check to make sure we are doing operations on an empty list
+
+    // We have set windows oh which wwe will compare
+    const start = Math.max(0, currentNode - BACK_WINDOW);
+    const end = Math.min(n - 1, currentNode + FORWARD_WINDOW);
+
+    // Grab the currenet stop and if we have it then we will see the distance between the user
+    // and the current stop
+    const curStop = currentRoute.stops[currentNode];
+    const curDist = curStop
+      ? haversineMeters(userLat, userLng, curStop.y, curStop.x)
+      : Number.POSITIVE_INFINITY;
+
+    // Initalize a best index and best distance as the current node so we can use it to comapre
+    // against the other nodes
+    let bestIdx = currentNode;
+    let bestDist = curDist;
+
+    // Loop through the allowable stops that can be jumped to from the current stop based on the forward
+    // and backward windows. For each one use its cordinates and get its distance from the users location.
+    // If it is better than make it the best dist and index
+    for (let i = start; i <= end; i++) {
+      const s = currentRoute.stops[i];
+      const d = haversineMeters(userLat, userLng, s.y, s.x);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
       }
+    }
+
+    // This checks if the best is actually within range to jump to
+    const isNearBest = bestDist <= NEAR_METERS;
+
+    // This keeps it from flipping back and forth between two nodes, that is it needs to be clearly better than the
+    // current node
+    const isClearlyBetter = bestDist + SWITCH_HYST < curDist;
+
+    if (!isNearBest && !isClearlyBetter) {
+      // no strong evidence, reset candidate/hits
+      candidateRef.current = null;
+      hitsRef.current = 0;
+      return;
+    }
+
+    // This prevents big forward skips unless we are really sure and really close to that node
+    const delta = bestIdx - currentNode;
+    if (delta > MAX_FORWARD_JUMP && bestDist > SUPER_NEAR) {
+      return;
+    }
+
+    // Increment the hits ref if we got the same index twice
+    if (candidateRef.current === bestIdx) {
+      hitsRef.current += 1;
     } else {
-      nearHitsRef.current = 0; // reset hit count if we move away from the stop
+      // If we got a new best then start the count for that
+      candidateRef.current = bestIdx;
+      hitsRef.current = 1;
+    }
+
+    // If the amount of hits for a node has passed the threshold needed and its not the current node
+    // then we want to set that as the current node, even if its backwards or forwards more than one
+    // As well as reset all the refs
+    if (hitsRef.current >= CONFIRM_HITS && bestIdx !== currentNode) {
+      const nextIdx = bestIdx + 1;
+
+      // In the case that the new node we would make the current is the last one before an indoor segment we
+      // want to know that
+      const bestIsOutdoor = !currentRoute.route?.[bestIdx]?.indoors;
+      const nextIsIndoor =
+        nextIdx < n && !!currentRoute.route?.[nextIdx]?.indoors;
+
+      // are we actually "at" the bestIdx stop we want to move to?
+      const atBestStop = bestDist <= NEAR_METERS;
+
+      if (bestIsOutdoor && nextIsIndoor && atBestStop) {
+        // snap straight into the first indoor node after the outdoor doorway node
+        dispatch(setCurrentNode(nextIdx));
+      } else {
+        // normal advance to best candidate
+        dispatch(setCurrentNode(bestIdx));
+      }
+
+      // After either of those outcomes we want to reset everything
+      lastSetAtRef.current = now;
+      candidateRef.current = null;
+      hitsRef.current = 0;
     }
   }, [location, isRouteStarted, currentRoute, currentNode, isCurrNodeInDoors]);
 
@@ -216,6 +281,7 @@ export default function TabTwoScreen() {
 
   // If we're locked on the user and the route has started and we have a location fix, keep the map centered on them
   useEffect(() => {
+    if (!mapReady) return; //
     if (!isLockedOnUser) return; // only auto-center if we're locked on the user
     if (!isRouteStarted) return; // only auto-center if the route has started
     if (!hasFix) return; // only auto-center if we have a location fix
@@ -233,14 +299,16 @@ export default function TabTwoScreen() {
   }, [location, isLockedOnUser, isRouteStarted, hasFix]);
 
   return (
-    <>
-      {isCurrNodeInDoors ? ( // if we're indoors, show the indoor nav screen instead of the map
-        <IndoorNav
-          instrList={currentRoute?.directions ?? []}
-          setIsRouteStarted={setIsRouteStarted}
-        />
-      ) : (
-        // if we're outdoors, show the map
+    <View style={{ flex: 1 }}>
+      {/* MAP LAYER (always mounted so tiles stay cached) */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { display: isCurrNodeInDoors ? "none" : "flex" },
+        ]}
+        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}
+      >
+        {/* if we're outdoors, show the map */}
         <>
           {isRouteStarted && (
             <View style={styles.instructionBar}>
@@ -256,7 +324,9 @@ export default function TabTwoScreen() {
           <MapView
             ref={mapRef}
             style={{ flex: 1 }}
-            mapType="satellite"
+            onMapReady={() => setMapReady(true)}
+            mapType={mapReady ? "satellite" : "standard"}
+            cacheEnabled
             cameraZoomRange={{
               // This is for limiting how far in and out the user can zoom. This might only work or apple users
               minCenterCoordinateDistance: 12,
@@ -286,8 +356,23 @@ export default function TabTwoScreen() {
             {/* Draw the route polylines on the map */}
           </MapView>
         </>
-      )}
-      {!isRouteStarted && ( // Want to show a summary of the route before they choose to start it, this can show on both outside and inside
+      </View>
+      {/* INDOOR LAYER */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { display: isCurrNodeInDoors ? "flex" : "none" },
+        ]}
+        pointerEvents={isCurrNodeInDoors ? "auto" : "none"}
+      >
+        {/* if we're indoors, show the indoor nav screen instead of the map */}
+        <IndoorNav
+          instrList={currentRoute?.directions ?? []}
+          setIsRouteStarted={setIsRouteStarted}
+        />
+      </View>
+      {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
+      {!isRouteStarted && (
         <RouteSummary
           setIsRouteStarted={setIsRouteStarted}
           routeLength={currentRoute?.length ?? 0}
@@ -297,16 +382,15 @@ export default function TabTwoScreen() {
           }
         />
       )}
-      {isRouteStarted &&
-        !isCurrNodeInDoors && ( // only show end route button if we're outdoors, since indoors we have the end route button in the indoor nav screen
-          <EndRoute setIsRouteStarted={setIsRouteStarted} />
-        )}
-      {!isLockedOnUser &&
-        !isCurrNodeInDoors &&
-        isRouteStarted && ( // only show lock on user button if we're outdoors and the route has started
-          <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
-        )}
-    </>
+      {/* only show end route button if we're outdoors, since indoors we have the end route button in the indoor nav screen */}
+      {isRouteStarted && !isCurrNodeInDoors && (
+        <EndRoute setIsRouteStarted={setIsRouteStarted} />
+      )}
+      {/* only show lock on user button if we're outdoors and the route has started */}
+      {!isLockedOnUser && !isCurrNodeInDoors && isRouteStarted && (
+        <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
+      )}
+    </View>
   );
 }
 

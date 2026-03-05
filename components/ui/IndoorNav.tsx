@@ -84,12 +84,15 @@ export default function IndoorNav({
     return last;
   }, [allSteps, destNodeIdx]);
 
+  // A small check to make sure we only show the "You have arrived at your destination" direction if that is indoors
+  const isDestIndoor = !!currentRoute?.route?.[destNodeIdx]?.indoors;
+
   // The list that is actually shown in IndoorNav, only indoor steps
   const displaySteps = React.useMemo(() => {
     return allSteps.filter((s, idx) => {
       const routeNode = currentRoute?.route[s.node]; // get the node on the route that this instruction corresponds to
       if (routeNode?.indoors) return true; // only include it if that node is indoors
-      if (idx === lastStepIdxForDest) return true; // only the case for indoor as we want to show the you have arrived message
+      if (idx === lastStepIdxForDest && isDestIndoor) return true; // only the case for indoor as we want to show the you have arrived message
     });
   }, [allSteps, currentRoute]);
 
