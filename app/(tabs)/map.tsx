@@ -5,9 +5,11 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-02-14
  */
-import { Graph } from "@/maps/graph";
+import { graph, Graph } from "@/maps/graph";
 import React, { useEffect, useRef } from "react";
-import MapView, { Polyline } from "react-native-maps";
+import MapView, { Marker, Polyline } from "react-native-maps";
+
+const DEBUG = false;
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
@@ -88,16 +90,16 @@ export default function TabTwoScreen() {
     >
       
       {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
-      {/*graph.nodes.map((node) => (
+      {DEBUG && graph.nodes.map((node) => (
         <Marker
           key={`node-${node.id}`}
           coordinate={{ latitude: node.y, longitude: node.x }}
           pinColor="blue"
           title={`${node.name} (${node.id})`}
         />
-      ))*/}
+      ))}
       {/* This displays the lines of the graph that we have collected data for */}
-      {/*makeDataLines(graph)*/}
+      {DEBUG && makeDataLines(graph)}
            {/*can be uncommented to drop markers at all nodes to make it easier to see map layout  */}
       {/*graph.nodes.map((node) => (
         <Marker

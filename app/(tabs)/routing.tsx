@@ -326,7 +326,6 @@ export default function TabTwoScreen() {
             style={{ flex: 1 }}
             onMapReady={() => setMapReady(true)}
             mapType={mapReady ? "satellite" : "standard"}
-            cacheEnabled
             cameraZoomRange={{
               // This is for limiting how far in and out the user can zoom. This might only work or apple users
               minCenterCoordinateDistance: 12,

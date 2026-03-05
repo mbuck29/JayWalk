@@ -170,6 +170,8 @@ function loadGraph(): Graph
         }
     }
 
+    console.log(`We have ${edges.length} edges and ${nodes.length} nodes.`)
+
     // Return the Graph
     return {
         edges: edges,
