@@ -15,7 +15,7 @@ import {
   setIndoorOutdoorPreference,
   setRoute,
   useAppDispatch,
-  useAppSelector,
+  useAppSelector
 } from "@/redux/appState";
 
 import { useFonts } from "expo-font";
@@ -56,11 +56,19 @@ export default function HomeScreen() {
     "outdoors" | "indoors" | "nopreference"
   >("nopreference");
   const accessible = useAppSelector((s) => s.jayWalk.accessible ?? false);
+  const reduxDestination = useAppSelector((s) => s.jayWalk.destination);
 
   const [currLocation, setCurrLocation] = useState<Node | null>(null);
   const [destLocation, setDestLocation] = useState<Node | null>(null);
   const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
+ useEffect(() => {
+  if (reduxDestination) {
+    setDestLocationText(reduxDestination);
+  }
+}, [reduxDestination]);
+
+
   const [showMissingLocation, setShowMissingLocation] = useState(false);
   const [showNeedLocationPermission, setShowNeedLocationPermission] =
     useState(false);
