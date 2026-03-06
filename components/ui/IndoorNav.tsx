@@ -31,11 +31,13 @@ import { floorPlanMap } from "../../maps/floorPlanMap";
 interface IndoorNavProps {
   instrList: Direction[];
   setIsRouteStarted: (isStarted: boolean) => void;
+  currentIndoorSegmentKey: string;
 }
 
 export default function IndoorNav({
   instrList,
   setIsRouteStarted,
+  currentIndoorSegmentKey,
 }: IndoorNavProps) {
   const state = getState();
   const currentRoute = getRoute(state);
@@ -75,7 +77,8 @@ export default function IndoorNav({
   // nodes that are indoor have a building field that is not undefined
   const isIndoorStep = React.useCallback(
     (step: Direction) => {
-      return currentRoute?.stops?.[step.node]?.building !== undefined;
+      const stop = currentRoute?.stops?.[step.node];
+      return !!stop?.building;
     },
     [currentRoute],
   );
@@ -85,33 +88,39 @@ export default function IndoorNav({
   // current active step so we do not snap back to the first matching instruction.
   const [activeStepIndex, setActiveStepIndex] = useState(0);
   const findStepIndexForNode = (nodeIdx: number) => {
-    const matches = allSteps
+    if (!allSteps.length) return 0;
+
+    // First: exact matches
+    const exactMatches = allSteps
       .map((step, index) => ({ step, index }))
       .filter(({ step }) => step.node === nodeIdx);
 
-    if (!matches.length) return 0;
+    if (exactMatches.length) {
+      let bestIndex = exactMatches[0].index;
+      let bestDelta = Math.abs(exactMatches[0].index - activeStepIndex);
 
-    let bestIndex = matches[0].index;
-    let bestDelta = Math.abs(matches[0].index - activeStepIndex);
-
-    for (const match of matches) {
-      const delta = Math.abs(match.index - activeStepIndex);
-      if (delta < bestDelta) {
-        bestDelta = delta;
-        bestIndex = match.index;
+      for (const match of exactMatches) {
+        const delta = Math.abs(match.index - activeStepIndex);
+        if (delta < bestDelta) {
+          bestDelta = delta;
+          bestIndex = match.index;
+        }
       }
+
+      return bestIndex;
     }
 
-    return bestIndex;
-  };
+    // Second: prefer the first step ahead of the current node
+    const forwardMatch = allSteps.findIndex((step) => step.node > nodeIdx);
+    if (forwardMatch !== -1) return forwardMatch;
 
-  // Keep active step synced with global currentNodeIndex changes
-  // (e.g. GPS updates or other UI changing the current node).
-  useEffect(() => {
-    if (!allSteps.length) return;
-    setActiveStepIndex(findStepIndexForNode(currentNodeIndex));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentNodeIndex, allSteps]);
+    // Third: if nothing is ahead, use the last step behind the current node
+    for (let i = allSteps.length - 1; i >= 0; i--) {
+      if (allSteps[i].node < nodeIdx) return i;
+    }
+
+    return 0;
+  };
 
   // Find the current contiguous indoor segment in the INSTRUCTION TIMELINE.
   // This lets us support routes like indoor -> outdoor -> indoor by only showing
@@ -157,14 +166,6 @@ export default function IndoorNav({
     dispatch(setCurrentNode(clamped));
   };
 
-  // Keep active step synced with global currentNodeIndex changes
-  // (e.g. GPS updates or other UI changing the current node).
-  useEffect(() => {
-    if (!allSteps.length) return;
-    setActiveStepIndex(findStepIndexForNode(currentNodeIndex));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentNodeIndex, allSteps]);
-
   // Compute which item in the *display* list should be highlighted.
   // If current active step is outdoors, it won't exist in displaySteps -> -1.
   const activeDisplayIndex = React.useMemo(() => {
@@ -176,18 +177,46 @@ export default function IndoorNav({
   // Handlers for Next and Prev buttons. These update the active step index, which in turn updates the global currentNodeIndex via the useEffect above.
   const handleNext = () => {
     if (!allSteps.length) return;
-    const next = Math.min(activeStepIndex + 1, allSteps.length - 1);
+
+    let next = activeStepIndex + 1;
+
+    while (
+      next < allSteps.length &&
+      currentRoute?.stops?.[allSteps[next].node]?.building === undefined
+    ) {
+      next++;
+    }
+
+    if (next >= allSteps.length) return;
+
     setActiveStepIndex(next);
     safeSetCurrentNode(allSteps[next].node);
   };
 
-  // Prev is similar but in the opposite direction
   const handlePrev = () => {
     if (!allSteps.length) return;
-    const prev = Math.max(activeStepIndex - 1, 0);
+
+    let prev = activeStepIndex - 1;
+
+    while (
+      prev >= 0 &&
+      currentRoute?.stops?.[allSteps[prev].node]?.building === undefined
+    ) {
+      prev--;
+    }
+
+    if (prev < 0) return;
+
     setActiveStepIndex(prev);
     safeSetCurrentNode(allSteps[prev].node);
   };
+
+  // Keep active step synced with global currentNodeIndex changes
+  // (e.g. GPS updates or other UI changing the current node).
+  useEffect(() => {
+    if (!allSteps.length) return;
+    setActiveStepIndex(findStepIndexForNode(currentNodeIndex));
+  }, [currentNodeIndex, currentIndoorSegmentKey, allSteps]);
 
   // Debugging useEffect to log current node and active step whenever they change
   useEffect(() => {
