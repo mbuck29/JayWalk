@@ -28,12 +28,12 @@ import { getRoute } from "../Utils/state";
 
 const BACK_WINDOW = 1; // allow recovery 1 stop behind
 const FORWARD_WINDOW = 3; // allow catch-up up to 3 stops ahead
-const NEAR_METERS = 18; // “you are at this stop”
+const NEAR_METERS = 14; // “you are at this stop”
 const SWITCH_HYST = 8; // must be this many meters closer than current stop
 const CONFIRM_HITS = 2; // consecutive confirmations
 const MAX_ACC = 50; // ignore worse accuracy than this
 const MAX_FORWARD_JUMP = 2; // prevent huge skips unless extremely near
-const SUPER_NEAR = 8; // allow bigger jump if you're REALLY close
+const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
