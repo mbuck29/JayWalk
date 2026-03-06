@@ -221,12 +221,14 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
           <Text style={styles.appTitle}>JayWalk</Text>
-          <InfoIcon
-            width={24}
-            height={24}
-            color="#fff"
-            style={{ marginLeft: 8 }}
-          />
+          <TouchableOpacity onPress={() => setShowInfo(true)}>
+            <InfoIcon
+              width={24}
+              height={24}
+              color="#fff"
+              style={{ marginLeft: 8 }}
+            />
+</TouchableOpacity>
         </View>
       </View>
 
