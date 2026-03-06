@@ -50,7 +50,7 @@ export default function IndoorNav({
     .toLowerCase(); // Convert to lowercase
   const currentFloor = currentNodeObj?.floor;
   const [isViewingFloorPlan, setIsViewingFloorPlan] = useState(false); // State to simply control if user is seeing floor plan
-  const routeLen = currentRoute?.route?.length ?? 0;
+  const stopLen = currentRoute?.stops?.length ?? 0;
   const destNodeIdx = (currentRoute?.stops?.length ?? 1) - 1; // simple grabbing of last nodes index
 
   // Get the floor plan image for the current building and floor, if available
@@ -66,6 +66,12 @@ export default function IndoorNav({
     dispatch(clearRoute()); // Clear the route from the state when ending the route
     navigate("/(tabs)");
   };
+
+  // Small helper to determine if a stop is indoors or outdoors.
+  // In our data model, outdoor stops have building undefined and real GPS coords,
+  // while indoor stops have building defined and indoor-map coords.
+  const isIndoorStop = (idx: number) =>
+    currentRoute?.stops?.[idx]?.building !== undefined;
 
   // The true timeline of steps, without prompts. This is what Next/Prev should walk.
   const allSteps = React.useMemo(() => {
@@ -85,16 +91,67 @@ export default function IndoorNav({
   }, [allSteps, destNodeIdx]);
 
   // A small check to make sure we only show the "You have arrived at your destination" direction if that is indoors
-  const isDestIndoor = !!currentRoute?.route?.[destNodeIdx]?.indoors;
+  const isDestIndoor = isIndoorStop(destNodeIdx);
 
-  // The list that is actually shown in IndoorNav, only indoor steps
+  // Find the current contiguous indoor segment that the user is in.
+  // This lets us support routes like indoor -> outdoor -> indoor by only showing
+  // the indoor instructions for the current building segment.
+  const currentIndoorSegment = React.useMemo(() => {
+    const stops = currentRoute?.stops ?? [];
+    if (!stops.length) return null;
+
+    // If the current node is not indoors then there is no indoor segment to show
+    if (!isIndoorStop(currentNodeIndex)) return null;
+
+    let start = currentNodeIndex;
+    let end = currentNodeIndex;
+
+    // Walk backward until we leave the current indoor run
+    while (start > 0 && isIndoorStop(start - 1)) {
+      start--;
+    }
+
+    // Walk forward until we leave the current indoor run
+    while (end < stops.length - 1 && isIndoorStop(end + 1)) {
+      end++;
+    }
+
+    return { start, end };
+  }, [currentRoute, currentNodeIndex]);
+
+  // The list that is actually shown in IndoorNav, only the indoor steps for the
+  // current indoor segment the user is in.
   const displaySteps = React.useMemo(() => {
+    if (!currentIndoorSegment) return [];
+
     return allSteps.filter((s, idx) => {
-      const routeNode = currentRoute?.route[s.node]; // get the node on the route that this instruction corresponds to
-      if (routeNode?.indoors) return true; // only include it if that node is indoors
-      if (idx === lastStepIdxForDest && isDestIndoor) return true; // only the case for indoor as we want to show the you have arrived message
+      // Normal case: show directions that belong to the current indoor segment
+      const inCurrentIndoorSegment =
+        s.node >= currentIndoorSegment.start &&
+        s.node <= currentIndoorSegment.end;
+
+      if (inCurrentIndoorSegment) return true;
+
+      // Special case: if the destination is indoors and in this same indoor segment,
+      // allow the "You have arrived at your destination!" instruction to show.
+      if (
+        idx === lastStepIdxForDest &&
+        isDestIndoor &&
+        destNodeIdx >= currentIndoorSegment.start &&
+        destNodeIdx <= currentIndoorSegment.end
+      ) {
+        return true;
+      }
+
+      return false;
     });
-  }, [allSteps, currentRoute]);
+  }, [
+    allSteps,
+    currentIndoorSegment,
+    lastStepIdxForDest,
+    isDestIndoor,
+    destNodeIdx,
+  ]);
 
   // Find the index in allSteps that corresponds to the currentNodeIndex, and keep that in state as activeStepIndex. This is the "true" active step that Next/Prev should update.
   const [activeStepIndex, setActiveStepIndex] = useState(0);
@@ -108,8 +165,8 @@ export default function IndoorNav({
   };
 
   const safeSetCurrentNode = (nodeIdx: number) => {
-    if (!routeLen) return;
-    const clamped = Math.max(0, Math.min(nodeIdx, routeLen - 1));
+    if (!stopLen) return;
+    const clamped = Math.max(0, Math.min(nodeIdx, stopLen - 1));
     dispatch(setCurrentNode(clamped));
   };
 
@@ -119,7 +176,7 @@ export default function IndoorNav({
     if (!allSteps.length) return;
     setActiveStepIndex(findStepIndexForNode(currentNodeIndex));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentNodeIndex, allSteps.length]);
+  }, [currentNodeIndex, allSteps]);
 
   // Compute which item in the *display* list should be highlighted.
   // If current active step is outdoors, it won't exist in displaySteps -> -1.
