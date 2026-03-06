@@ -178,16 +178,8 @@ export default function IndoorNav({
   const handleNext = () => {
     if (!allSteps.length) return;
 
-    let next = activeStepIndex + 1;
-
-    while (
-      next < allSteps.length &&
-      currentRoute?.stops?.[allSteps[next].node]?.building === undefined
-    ) {
-      next++;
-    }
-
-    if (next >= allSteps.length) return;
+    const next = Math.min(activeStepIndex + 1, allSteps.length - 1);
+    if (next === activeStepIndex) return;
 
     setActiveStepIndex(next);
     safeSetCurrentNode(allSteps[next].node);
@@ -196,16 +188,8 @@ export default function IndoorNav({
   const handlePrev = () => {
     if (!allSteps.length) return;
 
-    let prev = activeStepIndex - 1;
-
-    while (
-      prev >= 0 &&
-      currentRoute?.stops?.[allSteps[prev].node]?.building === undefined
-    ) {
-      prev--;
-    }
-
-    if (prev < 0) return;
+    const prev = Math.max(activeStepIndex - 1, 0);
+    if (prev === activeStepIndex) return;
 
     setActiveStepIndex(prev);
     safeSetCurrentNode(allSteps[prev].node);
