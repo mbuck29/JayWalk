@@ -75,7 +75,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
         // Punish not taking an indoor/outdoor route if they have a preference
         if(inOutPreference != "" && ((inOutPreference == "indoors") != edge.indoors))
         {
-            distance += 1000;
+            distance *= 1000;
         }
         
         const next = edgeOther(edge, start);
