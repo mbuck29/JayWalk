@@ -3049,5 +3049,41 @@
         "type": "door",
         "accessible": true,
         "indoors": true
+    },
+    {
+        "id": 348,
+        "startNodeId": 10309,
+        "endNodeId": 10078,
+        "length": 5.867750935269784,
+        "type": "stairs",
+        "accessible": false,
+        "indoors": true
+    },
+    {
+        "id": 349,
+        "startNodeId": 10011,
+        "endNodeId": 10310,
+        "length": 0.00041935545279994137,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 350,
+        "startNodeId": 10185,
+        "endNodeId": 10184,
+        "length": 2.9528231587932505,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
+    },
+    {
+        "id": 351,
+        "startNodeId": 10170,
+        "endNodeId": 10165,
+        "length": 3.57800554332262,
+        "type": "hallway",
+        "accessible": true,
+        "indoors": true
     }
 ]
