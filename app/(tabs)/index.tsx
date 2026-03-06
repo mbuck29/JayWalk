@@ -1,7 +1,7 @@
 /**
  * File: index.tsx
  * Purpose: The home menu for the app; used for searhcing for locations and starting routes
- * Author: Michael B, C. Cooper, Cole C, Delaney G.
+ * Author: Michael B, C. Cooper, Cole C, Delaney G., Blake Jesse
  * Date Created: 2026-02-03
  * Date Modified: 2026-02-28
  */
@@ -62,9 +62,14 @@ export default function HomeScreen() {
   const [destLocation, setDestLocation] = useState<Node | null>(null);
   const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
- useEffect(() => {
-  if (reduxDestination) {
-    setDestLocationText(reduxDestination);
+useEffect(() => {
+  if (!reduxDestination) return;
+
+  setDestLocationText(reduxDestination);
+
+  const node = graph.nodes.find(n => n.name === reduxDestination);
+  if (node) {
+    setDestLocation(node);
   }
 }, [reduxDestination]);
 
