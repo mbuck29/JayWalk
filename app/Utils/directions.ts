@@ -313,7 +313,7 @@ export function populateDirections(route: Route)
     }
 
     // If there is still a continueFrom, flush it
-    if(continueFrom)
+    if(continueFrom && !continueFrom.building)
     {
         const distance = getTensOfFeetOutdoors(continueFrom, stops[stops.length - 1]);
 

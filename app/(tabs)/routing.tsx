@@ -40,8 +40,8 @@ export default function TabTwoScreen() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.jayWalk);
   const currentRoute = getRoute(state); //get current route
-  console.log("Current route", currentRoute);
-  console.log("all stops", currentRoute?.stops);
+  //console.log("Current route", currentRoute);
+  //console.log("all stops", currentRoute?.stops);
 
   const [isRouteStarted, setIsRouteStarted] = useState(false); // a way to know if we should show componenets that are part of the route taking experince
   const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
