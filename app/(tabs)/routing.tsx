@@ -431,6 +431,7 @@ export default function TabTwoScreen() {
       >
         {/* if we're indoors, show the indoor nav screen instead of the map */}
         <IndoorNav
+          currentIndoorSegmentKey={`${currentRoute?.stops?.[currentNode]?.building?.id ?? "none"}-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
           instrList={currentRoute?.directions ?? []}
           setIsRouteStarted={setIsRouteStarted}
         />
