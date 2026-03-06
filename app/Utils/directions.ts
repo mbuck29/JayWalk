@@ -53,6 +53,7 @@ export function populateDirections(route: Route)
 
     const directions: Direction[] = route.directions;
 
+    let continueFromIndex = 0;
     let continueFrom: Node | null = canBeMerged(paths[0].type) ? stops[0] : null;
     let continueType: RouteType = paths[0].type;
 
@@ -143,7 +144,7 @@ export function populateDirections(route: Route)
             const continueDistance = getTensOfFeetOutdoors(continueFrom, thisStop);
 
             directions.push({
-                node: i,
+                node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
@@ -166,6 +167,7 @@ export function populateDirections(route: Route)
                 });
             }
 
+            continueFromIndex = i;
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
@@ -192,6 +194,7 @@ export function populateDirections(route: Route)
                     });
                 }
 
+                continueFromIndex = i;
                 continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
 
@@ -211,6 +214,7 @@ export function populateDirections(route: Route)
                     });
                 }
 
+                continueFromIndex = i;
                 continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
                 continueType = edgeOut.type;
 
@@ -227,6 +231,7 @@ export function populateDirections(route: Route)
                     prompt: false
                 });
 
+            continueFromIndex = i;
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
@@ -271,6 +276,7 @@ export function populateDirections(route: Route)
                 });
             }
 
+            continueFromIndex = i;
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
             continueType = edgeOut.type;
 
@@ -301,6 +307,7 @@ export function populateDirections(route: Route)
             prompt: false
         });
 
+        continueFromIndex = i;
         continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
         continueType = edgeOut.type;
     }
@@ -356,12 +363,32 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         startIndex++;
     }
 
+    const startPath = paths[startIndex];
+
+    if((startPath.type == "stairs" || startPath.type == "stairwell" || startPath.type == "elevator") && stops[startIndex].floor != stops[startIndex + 1].floor)
+    {
+        startIndex = takeElevatorDirections(route, startIndex, startPath.type);
+        while(startIndex > stops.length)
+        {
+            startIndex--;
+        }
+        const destFloor = stops[startIndex].floor;
+
+        while(stops[startIndex].floor == destFloor)
+        {
+            startIndex--;
+        }
+
+        startIndex++;
+    }
+
     let leftCount = 0;
     let rightCount = 0;
 
     let lastLeft: Node | null = null;
     let lastRight: Node | null = null;
 
+    let continueFromIndex = startIndex;
     let continueFrom: Node | null = canBeMerged(paths[startIndex].type) ? stops[startIndex] : null;
     let continueType = paths[startIndex].type;
 
@@ -476,7 +503,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const continueDistance = getTensOfFeetIndoors(continueFrom, thisStop);
 
             directions.push({
-                node: i,
+                node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
@@ -487,7 +514,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const continueDistance = getTensOfFeetIndoors(continueFrom, thisStop);
 
             directions.push({
-                node: i,
+                node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
                 prompt: false
@@ -601,6 +628,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             });
         }
 
+        continueFromIndex = i;
         continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
         continueType = edgeOut.type;
         leftCount = 0;

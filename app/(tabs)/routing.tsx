@@ -28,18 +28,20 @@ import { getRoute } from "../Utils/state";
 
 const BACK_WINDOW = 1; // allow recovery 1 stop behind
 const FORWARD_WINDOW = 3; // allow catch-up up to 3 stops ahead
-const NEAR_METERS = 18; // “you are at this stop”
+const NEAR_METERS = 14; // “you are at this stop”
 const SWITCH_HYST = 8; // must be this many meters closer than current stop
 const CONFIRM_HITS = 2; // consecutive confirmations
 const MAX_ACC = 50; // ignore worse accuracy than this
 const MAX_FORWARD_JUMP = 2; // prevent huge skips unless extremely near
-const SUPER_NEAR = 8; // allow bigger jump if you're REALLY close
+const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
 
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.jayWalk);
   const currentRoute = getRoute(state); //get current route
+  console.log("Current route", currentRoute);
+  console.log("all stops", currentRoute?.stops);
 
   const [isRouteStarted, setIsRouteStarted] = useState(false); // a way to know if we should show componenets that are part of the route taking experince
   const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
@@ -49,7 +51,8 @@ export default function TabTwoScreen() {
   const [locationPermissionStatus, requestLocationPermissions] =
     Location.useForegroundPermissions();
   const currentNode = useAppSelector((state) => state.jayWalk.currentNode);
-  const safeIndoors = !!currentRoute?.route?.[currentNode]?.indoors;
+  const safeIndoors =
+    currentRoute?.stops?.[currentNode]?.building !== undefined;
   const [isCurrNodeInDoors, setIsCurrNodeInDoors] =
     useState<boolean>(safeIndoors);
   const [mapReady, setMapReady] = useState(false);
@@ -67,6 +70,11 @@ export default function TabTwoScreen() {
     if (!isRouteStarted) return; // only track location and advance if the route has started
     if (!location) return; // need location to do anything
     if (!currentRoute) return; // need a route to do anything
+
+    // Determine indoor/outdoor based on the stop itself, since outdoor stops have real GPS coords
+    // and indoor stops use indoor-map coordinates
+    const isCurrNodeInDoors =
+      currentRoute?.stops?.[currentNode]?.building !== undefined;
     if (isCurrNodeInDoors) return; // only track outdoors here
 
     const now = Date.now();
@@ -82,13 +90,40 @@ export default function TabTwoScreen() {
     const n = currentRoute.stops.length;
     if (!n) return; // Small check to make sure we are doing operations on an empty list
 
+    // -------- Transition cooldown (prevents big jumps right after indoor->outdoor flips) --------
+    // If we *just* flipped to outdoors, be conservative for a few seconds.
+    // (This prevents "press next -> go outside -> GPS jumps 6 nodes ahead".)
+    const TRANSITION_COOLDOWN_MS = 3500;
+    const prevIndoorsRef = (TabTwoScreen as any)._prevIndoorsRef ?? {
+      current: isCurrNodeInDoors,
+    };
+    const lastFlipAtRef = (TabTwoScreen as any)._lastFlipAtRef ?? {
+      current: 0,
+    };
+    (TabTwoScreen as any)._prevIndoorsRef = prevIndoorsRef;
+    (TabTwoScreen as any)._lastFlipAtRef = lastFlipAtRef;
+
+    if (prevIndoorsRef.current !== isCurrNodeInDoors) {
+      lastFlipAtRef.current = now;
+      prevIndoorsRef.current = isCurrNodeInDoors;
+    }
+
+    const inCooldown = now - lastFlipAtRef.current < TRANSITION_COOLDOWN_MS;
+
     // We have set windows oh which wwe will compare
     const start = Math.max(0, currentNode - BACK_WINDOW);
-    const end = Math.min(n - 1, currentNode + FORWARD_WINDOW);
+    const end = Math.min(
+      n - 1,
+      currentNode + (inCooldown ? 1 : FORWARD_WINDOW),
+    );
 
     // Grab the currenet stop and if we have it then we will see the distance between the user
-    // and the current stop
-    const curStop = currentRoute.stops[currentNode];
+    // and the current stop. Only use it if it is actually an outdoor stop with valid GPS coords.
+    const curStop =
+      currentRoute.stops[currentNode]?.building === undefined
+        ? currentRoute.stops[currentNode]
+        : null;
+
     const curDist = curStop
       ? haversineMeters(userLat, userLng, curStop.y, curStop.x)
       : Number.POSITIVE_INFINITY;
@@ -100,8 +135,11 @@ export default function TabTwoScreen() {
 
     // Loop through the allowable stops that can be jumped to from the current stop based on the forward
     // and backward windows. For each one use its cordinates and get its distance from the users location.
-    // If it is better than make it the best dist and index
+    // IMPORTANT: only consider OUTDOOR stops while outdoors
     for (let i = start; i <= end; i++) {
+      const isIndoorCandidate = currentRoute.stops[i]?.building !== undefined;
+      if (isIndoorCandidate) continue;
+
       const s = currentRoute.stops[i];
       const d = haversineMeters(userLat, userLng, s.y, s.x);
       if (d < bestDist) {
@@ -126,7 +164,8 @@ export default function TabTwoScreen() {
 
     // This prevents big forward skips unless we are really sure and really close to that node
     const delta = bestIdx - currentNode;
-    if (delta > MAX_FORWARD_JUMP && bestDist > SUPER_NEAR) {
+    const maxJumpNow = inCooldown ? 1 : MAX_FORWARD_JUMP;
+    if (delta > maxJumpNow && bestDist > SUPER_NEAR) {
       return;
     }
 
@@ -143,35 +182,59 @@ export default function TabTwoScreen() {
     // then we want to set that as the current node, even if its backwards or forwards more than one
     // As well as reset all the refs
     if (hitsRef.current >= CONFIRM_HITS && bestIdx !== currentNode) {
-      const nextIdx = bestIdx + 1;
-
-      // In the case that the new node we would make the current is the last one before an indoor segment we
-      // want to know that
-      const bestIsOutdoor = !currentRoute.route?.[bestIdx]?.indoors;
-      const nextIsIndoor =
-        nextIdx < n && !!currentRoute.route?.[nextIdx]?.indoors;
-
-      // are we actually "at" the bestIdx stop we want to move to?
-      const atBestStop = bestDist <= NEAR_METERS;
-
-      if (bestIsOutdoor && nextIsIndoor && atBestStop) {
-        // snap straight into the first indoor node after the outdoor doorway node
-        dispatch(setCurrentNode(nextIdx));
-      } else {
-        // normal advance to best candidate
-        dispatch(setCurrentNode(bestIdx));
+      // -------- Doorway snap logic (outdoors -> indoors) --------
+      // Find the next indoor stop after our chosen outdoor bestIdx.
+      // Only snap inside if we are *actually near the outdoor doorway stop*.
+      let nextIndoorIdx = -1;
+      for (let j = bestIdx + 1; j < n; j++) {
+        if (currentRoute.stops[j]?.building !== undefined) {
+          nextIndoorIdx = j;
+          break;
+        }
+        // stop scanning once we find the first indoor stop after this outdoor run
       }
+
+      if (nextIndoorIdx !== -1) {
+        const doorwayIdx = nextIndoorIdx - 1; // last outdoor stop before going indoors
+        const doorwayIsOutdoor =
+          doorwayIdx >= 0 &&
+          currentRoute.stops[doorwayIdx]?.building === undefined;
+
+        if (doorwayIsOutdoor) {
+          const doorStop = currentRoute.stops[doorwayIdx];
+          const distToDoor = haversineMeters(
+            userLat,
+            userLng,
+            doorStop.y,
+            doorStop.x,
+          );
+
+          // Only snap indoors when we're actually at the doorway outdoor stop
+          if (distToDoor <= NEAR_METERS) {
+            dispatch(setCurrentNode(nextIndoorIdx));
+            lastSetAtRef.current = now;
+            candidateRef.current = null;
+            hitsRef.current = 0;
+            return;
+          }
+        }
+      }
+
+      // normal advance to best candidate
+      dispatch(setCurrentNode(bestIdx));
 
       // After either of those outcomes we want to reset everything
       lastSetAtRef.current = now;
       candidateRef.current = null;
       hitsRef.current = 0;
     }
-  }, [location, isRouteStarted, currentRoute, currentNode, isCurrNodeInDoors]);
+  }, [location, isRouteStarted, currentRoute, currentNode]);
 
   // Update whether we're indoors or outdoors whenever we change nodes or routes
   useEffect(() => {
-    setIsCurrNodeInDoors(!!currentRoute?.route?.[currentNode]?.indoors);
+    setIsCurrNodeInDoors(
+      currentRoute?.stops?.[currentNode]?.building !== undefined,
+    );
     console.log("currentNode", currentRoute?.stops[currentNode]);
     console.log("isCurrNodeInDoors", isCurrNodeInDoors);
   }, [currentNode, currentRoute]);
@@ -326,12 +389,13 @@ export default function TabTwoScreen() {
             style={{ flex: 1 }}
             onMapReady={() => setMapReady(true)}
             mapType={mapReady ? "satellite" : "standard"}
-            cacheEnabled
             cameraZoomRange={{
               // This is for limiting how far in and out the user can zoom. This might only work or apple users
               minCenterCoordinateDistance: 12,
               maxCenterCoordinateDistance: 7000,
             }}
+            pitchEnabled={isRouteStarted} // lock changing the pitch till they start the route
+            rotateEnabled={isRouteStarted} // lock rotating till they start
             scrollEnabled={isRouteStarted} // Lock panning if not started
             zoomEnabled={isRouteStarted} // Lock zooming if not started
             initialRegion={routeOverview} // This places them over the campus on load
