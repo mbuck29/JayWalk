@@ -26,6 +26,8 @@ import { Route } from "../Utils/routing";
 import { haversineMeters } from "../Utils/routingUtils";
 import { getRoute } from "../Utils/state";
 
+const DEBUG_SPOOF = false;
+
 const BACK_WINDOW = 1; // allow recovery 1 stop behind
 const FORWARD_WINDOW = 3; // allow catch-up up to 3 stops ahead
 const NEAR_METERS = 14; // “you are at this stop”
@@ -65,6 +67,22 @@ export default function TabTwoScreen() {
   const candidateRef = useRef<number | null>(null);
   const hitsRef = useRef(0);
   const lastSetAtRef = useRef(0);
+
+  function handleMapPress(e: any) {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+  
+    setLocation({coords: {
+      latitude: latitude,
+      longitude: longitude,
+      altitude: 0,
+      altitudeAccuracy: 1,
+      accuracy: 1,
+      speed: 1,
+      heading: 0
+    },
+    timestamp: 0
+  })
+  }
 
   useEffect(() => {
     if (!isRouteStarted) return; // only track location and advance if the route has started
@@ -250,7 +268,7 @@ export default function TabTwoScreen() {
     }
 
     // If we have location permissions, add a watcher for when they move
-    if (hasLocationPermissions()) {
+    if (hasLocationPermissions() && !DEBUG_SPOOF) {
       watchLocation(setLocation, (errorReason) =>
         console.log("Location error: " + errorReason),
       );
@@ -385,6 +403,7 @@ export default function TabTwoScreen() {
             </View>
           )}
           <MapView
+            onPress={DEBUG_SPOOF && handleMapPress}
             ref={mapRef}
             style={{ flex: 1 }}
             onMapReady={() => setMapReady(true)}
