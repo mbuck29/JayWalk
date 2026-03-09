@@ -5,6 +5,7 @@
  * Date Created: 2026-03-01
  */
 
+import { metersToFeet } from "@/app/Utils/directions";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import DashedLine from "react-native-dashed-line";
@@ -21,6 +22,7 @@ export default function RouteSummary(props: RouteSummaryProps) {
   const { setIsRouteStarted } = props;
   const routeLengthMiles = props.routeLength / 1609.344; // the length from the route is in meters so we need to make into miles
   const timeOfTrip = calculateRouteTime(props.routeLength); // Use our util to get the time it may take on avg
+  const length = Math.round(metersToFeet(props.routeLength));
 
   return (
     <View style={styles.container}>
@@ -54,7 +56,7 @@ export default function RouteSummary(props: RouteSummaryProps) {
             {/* We are using toFixed in these two locations to make the numbers more readable */}
           </Text>
           <Text style={styles.timeText}>
-            {routeLengthMiles.toFixed(2)} miles
+            {length} feet
           </Text>
         </View>
         <TouchableOpacity

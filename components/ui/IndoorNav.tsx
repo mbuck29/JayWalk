@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "space-between",
-    backgroundColor: "#0015BA",
+    backgroundColor: "#356EC4",
     paddingHorizontal: 30,
     paddingBottom: 10,
     height: 90,
@@ -391,6 +391,7 @@ const styles = StyleSheet.create({
   },
   appTitle: {
     color: "#fff",
+    fontFamily: "MuseoModerno-Bold",
     fontSize: 24,
   },
   indoorNavTitle: {
