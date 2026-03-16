@@ -39,31 +39,37 @@ export interface Direction
 /**
  * Fills in the directions list for the given route
  * @param route The route to populate the list for
-
  */
 export function populateDirections(route: Route)
 {
+    // Get the Edges and Nodes for the route
     const paths = route.route;
     const stops = route.stops;
 
+    // If there is 1 or 0 stops, we have no directions to make
     if(stops.length < 2)
     {
         return;
     }
 
+    // Get the Route's empty list of directions to fill
     const directions: Direction[] = route.directions;
 
+    // The algorithm will merge valid edges of the same type in a straight line into one edge for the purpose of directions so that it
+    // doesn't say like "Continue forward for 40 feet" five times in a row. When this is happening, these variables will refer to the starting
+    // node / the type of the edge being merged
     let continueFromIndex = 0;
     let continueFrom: Node | null = canBeMerged(paths[0].type) ? stops[0] : null;
     let continueType: RouteType = paths[0].type;
 
     let i = 1;
 
+    // If it is starting indoors, pass the handling over to the indoor function
     if(paths[0].indoors)
     {
-        i = populateDirectionsIndoors(route, 0, false);
+        i = populateDirectionsIndoors(route, 0, false) - 1;
     }
-    else if(!continueFrom)
+    else if(!continueFrom) // If the first edge isn't going to be merged, make directions for it
     {
         directions.push({
             node: 0,
@@ -76,6 +82,7 @@ export function populateDirections(route: Route)
     // For each node,
     for(; i < paths.length; i++)
     {
+        // Get the adjacent stops and edges
         const lastStop = stops[i - 1];
         const thisStop = stops[i];
         const nextStop = stops[i + 1];
@@ -382,15 +389,20 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         startIndex++;
     }
 
-    let leftCount = 0;
-    let rightCount = 0;
-
-    let lastLeft: Node | null = null;
-    let lastRight: Node | null = null;
-
+    // The algorithm will merge valid edges of the same type in a straight line into one edge for the purpose of directions so that it
+    // doesn't say like "Continue forward for 40 feet" five times in a row. When this is happening, these variables will refer to the starting
+    // node / the type of the edge being merged
     let continueFromIndex = startIndex;
     let continueFrom: Node | null = canBeMerged(paths[startIndex].type) ? stops[startIndex] : null;
     let continueType = paths[startIndex].type;
+
+    // As the algorithm is merging, it will keep track of the number of hallways we pass on the L/R so that it can say like 'take the third left'
+    let leftCount = 0;
+    let rightCount = 0;
+
+    // It will also keep track of the last landmarks we passed on each side so it can say like 'turn left after passin Eaton 1005 on your left'
+    let lastLeft: Node | null = null;
+    let lastRight: Node | null = null;
 
     if(startIndex == 0 && continueFrom)
     {
@@ -779,7 +791,6 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
     {
         output += turnText + " to ";
     }
-
 
     if(specifier != "")
     {
