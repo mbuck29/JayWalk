@@ -9,6 +9,7 @@
 import EndRoute from "@/components/ui/EndRoute";
 import IndoorNav from "@/components/ui/IndoorNav";
 import LockOnUser from "@/components/ui/lockOnUser";
+import ReroutePrompt from "@/components/ui/ReroutePrompt";
 import RouteSummary from "@/components/ui/RouteSummary";
 import { Node } from "@/maps/graph";
 import {
@@ -19,8 +20,9 @@ import {
 import * as Location from "expo-location";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
+import Reroute from "../../assets/images/icons/reroute.svg";
 import { watchLocation } from "../Utils/location";
 import { Route } from "../Utils/routing";
 import { haversineMeters } from "../Utils/routingUtils";
@@ -42,14 +44,14 @@ export default function TabTwoScreen() {
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.jayWalk);
   const currentRoute = getRoute(state); //get current route
-  //console.log("Current route", currentRoute);
-  //console.log("all stops", currentRoute?.stops);
 
   const [isRouteStarted, setIsRouteStarted] = useState(false); // a way to know if we should show componenets that are part of the route taking experince
   const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
+  const [showReroutePrompt, setShowReroutePrompt] = useState(false);
+  const [isManualReroute, setIsManualReroute] = useState(false);
   const [locationPermissionStatus, requestLocationPermissions] =
     Location.useForegroundPermissions();
   const currentNode = useAppSelector((state) => state.jayWalk.currentNode);
@@ -64,24 +66,27 @@ export default function TabTwoScreen() {
     (location?.coords?.latitude ?? 0) !== 0 &&
     (location?.coords?.longitude ?? 0) !== 0;
 
+  // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
   const candidateRef = useRef<number | null>(null);
   const hitsRef = useRef(0);
+  const missRef = useRef(0);
   const lastSetAtRef = useRef(0);
 
   function handleMapPress(e: any) {
     const { latitude, longitude } = e.nativeEvent.coordinate;
-  
-    setLocation({coords: {
-      latitude: latitude,
-      longitude: longitude,
-      altitude: 0,
-      altitudeAccuracy: 1,
-      accuracy: 1,
-      speed: 1,
-      heading: 0
-    },
-    timestamp: 0
-  })
+
+    setLocation({
+      coords: {
+        latitude: latitude,
+        longitude: longitude,
+        altitude: 0,
+        altitudeAccuracy: 1,
+        accuracy: 1,
+        speed: 1,
+        heading: 0,
+      },
+      timestamp: 0,
+    });
   }
 
   useEffect(() => {
@@ -128,7 +133,7 @@ export default function TabTwoScreen() {
 
     const inCooldown = now - lastFlipAtRef.current < TRANSITION_COOLDOWN_MS;
 
-    // We have set windows oh which wwe will compare
+    // We have set windows on which we will compare
     const start = Math.max(0, currentNode - BACK_WINDOW);
     const end = Math.min(
       n - 1,
@@ -184,6 +189,15 @@ export default function TabTwoScreen() {
     const delta = bestIdx - currentNode;
     const maxJumpNow = inCooldown ? 1 : MAX_FORWARD_JUMP;
     if (delta > maxJumpNow && bestDist > SUPER_NEAR) {
+      missRef.current += 1; // if we are not close to any nodes then we want to count that as a miss
+
+      // If we miss enough times that means that we are no longer on the path
+      // So we will show the message to the user that need to reroute so we can give them acurate info
+      if (missRef.current > 3) {
+        setIsManualReroute(false);
+        setShowReroutePrompt(true);
+        missRef.current = 0;
+      }
       return;
     }
 
@@ -379,6 +393,13 @@ export default function TabTwoScreen() {
     );
   }, [location, isLockedOnUser, isRouteStarted, hasFix]);
 
+  // We have automatic reroute if the user leaves the path, but we also allow the user to
+  // manually reroute in the case that we didnt catch that they left the route or other reasons
+  function handleManualReroute() {
+    setIsManualReroute(true);
+    setShowReroutePrompt(true);
+  }
+
   return (
     <View style={{ flex: 1 }}>
       {/* MAP LAYER (always mounted so tiles stay cached) */}
@@ -453,6 +474,8 @@ export default function TabTwoScreen() {
           currentIndoorSegmentKey={`${currentRoute?.stops?.[currentNode]?.building?.id ?? "none"}-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
           instrList={currentRoute?.directions ?? []}
           setIsRouteStarted={setIsRouteStarted}
+          setShowReroutePrompt={setShowReroutePrompt}
+          setIsManualReroute={setIsManualReroute}
         />
       </View>
       {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
@@ -473,6 +496,23 @@ export default function TabTwoScreen() {
       {/* only show lock on user button if we're outdoors and the route has started */}
       {!isLockedOnUser && !isCurrNodeInDoors && isRouteStarted && (
         <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
+      )}
+      {/* A button that will allow the user to reroute manually */}
+      {!isCurrNodeInDoors && isRouteStarted && !showReroutePrompt && (
+        <TouchableOpacity
+          style={styles.rerouteButton}
+          onPress={handleManualReroute}
+        >
+          <Reroute width={30} height={30} style={styles.rerouteIcon} />
+        </TouchableOpacity>
+      )}
+      {showReroutePrompt && (
+        <ReroutePrompt
+          isManualReroute={isManualReroute}
+          setShowReroutePrompt={setShowReroutePrompt}
+          setIsRouteStarted={setIsRouteStarted}
+          isIndoors={isCurrNodeInDoors}
+        />
       )}
     </View>
   );
@@ -500,4 +540,16 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  rerouteButton: {
+    position: "absolute",
+    alignContent: "center",
+    bottom: 100,
+    left: 20,
+    backgroundColor: "#356EC4",
+    padding: 10,
+    borderRadius: 40,
+    height: "8%",
+    width: "16%",
+  },
+  rerouteIcon: { alignSelf: "center", marginTop: 5 },
 });

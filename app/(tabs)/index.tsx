@@ -12,10 +12,12 @@ import { graph, Node } from "@/maps/graph";
 import {
   clearRoute,
   setAccessiblePreference,
+  setDestination,
   setIndoorOutdoorPreference,
   setRoute,
+  setStart,
   useAppDispatch,
-  useAppSelector
+  useAppSelector,
 } from "@/redux/appState";
 
 import { useFonts } from "expo-font";
@@ -62,17 +64,17 @@ export default function HomeScreen() {
   const [destLocation, setDestLocation] = useState<Node | null>(null);
   const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
-useEffect(() => {
-  if (!reduxDestination) return;
 
-  setDestLocationText(reduxDestination);
+  useEffect(() => {
+    if (!reduxDestination) return;
 
-  const node = graph.nodes.find(n => n.name === reduxDestination);
-  if (node) {
-    setDestLocation(node);
-  }
-}, [reduxDestination]);
+    setDestLocationText(reduxDestination);
 
+    const node = graph.nodes.find((n) => n.name === reduxDestination);
+    if (node) {
+      setDestLocation(node);
+    }
+  }, [reduxDestination]);
 
   const [showMissingLocation, setShowMissingLocation] = useState(false);
   const [showNeedLocationPermission, setShowNeedLocationPermission] =
@@ -125,6 +127,14 @@ useEffect(() => {
 
       // Sanitize the route and then push it to the global state
       dispatch(setRoute(sanitize(calculatedRoute)));
+
+      // Set the destination so it can be refernced later
+      dispatch(setDestination(destLocation.name));
+      dispatch(setStart(currLocation.name));
+
+      // WIpe the text values so they will be gone if they pick a new route
+      setCurrLocationText("");
+      setDestLocationText("");
 
       // This will navigate them to the map screen where they can see the route we just calculated.
       navigate("/routing");
@@ -241,7 +251,7 @@ useEffect(() => {
               color="#fff"
               style={{ marginLeft: 8 }}
             />
-</TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
 

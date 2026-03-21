@@ -9,6 +9,7 @@ type JayWalkState = {
   route: Route | null;
   accessible: boolean;
   indoors: "indoors" | "outdoors" | "";
+  start: string;
   currentNode: number;
   destination: string;
 };
@@ -17,6 +18,7 @@ const initialState: JayWalkState = {
   route: null,
   accessible: false,
   indoors: "",
+  start: "",
   currentNode: 0,
   destination: "",
 };
@@ -62,11 +64,12 @@ const appSlice = createSlice({
     setCurrentNode(state: JayWalkState, payload: PayloadAction<number>) {
       state.currentNode = payload.payload;
     },
-
+    setStart(state: JayWalkState, payload: PayloadAction<string>) {
+      state.start = payload.payload;
+    },
     setDestination(state: JayWalkState, payload: PayloadAction<string>) {
       state.destination = payload.payload;
-},
-
+    },
   },
 });
 
@@ -76,6 +79,7 @@ export const {
   setAccessiblePreference,
   setIndoorOutdoorPreference,
   setCurrentNode,
+  setStart,
   setDestination,
 } = appSlice.actions;
 

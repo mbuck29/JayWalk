@@ -32,12 +32,16 @@ interface IndoorNavProps {
   instrList: Direction[];
   setIsRouteStarted: (isStarted: boolean) => void;
   currentIndoorSegmentKey: string;
+  setShowReroutePrompt: (x: boolean) => void;
+  setIsManualReroute: (x: boolean) => void;
 }
 
 export default function IndoorNav({
   instrList,
   setIsRouteStarted,
   currentIndoorSegmentKey,
+  setShowReroutePrompt,
+  setIsManualReroute,
 }: IndoorNavProps) {
   const state = getState();
   const currentRoute = getRoute(state);
@@ -66,6 +70,13 @@ export default function IndoorNav({
     setIsRouteStarted(false);
     dispatch(clearRoute()); // Clear the route from the state when ending the route
     navigate("/(tabs)");
+  };
+
+  // In the indoor nav there is no way for us to know if the user is off path so we will have to trust them
+  // to use a manual reroute if they feel the directions are off
+  const handleReroutePress = () => {
+    setIsManualReroute(true);
+    setShowReroutePrompt(true);
   };
 
   // The true timeline of steps, without prompts. This is what Next/Prev should walk.
@@ -215,154 +226,172 @@ export default function IndoorNav({
   }, [currentNodeObj, activeStepIndex, allSteps]);
 
   return (
-    <View style={styles.listContainer}>
-      <View style={styles.appHeader}>
-        <Text style={styles.appTitle}>JayWalk</Text>
-      </View>
-      <View style={styles.listHeader}>
-        <Text style={styles.indoorNavTitle}>Directions</Text>
-        <TouchableOpacity
-          style={styles.floorMapButton}
-          onPress={() => setIsViewingFloorPlan(!isViewingFloorPlan)}
-        >
-          <Map height={40} width={40} />
-          <Text
-            style={{
-              color: "#fff",
-              fontSize: 18,
-              fontFamily: "Orelega One",
-              flexWrap: "wrap",
-              marginLeft: 10,
-              width: 80,
-              textAlign: "center",
-            }}
+    <>
+      <View style={styles.listContainer}>
+        <View style={styles.appHeader}>
+          <Text style={styles.appTitle}>JayWalk</Text>
+        </View>
+        <View style={styles.listHeader}>
+          <Text style={styles.indoorNavTitle}>Directions</Text>
+          <TouchableOpacity
+            style={styles.floorMapButton}
+            onPress={() => setIsViewingFloorPlan(!isViewingFloorPlan)}
           >
-            View Floor plan
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <FlatList
-        data={displaySteps}
-        style={styles.instrList}
-        renderItem={({ item, index }) => (
-          <View
-            style={[
-              styles.instrContainer,
-              {
-                // Display different background colors so the user can know which is the current step
-                backgroundColor:
-                  index === activeDisplayIndex ? "#356EC4" : "#C2DCF0",
-              },
-            ]}
-          >
+            <Map height={40} width={40} />
             <Text
-              style={[
-                styles.instrText, // Same here for the text color
-                { color: index === activeDisplayIndex ? "#fff" : "#356EC4" },
-              ]}
-            >
-              {item.direction}
-            </Text>
-          </View>
-        )}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-      />
-      <View style={styles.BottomButtonContainer}>
-        <TouchableOpacity style={styles.endButton} onPress={handleEndRoute}>
-          <Text style={styles.endButtonText}>End</Text>
-        </TouchableOpacity>
-        <View style={styles.progressContainer}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <TouchableOpacity
-              style={[
-                styles.progressButton,
-                {
-                  // Change background color to indicate if the button is disabled or not
-                  backgroundColor: activeStepIndex > 0 ? "#356EC4" : "#888888",
-                },
-              ]}
-              onPress={() => {
-                handlePrev();
+              style={{
+                color: "#fff",
+                fontSize: 18,
+                fontFamily: "Orelega One",
+                flexWrap: "wrap",
+                marginLeft: 10,
+                width: 80,
+                textAlign: "center",
               }}
-              disabled={activeStepIndex <= 0} // Disable the button if we're at the beginning of the list
             >
-              <Arrow width={40} height={40} color={"#fff"} />
-            </TouchableOpacity>
-            <Text style={styles.progressText}>Prev</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Text style={styles.progressText}>Next</Text>
-            <TouchableOpacity
+              View Floor plan
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <FlatList
+          data={displaySteps}
+          style={styles.instrList}
+          renderItem={({ item, index }) => (
+            <View
               style={[
-                styles.progressButton,
+                styles.instrContainer,
                 {
-                  // Same here for the next button, change color if disabled
+                  // Display different background colors so the user can know which is the current step
                   backgroundColor:
-                    activeStepIndex >= allSteps.length - 1 // Not -1 because we need to be able to transtion to outside
-                      ? "#888888"
-                      : "#356EC4",
+                    index === activeDisplayIndex ? "#356EC4" : "#C2DCF0",
                 },
               ]}
-              onPress={() => handleNext()}
-              disabled={activeStepIndex >= allSteps.length - 1} // if we reach the end of the list, only possible if route is indoors only
             >
-              <Arrow
-                width={40}
-                height={40}
-                color="#fff"
-                style={{ transform: [{ rotate: "180deg" }] }}
-              />
+              <Text
+                style={[
+                  styles.instrText, // Same here for the text color
+                  { color: index === activeDisplayIndex ? "#fff" : "#356EC4" },
+                ]}
+              >
+                {item.direction}
+              </Text>
+            </View>
+          )}
+          ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        />
+        <View style={styles.BottomButtonContainer}>
+          <View style={styles.endAndRerouteRow}>
+            <TouchableOpacity
+              style={styles.endAndRerouteButton}
+              onPress={handleReroutePress}
+            >
+              <Text style={styles.endAndRerouteText}>Reroute</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.endAndRerouteButton}
+              onPress={handleEndRoute}
+            >
+              <Text style={styles.endAndRerouteText}>End</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.progressContainer}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <TouchableOpacity
+                style={[
+                  styles.progressButton,
+                  {
+                    // Change background color to indicate if the button is disabled or not
+                    backgroundColor:
+                      activeStepIndex > 0 ? "#356EC4" : "#888888",
+                  },
+                ]}
+                onPress={() => {
+                  handlePrev();
+                }}
+                disabled={activeStepIndex <= 0} // Disable the button if we're at the beginning of the list
+              >
+                <Arrow width={40} height={40} color={"#fff"} />
+              </TouchableOpacity>
+              <Text style={styles.progressText}>Prev</Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 10 }}
+            >
+              <Text style={styles.progressText}>Next</Text>
+              <TouchableOpacity
+                style={[
+                  styles.progressButton,
+                  {
+                    // Same here for the next button, change color if disabled
+                    backgroundColor:
+                      activeStepIndex >= allSteps.length - 1 // Not -1 because we need to be able to transtion to outside
+                        ? "#888888"
+                        : "#356EC4",
+                  },
+                ]}
+                onPress={() => handleNext()}
+                disabled={activeStepIndex >= allSteps.length - 1} // if we reach the end of the list, only possible if route is indoors only
+              >
+                <Arrow
+                  width={40}
+                  height={40}
+                  color="#fff"
+                  style={{ transform: [{ rotate: "180deg" }] }}
+                />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-      {isViewingFloorPlan && floorPlanImage && (
-        <View
-          style={{
-            position: "absolute",
-            top: 0,
-            width: "100%",
-            height: "100%",
-          }}
-        >
+        {isViewingFloorPlan && floorPlanImage && (
           <View
             style={{
-              // This View is to gray out the background when we show the floor plan to the user
               position: "absolute",
               top: 0,
               width: "100%",
               height: "100%",
-              backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent gray
-              zIndex: 99,
             }}
-            pointerEvents="auto"
-          />
-          <View style={{ zIndex: 100, flex: 1, justifyContent: "center" }}>
-            <View style={styles.floorPlanHeader}>
-              <TouchableOpacity
-                onPress={() => setIsViewingFloorPlan(false)}
-                style={{
-                  padding: 10,
-                  borderRadius: 40,
-                }}
-              >
-                <Close width={30} height={30} />
-              </TouchableOpacity>
-            </View>
-            <Image
-              source={floorPlanImage}
+          >
+            <View
               style={{
-                width: 300,
-                height: 300,
-                zIndex: 100,
-                alignSelf: "center",
+                // This View is to gray out the background when we show the floor plan to the user
+                position: "absolute",
+                top: 0,
+                width: "100%",
+                height: "100%",
+                backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent gray
+                zIndex: 99,
               }}
+              pointerEvents="auto"
             />
-            <View style={styles.floorPlanFooter} />
+            <View style={{ zIndex: 100, flex: 1, justifyContent: "center" }}>
+              <View style={styles.floorPlanHeader}>
+                <TouchableOpacity
+                  onPress={() => setIsViewingFloorPlan(false)}
+                  style={{
+                    padding: 10,
+                    borderRadius: 40,
+                  }}
+                >
+                  <Close width={30} height={30} />
+                </TouchableOpacity>
+              </View>
+              <Image
+                source={floorPlanImage}
+                style={{
+                  width: 300,
+                  height: 300,
+                  zIndex: 100,
+                  alignSelf: "center",
+                }}
+              />
+              <View style={styles.floorPlanFooter} />
+            </View>
           </View>
-        </View>
-      )}
-    </View>
+        )}
+      </View>
+    </>
   );
 }
 
@@ -449,17 +478,23 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     width: "100%",
   },
-  endButton: {
+  endAndRerouteRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginLeft: 8,
+  },
+  endAndRerouteButton: {
     backgroundColor: "#C42514",
-    padding: 10,
-    width: "30%",
+    paddingVertical: 10,
+    paddingHorizontal: 26,
+    //width: "30%",
     borderRadius: 40,
     alignSelf: "flex-end",
     alignItems: "center",
     marginBottom: 10,
     marginRight: 10,
   },
-  endButtonText: {
+  endAndRerouteText: {
     color: "#fff",
     fontSize: 36,
     fontFamily: "Orelega One",

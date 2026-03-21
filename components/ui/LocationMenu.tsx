@@ -12,6 +12,7 @@ type LocationMenuProps = {
   setLocationText: (text: string) => void;
   onSelect: () => void | undefined;
   oppisiteValue: Node | null;
+  currentStartValue?: Node | null;
 };
 
 export default function LocationMenu({
@@ -24,6 +25,7 @@ export default function LocationMenu({
   setLocationText,
   onSelect,
   oppisiteValue,
+  currentStartValue,
 }: LocationMenuProps) {
   return (
     // This is the menu that is shown when the user clicks on the text input to select a location.
@@ -39,7 +41,8 @@ export default function LocationMenu({
           (o) =>
             o.name.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
             !o.name.includes("~") && // This filters out options that are not real locations,
-            o.id !== oppisiteValue?.id, // This filters out the opposite value so that the user doesn't select the same location for both current and destination
+            o.id !== oppisiteValue?.id && // This filters out the opposite value so that the user doesn't select the same location for both current and destination
+            o.id !== currentStartValue?.id, // This is for the reroute flow, making sure they cant create a route that has the start and dest the same
         )
         .slice(0, 5) // This limits the number of options shown to 5 so that it doesnt get too long
 
@@ -49,8 +52,16 @@ export default function LocationMenu({
             key={option.name}
             // If the user selects an option then we set that as there input and close the menu
             onPress={() => {
-              setLocation(option.building && option.floor < -100 ? option.building : option);
-              setLocationText(option.building && option.floor < -100 ? option.building.name : option.name);
+              setLocation(
+                option.building && option.floor < -100
+                  ? option.building
+                  : option,
+              );
+              setLocationText(
+                option.building && option.floor < -100
+                  ? option.building.name
+                  : option.name,
+              );
               onDismiss();
               onSelect();
             }}
