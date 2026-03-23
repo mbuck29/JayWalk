@@ -1443,7 +1443,7 @@
         "id": 170,
         "startNodeId": 10149,
         "endNodeId": 10150,
-        "length": 3.642894518532483,
+        "length": 3.1080174817298167,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1452,7 +1452,7 @@
         "id": 171,
         "startNodeId": 10150,
         "endNodeId": 10151,
-        "length": 4.972218447164078,
+        "length": 4.242160122437715,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1461,7 +1461,7 @@
         "id": 172,
         "startNodeId": 10151,
         "endNodeId": 10152,
-        "length": 8.920659366287248,
+        "length": 7.610861395500045,
         "type": "ramp",
         "accessible": true,
         "indoors": true
@@ -1470,7 +1470,7 @@
         "id": 173,
         "startNodeId": 10152,
         "endNodeId": 10153,
-        "length": 2.838000511466442,
+        "length": 2.4213040366453344,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1479,7 +1479,7 @@
         "id": 174,
         "startNodeId": 10153,
         "endNodeId": 10154,
-        "length": 2.889313150992151,
+        "length": 2.465082570409702,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1488,7 +1488,7 @@
         "id": 175,
         "startNodeId": 10155,
         "endNodeId": 10154,
-        "length": 4.5406794655055975,
+        "length": 3.873982923724109,
         "type": "steps",
         "accessible": false,
         "indoors": true
@@ -1497,7 +1497,7 @@
         "id": 176,
         "startNodeId": 10155,
         "endNodeId": 10156,
-        "length": 8.721281122306438,
+        "length": 7.440757357456533,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1506,7 +1506,7 @@
         "id": 177,
         "startNodeId": 10156,
         "endNodeId": 10150,
-        "length": 3.2807752390600333,
+        "length": 2.799067264987014,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1515,7 +1515,7 @@
         "id": 178,
         "startNodeId": 10156,
         "endNodeId": 10157,
-        "length": 1.9380917225269112,
+        "length": 1.6535265910570676,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1524,7 +1524,7 @@
         "id": 179,
         "startNodeId": 10157,
         "endNodeId": 10158,
-        "length": 2.1620790265022927,
+        "length": 1.8446264027313999,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1533,7 +1533,7 @@
         "id": 180,
         "startNodeId": 10149,
         "endNodeId": 10159,
-        "length": 0.8835316989937082,
+        "length": 0.7538049625551917,
         "type": "ignore",
         "accessible": true,
         "indoors": true
@@ -1578,7 +1578,7 @@
         "id": 184,
         "startNodeId": 10150,
         "endNodeId": 10160,
-        "length": 10.223128124003305,
+        "length": 8.72209194247157,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1587,7 +1587,7 @@
         "id": 185,
         "startNodeId": 10160,
         "endNodeId": 10154,
-        "length": 4.3124610591,
+        "length": 3.6792732517441316,
         "type": "steps",
         "accessible": false,
         "indoors": true
@@ -1596,7 +1596,7 @@
         "id": 186,
         "startNodeId": 10150,
         "endNodeId": 10161,
-        "length": 9.994641869244793,
+        "length": 8.527153749638442,
         "type": "atrium",
         "accessible": true,
         "indoors": true
@@ -1605,7 +1605,7 @@
         "id": 187,
         "startNodeId": 10161,
         "endNodeId": 10154,
-        "length": 4.121910303537037,
+        "length": 3.5167005842036256,
         "type": "steps",
         "accessible": false,
         "indoors": true
@@ -2991,7 +2991,7 @@
         "id": 341,
         "startNodeId": 10160,
         "endNodeId": 10153,
-        "length": 3.7485075345103307,
+        "length": 3.1981236042890817,
         "type": "stairs",
         "accessible": false,
         "indoors": true
