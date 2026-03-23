@@ -678,7 +678,7 @@
         "id": 81,
         "startNodeId": 10073,
         "endNodeId": 10074,
-        "length": 4.266098121594591,
+        "length": 4.18766526634713,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -687,7 +687,7 @@
         "id": 82,
         "startNodeId": 10074,
         "endNodeId": 10075,
-        "length": 19.84215902868907,
+        "length": 19.477357952263624,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -696,7 +696,7 @@
         "id": 83,
         "startNodeId": 10075,
         "endNodeId": 10076,
-        "length": 4.544194509905471,
+        "length": 4.4606488107553295,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -705,7 +705,7 @@
         "id": 84,
         "startNodeId": 10076,
         "endNodeId": 10077,
-        "length": 8.085744617328702,
+        "length": 7.93708698708605,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -714,7 +714,7 @@
         "id": 85,
         "startNodeId": 10077,
         "endNodeId": 10078,
-        "length": 8.294107971532187,
+        "length": 8.141619549701222,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -723,7 +723,7 @@
         "id": 86,
         "startNodeId": 10078,
         "endNodeId": 10079,
-        "length": 7.605248384686695,
+        "length": 7.4654247499095945,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -732,7 +732,7 @@
         "id": 87,
         "startNodeId": 10079,
         "endNodeId": 10080,
-        "length": 3.534298433976476,
+        "length": 3.4693198259903584,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -741,7 +741,7 @@
         "id": 89,
         "startNodeId": 10076,
         "endNodeId": 10081,
-        "length": 3.0611432970536643,
+        "length": 3.0048637173847834,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -750,7 +750,7 @@
         "id": 90,
         "startNodeId": 10081,
         "endNodeId": 10082,
-        "length": 10.108111041346708,
+        "length": 9.922271900395382,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -759,7 +759,7 @@
         "id": 91,
         "startNodeId": 10082,
         "endNodeId": 10083,
-        "length": 3.9293759011461047,
+        "length": 3.857133734537837,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -768,7 +768,7 @@
         "id": 93,
         "startNodeId": 10083,
         "endNodeId": 10085,
-        "length": 1.8567036767928973,
+        "length": 1.8225679005944602,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -777,7 +777,7 @@
         "id": 94,
         "startNodeId": 10085,
         "endNodeId": 10082,
-        "length": 3.841984060198229,
+        "length": 3.771348605722572,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -786,7 +786,7 @@
         "id": 95,
         "startNodeId": 10085,
         "endNodeId": 10086,
-        "length": 7.603552614094129,
+        "length": 7.463760156314281,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -795,7 +795,7 @@
         "id": 96,
         "startNodeId": 10086,
         "endNodeId": 10087,
-        "length": 1.9821134620429917,
+        "length": 1.9456720080910714,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -804,7 +804,7 @@
         "id": 97,
         "startNodeId": 10087,
         "endNodeId": 10085,
-        "length": 8.230638358343528,
+        "length": 8.07931683489182,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -813,7 +813,7 @@
         "id": 98,
         "startNodeId": 10076,
         "endNodeId": 10088,
-        "length": 4.551755570891317,
+        "length": 4.4680708604983685,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -822,7 +822,7 @@
         "id": 99,
         "startNodeId": 10088,
         "endNodeId": 10077,
-        "length": 8.74958335725141,
+        "length": 8.588720951986717,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -831,7 +831,7 @@
         "id": 100,
         "startNodeId": 10076,
         "endNodeId": 10089,
-        "length": 5.556976691062821,
+        "length": 5.454810839270192,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -840,7 +840,7 @@
         "id": 102,
         "startNodeId": 10088,
         "endNodeId": 10090,
-        "length": 2.962670015883052,
+        "length": 2.908200882291044,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -849,7 +849,7 @@
         "id": 103,
         "startNodeId": 10074,
         "endNodeId": 10091,
-        "length": 7.815422345359241,
+        "length": 7.671734630721724,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -858,7 +858,7 @@
         "id": 104,
         "startNodeId": 10091,
         "endNodeId": 10092,
-        "length": 2.4948227416597506,
+        "length": 2.448955050531368,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -867,7 +867,7 @@
         "id": 105,
         "startNodeId": 10092,
         "endNodeId": 10093,
-        "length": 1.1728174050986155,
+        "length": 1.1512549808073949,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -876,7 +876,7 @@
         "id": 106,
         "startNodeId": 10093,
         "endNodeId": 10094,
-        "length": 1.0241187712360142,
+        "length": 1.0052901936808083,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -885,7 +885,7 @@
         "id": 107,
         "startNodeId": 10094,
         "endNodeId": 10095,
-        "length": 1.5870997429485167,
+        "length": 1.5579206756008028,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -894,7 +894,7 @@
         "id": 108,
         "startNodeId": 10095,
         "endNodeId": 10096,
-        "length": 3.4356244101411084,
+        "length": 3.3724599389159318,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -903,7 +903,7 @@
         "id": 109,
         "startNodeId": 10096,
         "endNodeId": 10097,
-        "length": 2.714318596014048,
+        "length": 2.664415440608638,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -912,7 +912,7 @@
         "id": 110,
         "startNodeId": 10097,
         "endNodeId": 10098,
-        "length": 1.1279796610642323,
+        "length": 1.107241585437115,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -921,7 +921,7 @@
         "id": 111,
         "startNodeId": 10098,
         "endNodeId": 10099,
-        "length": 2.2271953833664297,
+        "length": 2.1862480614501445,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -930,7 +930,7 @@
         "id": 112,
         "startNodeId": 10093,
         "endNodeId": 10100,
-        "length": 2.22526456776,
+        "length": 2.18435274417888,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -939,7 +939,7 @@
         "id": 113,
         "startNodeId": 10094,
         "endNodeId": 10101,
-        "length": 2.874300066690001,
+        "length": 2.821455627897721,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -948,7 +948,7 @@
         "id": 114,
         "startNodeId": 10095,
         "endNodeId": 10102,
-        "length": 2.4124856873674183,
+        "length": 2.3681317753591467,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -957,7 +957,7 @@
         "id": 115,
         "startNodeId": 10096,
         "endNodeId": 10103,
-        "length": 2.3346137556018043,
+        "length": 2.29169153076479,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -966,7 +966,7 @@
         "id": 116,
         "startNodeId": 10097,
         "endNodeId": 10104,
-        "length": 2.703210551648391,
+        "length": 2.6535116193084103,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -975,7 +975,7 @@
         "id": 117,
         "startNodeId": 10097,
         "endNodeId": 10105,
-        "length": 2.039825853780002,
+        "length": 2.0023233488306422,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -984,7 +984,7 @@
         "id": 118,
         "startNodeId": 10098,
         "endNodeId": 10106,
-        "length": 2.5961419957199965,
+        "length": 2.5484115348753567,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -993,7 +993,7 @@
         "id": 119,
         "startNodeId": 10098,
         "endNodeId": 10107,
-        "length": 2.1345598972946873,
+        "length": 2.0953156927148426,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1002,7 +1002,7 @@
         "id": 120,
         "startNodeId": 10099,
         "endNodeId": 10108,
-        "length": 2.3198375707277545,
+        "length": 2.277187008270813,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1011,7 +1011,7 @@
         "id": 121,
         "startNodeId": 10099,
         "endNodeId": 10109,
-        "length": 2.039825853780002,
+        "length": 2.0023233488306422,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1020,7 +1020,7 @@
         "id": 122,
         "startNodeId": 10083,
         "endNodeId": 10110,
-        "length": 3.52333556562,
+        "length": 3.4585585116165602,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1029,7 +1029,7 @@
         "id": 123,
         "startNodeId": 10083,
         "endNodeId": 10111,
-        "length": 2.7815807096999983,
+        "length": 2.730440930223599,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1038,7 +1038,7 @@
         "id": 124,
         "startNodeId": 10086,
         "endNodeId": 10112,
-        "length": 3.4506054015904395,
+        "length": 3.387165502585517,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1047,7 +1047,7 @@
         "id": 125,
         "startNodeId": 10087,
         "endNodeId": 10113,
-        "length": 2.5977971708933794,
+        "length": 2.5500362794043703,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1056,7 +1056,7 @@
         "id": 126,
         "startNodeId": 10081,
         "endNodeId": 10114,
-        "length": 3.8986257009374294,
+        "length": 3.8269488813823838,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1065,7 +1065,7 @@
         "id": 127,
         "startNodeId": 10114,
         "endNodeId": 10115,
-        "length": 11.028927565447242,
+        "length": 10.826159074282739,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1074,7 +1074,7 @@
         "id": 128,
         "startNodeId": 10115,
         "endNodeId": 10087,
-        "length": 10.048400158319025,
+        "length": 9.86365881092793,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1083,7 +1083,7 @@
         "id": 129,
         "startNodeId": 10115,
         "endNodeId": 10116,
-        "length": 4.173401152472014,
+        "length": 4.0966725449361245,
         "type": "steps",
         "accessible": false,
         "indoors": true
@@ -1092,7 +1092,7 @@
         "id": 130,
         "startNodeId": 10116,
         "endNodeId": 10117,
-        "length": 4.547031381169142,
+        "length": 4.463433525714378,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1101,7 +1101,7 @@
         "id": 131,
         "startNodeId": 10117,
         "endNodeId": 10118,
-        "length": 3.6112969535458377,
+        "length": 3.5449027162029827,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1110,7 +1110,7 @@
         "id": 132,
         "startNodeId": 10118,
         "endNodeId": 10119,
-        "length": 11.32619224784111,
+        "length": 11.117958500805823,
         "type": "room",
         "accessible": true,
         "indoors": true
@@ -1119,7 +1119,7 @@
         "id": 133,
         "startNodeId": 10119,
         "endNodeId": 10120,
-        "length": 4.544194509905471,
+        "length": 4.4606488107553295,
         "type": "ramp",
         "accessible": true,
         "indoors": true
@@ -1128,7 +1128,7 @@
         "id": 134,
         "startNodeId": 10120,
         "endNodeId": 10114,
-        "length": 5.375324256164263,
+        "length": 5.276498111693327,
         "type": "ramp",
         "accessible": true,
         "indoors": true
@@ -1137,7 +1137,7 @@
         "id": 135,
         "startNodeId": 10078,
         "endNodeId": 10121,
-        "length": 3.153821362864326,
+        "length": 3.095837883024104,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -1146,7 +1146,7 @@
         "id": 136,
         "startNodeId": 10121,
         "endNodeId": 10122,
-        "length": 3.0723563137080454,
+        "length": 3.0158705810424276,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1155,7 +1155,7 @@
         "id": 137,
         "startNodeId": 10121,
         "endNodeId": 10123,
-        "length": 2.972808735377531,
+        "length": 2.91815319990356,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1164,7 +1164,7 @@
         "id": 138,
         "startNodeId": 10079,
         "endNodeId": 10124,
-        "length": 3.431868944187047,
+        "length": 3.368773517767959,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1173,7 +1173,7 @@
         "id": 139,
         "startNodeId": 10077,
         "endNodeId": 10125,
-        "length": 6.122286594107329,
+        "length": 6.009727434769567,
         "type": "door",
         "accessible": true,
         "indoors": true
@@ -1182,7 +1182,7 @@
         "id": 141,
         "startNodeId": 10080,
         "endNodeId": 10126,
-        "length": 4.451494857379152,
+        "length": 4.3696534552753645,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -1362,7 +1362,7 @@
         "id": 161,
         "startNodeId": 10126,
         "endNodeId": 10144,
-        "length": 0.563989830532118,
+        "length": 0.5536207927185595,
         "type": "hallway",
         "accessible": true,
         "indoors": true
@@ -3054,7 +3054,7 @@
         "id": 348,
         "startNodeId": 10309,
         "endNodeId": 10078,
-        "length": 5.867750935269784,
+        "length": 5.759871452281675,
         "type": "stairs",
         "accessible": false,
         "indoors": true
