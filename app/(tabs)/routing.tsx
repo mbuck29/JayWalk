@@ -311,27 +311,44 @@ export default function TabTwoScreen() {
   //const currentRoute = { stops: [graph.nodes[0], graph.nodes[1], graph.nodes[2]] };
 
   // CURRENT ROUTE DISPLAY - makes a line through stops
-  function makeRoutePolyline(stops: Node[]) {
+  function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number) {
     if (!stops || stops.length < 2) return null; // return if route too short
 
-    //each stop into coordinates
-    const coords = stops.map((node: Node) => ({
-      latitude: node.y,
-      longitude: node.x,
-    }));
+    const splitAt = Math.max(0, Math.min(currentNode - baseIndex, stops.length - 1));
+    const traveled = stops.slice(0, splitAt + 1);
+    const remaining = stops.slice(splitAt);
+
+  
+  const toCoords = (nodes: { y: number; x: number }[]) =>
+  nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
 
     //displays route
-    return (
-      <Polyline
-        coordinates={coords}
-        strokeColor="#0066ff"
-        strokeWidth={5}
-        lineCap="round"
-        lineJoin="round"
-        key={stops[0].name}
-      />
-    );
-  }
+  return (
+    <>
+      {traveled.length >= 2 && (
+        <Polyline
+          coordinates={toCoords(traveled)}
+          strokeColor="#9ca3af"
+          strokeWidth={5}
+          lineCap="round"
+          lineJoin="round"
+          key={stops[0].name + "-traveled"}
+        />
+      )}
+      {remaining.length >= 2 && (
+        <Polyline
+          coordinates={toCoords(remaining)}
+          strokeColor="#0066ff"
+          strokeWidth={5}
+          lineCap="round"
+          lineJoin="round"
+          key={stops[0].name + "-remaining"}
+        />
+      )}
+    </>
+  );
+}
+
 
   function makeRoutePolylines(route: Route) {
     const polylines = [];
@@ -348,15 +365,14 @@ export default function TabTwoScreen() {
       }
 
       if (base != i - 1) {
-        polylines.push(makeRoutePolyline(route.stops.slice(base, i)));
-      }
+        polylines.push(makeRoutePolyline(route.stops.slice(base, i), currentNode, base));      }
 
       base = -1;
     }
 
     if (base >= 0 && base != route.stops.length - 2) {
-      polylines.push(
-        makeRoutePolyline(route.stops.slice(base, route.stops.length)),
+        polylines.push(makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNode, base)
+
       );
     }
 
