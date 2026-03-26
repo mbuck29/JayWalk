@@ -8,14 +8,17 @@
 import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch } from "@/redux/appState";
 import { navigate } from "expo-router/build/global-state/routing";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { Button, View } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
 const DEBUG = false;
 
+
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
+  const [selectedNode, setSelectedNode] = useState<any>(null);
   const KU = {
     latitude: 38.9541967,
     longitude: -95.2597806,
@@ -53,22 +56,23 @@ export default function TabTwoScreen() {
     return out;
   }
 
-  function handleMapPress(e: any) {
+function handleMapPress(e: any) {
   const { latitude, longitude } = e.nativeEvent.coordinate;
 
   const closest = getClosestNode(latitude, longitude, graph);
 
   console.log("Tapped at:", latitude, longitude);
+
   if (closest != null) {
     console.log("Closest node:", {
-  id: closest.id,
-  name: closest.name,
-  lat: closest.y,
-  lng: closest.x,
-});
-  dispatch(setDestination(closest.name));
-  navigate("/");
-  };
+      id: closest.id,
+      name: closest.name,
+      lat: closest.y,
+      lng: closest.x,
+    });
+
+    setSelectedNode(closest); // <-- only set state
+  }
 }
 
 function getClosestNode(lat: number, lng: number, graph: Graph) {
@@ -109,6 +113,7 @@ function getClosestNode(lat: number, lng: number, graph: Graph) {
   }, []);
 
   return (
+    <View style={{ flex: 1 }}>
     <MapView
       ref={mapRef}
       mapType="hybrid"
@@ -157,6 +162,41 @@ function getClosestNode(lat: number, lng: number, graph: Graph) {
           title={`Node ID: ${node.id}`}
         />
       ))*/} 
+      {selectedNode && (
+  <Marker
+    coordinate={{
+      latitude: selectedNode.y,
+      longitude: selectedNode.x,
+    }}
+    title={selectedNode.name}
+    pinColor="red"
+  />
+)}
     </MapView>
+    {selectedNode && (
+      <View
+        style={{
+          position: "absolute",
+          bottom: 40,
+          left: 20,
+          right: 20,
+          backgroundColor: "white",
+          padding: 12,
+          borderRadius: 10,
+        }}
+      >
+        <Button
+          title={`Go to ${selectedNode.name}`}
+          onPress={() => {
+            dispatch(setDestination(selectedNode.name));
+            navigate("/");
+            setSelectedNode(null);
+          }}
+        />
+        <Button title="Cancel" onPress={() => setSelectedNode(null)} />
+      </View>
+    )}
+    
+    </View>
   );
 }
