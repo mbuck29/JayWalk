@@ -9,7 +9,7 @@ import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch } from "@/redux/appState";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
-import { Button, View } from "react-native";
+import { Button, Text, View } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 
 const DEBUG = false;
@@ -185,6 +185,7 @@ function getClosestNode(lat: number, lng: number, graph: Graph) {
           borderRadius: 10,
         }}
       >
+      <Text style={{ textAlign: "center" }}>Lat: {selectedNode.y.toFixed(6)} Lng: {selectedNode.x.toFixed(6)}</Text>
         <Button
           title={`Go to ${selectedNode.name}`}
           onPress={() => {
