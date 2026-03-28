@@ -12,6 +12,7 @@ type JayWalkState = {
   start: string;
   currentNode: number;
   destination: string;
+  selectedFeatures: String[];
 };
 
 const initialState: JayWalkState = {
@@ -21,6 +22,7 @@ const initialState: JayWalkState = {
   start: "",
   currentNode: 0,
   destination: "",
+  selectedFeatures: [],
 };
 
 const appSlice = createSlice({
@@ -70,6 +72,22 @@ const appSlice = createSlice({
     setDestination(state: JayWalkState, payload: PayloadAction<string>) {
       state.destination = payload.payload;
     },
+    addToSelectedFeatures(state: JayWalkState, payload: PayloadAction<string>) {
+      if (!state.selectedFeatures.includes(payload.payload)) {
+        state.selectedFeatures.push(payload.payload);
+      }
+    },
+    removeFromSelectedFeatures(
+      state: JayWalkState,
+      payload: PayloadAction<string>,
+    ) {
+      state.selectedFeatures = state.selectedFeatures.filter(
+        (feature) => feature !== payload.payload,
+      );
+    },
+    clearSelectedFeatures(state: JayWalkState) {
+      state.selectedFeatures = [];
+    },
   },
 });
 
@@ -81,6 +99,9 @@ export const {
   setCurrentNode,
   setStart,
   setDestination,
+  removeFromSelectedFeatures,
+  addToSelectedFeatures,
+  clearSelectedFeatures,
 } = appSlice.actions;
 
 export const store = configureStore({
