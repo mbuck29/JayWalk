@@ -1,7 +1,7 @@
 /**
  * File: routing.tsx
  * Purpose: Specify the tab layout of the app
- * Author: Delaney G, C. Cooper, Blake J, Michael B
+ * Author: Delaney G, C. Cooper, Blake J, Michael B, Cole C
  * Date Created: 2026-02-09
  * Date Modified: 2026-02-14
  */
@@ -25,7 +25,7 @@ import MapView, { Polyline } from "react-native-maps";
 import Reroute from "../../assets/images/icons/reroute.svg";
 import { watchLocation } from "../Utils/location";
 import { Route } from "../Utils/routing";
-import { haversineMeters } from "../Utils/routingUtils";
+import { haversineMeters, remainingRouteMeters, calculateRouteTime } from "../Utils/routingUtils";
 import { getRoute } from "../Utils/state";
 
 const DEBUG_SPOOF = false;
@@ -416,6 +416,17 @@ export default function TabTwoScreen() {
     setShowReroutePrompt(true);
   }
 
+  // Compute remaining ETA in minutes whenever the route or currentNode changes
+  const etaMinutes = currentRoute
+    ? calculateRouteTime(remainingRouteMeters(currentRoute, currentNode))
+    : null;
+
+  const etaText = etaMinutes !== null
+    ? etaMinutes < 1
+      ? "< 1 min"
+      : `${Math.ceil(etaMinutes)} min`
+    : null
+
   return (
     <View style={{ flex: 1 }}>
       {/* MAP LAYER (always mounted so tiles stay cached) */}
@@ -513,6 +524,12 @@ export default function TabTwoScreen() {
       {!isLockedOnUser && !isCurrNodeInDoors && isRouteStarted && (
         <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
       )}
+      {/* ETA pill — shown between recenter and reroute buttons */}
+      {isRouteStarted && !isCurrNodeInDoors && etaText && (
+        <View style={styles.etaPill}>
+          <Text style={styles.etaText}>ETA {etaText}</Text>
+        </View>
+      )}
       {/* A button that will allow the user to reroute manually */}
       {!isCurrNodeInDoors && isRouteStarted && !showReroutePrompt && (
         <TouchableOpacity
@@ -568,4 +585,19 @@ const styles = StyleSheet.create({
     width: "16%",
   },
   rerouteIcon: { alignSelf: "center", marginTop: 5 },
+  etaPill: {
+  position: "absolute",
+  bottom: 20,
+  alignSelf: "center",
+  backgroundColor: "#0A2145",
+  paddingHorizontal: 16,
+  paddingVertical: 10,
+  borderRadius: 20,
+  zIndex: 1,
+},
+etaText: {
+  color: "#fff",
+  fontSize: 15,
+  fontFamily: "Orelega One",
+},
 });
