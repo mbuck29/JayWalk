@@ -1,7 +1,7 @@
 /**
  * File: routingUtils.ts
  * Purpose: Utilility functions for the routing algorithm and Route objects
- * Author: C. Cooper, Michael B
+ * Author: C. Cooper, Michael B, Cole C
  * Date Created: 2026-02-11
  */
 
@@ -163,4 +163,20 @@ export function haversineMeters(
   // Finally, we convert this to a distance in meters by multiplying by the Earth’s radius and applying the arcsine function to get the angle between the points,
   // which gives us the distance along the surface of the Earth.
   return 2 * R * Math.asin(Math.sqrt(a));
+}
+
+/**
+ * Calculates the total distance in meters remaining in a route from a given stop index.
+ * @param route The current route
+ * @param fromStopIndex The index of the stop the user is currently at
+ * @returns The remaining distance in meters
+ */
+export function remainingRouteMeters(route: Route, fromStopIndex: number): number {
+  let total = 0;
+  for (let i = fromStopIndex; i < route.stops.length - 1; i++) {
+    const a = route.stops[i];
+    const b = route.stops[i + 1];
+    total += haversineMeters(a.y, a.x, b.y, b.x);
+  }
+  return total;
 }
