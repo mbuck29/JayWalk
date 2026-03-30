@@ -49,6 +49,20 @@ export interface DataNode
     edgeIds: number[]
 }
 
+export interface FloorMapData
+{
+    originPixelX: number,
+    originPixelY: number,
+    metersPerPixel: number
+}
+
+export interface BuildingMapData
+{
+    name: string,
+    nodeId: number,
+    floors: Record<string, FloorMapData>
+}
+
 /**
  * Loads the edge data
  * @returns The edge data for the app's map
@@ -66,3 +80,10 @@ export function getNodes()
 {
     return require('./nodes.json') as DataNode[]
 }
+
+export function getBuildings()
+{
+    return require('./buildings.json') as BuildingMapData[]
+}
+
+export const buildingData = getBuildings();

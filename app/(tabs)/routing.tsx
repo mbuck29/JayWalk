@@ -267,8 +267,8 @@ export default function TabTwoScreen() {
     setIsCurrNodeInDoors(
       currentRoute?.stops?.[currentNode]?.building !== undefined,
     );
-    console.log("currentNode", currentRoute?.stops[currentNode]);
-    console.log("isCurrNodeInDoors", isCurrNodeInDoors);
+    //console.log("currentNode", currentRoute?.stops[currentNode]);
+    //console.log("isCurrNodeInDoors", isCurrNodeInDoors);
   }, [currentNode, currentRoute]);
 
   // Request location permissions on mount and set up location tracking if granted
@@ -324,7 +324,7 @@ export default function TabTwoScreen() {
 
     //displays route
   return (
-    <>
+    <ul>
       {traveled.length >= 2 && (
         <Polyline
           coordinates={toCoords(traveled)}
@@ -345,7 +345,7 @@ export default function TabTwoScreen() {
           key={stops[0].name + "-remaining"}
         />
       )}
-    </>
+    </ul>
   );
 }
 

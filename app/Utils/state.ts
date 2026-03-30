@@ -11,7 +11,7 @@ import { Route } from "./routing";
 /**
  * Gets the global state of the app.
  * This must be called from within a function component that is a subcomponent of one of the tabs.
- * @returns The
+ * @returns The global app state
  */
 export function getState(): JayWalkState {
   return useAppSelector((state) => state.jayWalk);

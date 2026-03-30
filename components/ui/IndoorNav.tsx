@@ -17,16 +17,14 @@ import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useState } from "react";
 import {
   FlatList,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Arrow from "../../assets/images/icons/arrow.svg";
-import Close from "../../assets/images/icons/close.svg";
 import Map from "../../assets/images/icons/map.svg";
-import { floorPlanMap } from "../../maps/floorPlanMap";
+import IndoorMap from "./IndoorMap";
 
 interface IndoorNavProps {
   instrList: Direction[];
@@ -57,14 +55,6 @@ export default function IndoorNav({
   const currentFloor = currentNodeObj?.floor;
   const [isViewingFloorPlan, setIsViewingFloorPlan] = useState(false); // State to simply control if user is seeing floor plan
   const stopLen = currentRoute?.stops?.length ?? 0;
-
-  // Get the floor plan image for the current building and floor, if available
-  const floorPlanImage =
-    buildingNameWithoutTilde && currentFloor
-      ? (floorPlanMap as Record<string, any>)[buildingNameWithoutTilde]?.[
-          currentFloor
-        ]
-      : undefined;
 
   const handleEndRoute = () => {
     setIsRouteStarted(false);
@@ -215,14 +205,14 @@ export default function IndoorNav({
 
   // Debugging useEffect to log current node and active step whenever they change
   useEffect(() => {
-    console.log("currentNodeIndex", currentNodeIndex);
+    /*console.log("currentNodeIndex", currentNodeIndex);
     console.log("currentNode", currentNodeObj);
     console.log(
       "activeStepIndex",
       activeStepIndex,
       "activeStep",
       allSteps[activeStepIndex],
-    );
+    );*/
   }, [currentNodeObj, activeStepIndex, allSteps]);
 
   return (
@@ -344,52 +334,7 @@ export default function IndoorNav({
             </View>
           </View>
         </View>
-        {isViewingFloorPlan && floorPlanImage && (
-          <View
-            style={{
-              position: "absolute",
-              top: 0,
-              width: "100%",
-              height: "100%",
-            }}
-          >
-            <View
-              style={{
-                // This View is to gray out the background when we show the floor plan to the user
-                position: "absolute",
-                top: 0,
-                width: "100%",
-                height: "100%",
-                backgroundColor: "rgba(0,0,0,0.5)", // semi-transparent gray
-                zIndex: 99,
-              }}
-              pointerEvents="auto"
-            />
-            <View style={{ zIndex: 100, flex: 1, justifyContent: "center" }}>
-              <View style={styles.floorPlanHeader}>
-                <TouchableOpacity
-                  onPress={() => setIsViewingFloorPlan(false)}
-                  style={{
-                    padding: 10,
-                    borderRadius: 40,
-                  }}
-                >
-                  <Close width={30} height={30} />
-                </TouchableOpacity>
-              </View>
-              <Image
-                source={floorPlanImage}
-                style={{
-                  width: 300,
-                  height: 300,
-                  zIndex: 100,
-                  alignSelf: "center",
-                }}
-              />
-              <View style={styles.floorPlanFooter} />
-            </View>
-          </View>
-        )}
+        {isViewingFloorPlan && <IndoorMap></IndoorMap>}
       </View>
     </>
   );
