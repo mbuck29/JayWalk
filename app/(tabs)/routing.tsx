@@ -25,7 +25,7 @@ import MapView, { Polyline } from "react-native-maps";
 import Reroute from "../../assets/images/icons/reroute.svg";
 import { watchLocation } from "../Utils/location";
 import { Route } from "../Utils/routing";
-import { haversineMeters, remainingRouteMeters, calculateRouteTime } from "../Utils/routingUtils";
+import { calculateRouteTime, haversineMeters, remainingRouteMeters } from "../Utils/routingUtils";
 import { getRoute } from "../Utils/state";
 
 const DEBUG_SPOOF = false;
@@ -324,7 +324,7 @@ export default function TabTwoScreen() {
 
     //displays route
   return (
-    <ul>
+    <>
       {traveled.length >= 2 && (
         <Polyline
           coordinates={toCoords(traveled)}
@@ -345,7 +345,7 @@ export default function TabTwoScreen() {
           key={stops[0].name + "-remaining"}
         />
       )}
-    </ul>
+    </>
   );
 }
 
