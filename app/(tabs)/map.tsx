@@ -103,8 +103,12 @@ export default function TabTwoScreen() {
         lat: closest.y,
         lng: closest.x,
       });
+       const selectedNodeSafe = {
+    ...closest,
+    tags: "tags" in closest ? closest.tags : [], // only default if missing
+  };
 
-      setSelectedNode(closest); // <-- only set state
+      setSelectedNode(selectedNodeSafe); // <-- only set state
     }
   }
 
@@ -208,6 +212,7 @@ export default function TabTwoScreen() {
           <Text style={{ textAlign: "center" }}>
             Lat: {selectedNode.y.toFixed(6)} Lng: {selectedNode.x.toFixed(6)}
           </Text>
+          <Text style={{ textAlign: "center", marginTop: 4 }}> Tags: {selectedNode.tags?.join(", ") || "None"}</Text>
           <Button
             title={`Go to ${selectedNode.name}`}
             onPress={() => {

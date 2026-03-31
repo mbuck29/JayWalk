@@ -5,7 +5,7 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-02-07
  */
-import { RouteType, getEdges, getNodes } from "./data"
+import { RouteType, Tag, getEdges, getNodes } from "./data"
 
 /**
  * An edge (path) in the graph
@@ -47,6 +47,8 @@ export interface Node
     floor: number
     /** All of the edges with this node as one of their ends. */
     edges: Edge[]
+
+    tags: Tag[]
 }
 
 /**
@@ -93,7 +95,8 @@ function loadGraph(): Graph
             y: data.y,
             building: undefined,
             floor: data.floor ?? -1000,
-            edges: []
+            edges: [],
+            tags: data.tags ?? [],
         };
 
         nodes.push(node);

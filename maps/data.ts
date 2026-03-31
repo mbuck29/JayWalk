@@ -7,7 +7,7 @@
  */
 
 export type RouteType = "sidewalk" | "crosswalk" | "stairs" | "stairwell" | "elevator" | "hallway" | "room" | "ramp" | "door" | "doorway" | "bridge" | "atrium" | "ignore" | "steps"
-
+export type Tag = "bathrooms" | "printers" |"bus stop" | "food" | "computers"
 /**
  * An edge (path) in the graph
  */
@@ -47,6 +47,8 @@ export interface DataNode
     floor: number | undefined,
     /** The unique ids for all of the edges with this node as one of their ends. */
     edgeIds: number[]
+
+    tags: Tag[]
 }
 
 export interface FloorMapData
