@@ -9,15 +9,16 @@ import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
 import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch } from "@/redux/appState";
+import { useFonts } from "expo-font";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
 import {
-  Button,
+  Image,
   Pressable,
   StyleSheet,
   Text,
   useWindowDimensions,
-  View,
+  View
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Animated, {
@@ -56,6 +57,14 @@ export default function TabTwoScreen() {
       }),
     };
   });
+
+const [fontsLoaded] = useFonts({
+  "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"), 
+  "OrelegaOne": require("../../assets/fonts/OrelegaOne-Regular.ttf"),
+});
+
+  // If fonts aren't ready, don't render yet (prevents style errors)
+  if (!fontsLoaded) return null;
 
   const KU = {
     latitude: 38.9541967,
@@ -185,46 +194,68 @@ export default function TabTwoScreen() {
           ))}
 
         {DEBUG && makeDataLines(graph)}
-        {selectedNode && (
-          <Marker
-            coordinate={{
-              latitude: selectedNode.y,
-              longitude: selectedNode.x,
-            }}
-            title={selectedNode.name}
-            pinColor="red"
-          />
-        )}
-      </MapView>
+ {selectedNode && (
+  <Marker
+    coordinate={{
+      latitude: selectedNode.y,
+      longitude: selectedNode.x,
+    }}
+  >
+    <Image 
+      source={require("../../assets/images/icons/pin.png")} 
+      style={{ width: 45, height: 45 }} 
+      resizeMode="contain"
+    />
+  </Marker>
+)}
+</MapView>
 
       {selectedNode && (
-        <View
-          style={{
-            position: "absolute",
-            bottom: 40,
-            left: 20,
-            right: 20,
-            backgroundColor: "white",
-            padding: 12,
-            borderRadius: 10,
-          }}
-        >
-          <Text style={{ textAlign: "center" }}>
-            Lat: {selectedNode.y.toFixed(6)} Lng: {selectedNode.x.toFixed(6)}
-          </Text>
-          <Text style={{ textAlign: "center", marginTop: 4 }}> Tags: {selectedNode.tags?.join(", ") || "None"}</Text>
-          <Button
-            title={`Go to ${selectedNode.name}`}
-            onPress={() => {
-              dispatch(setDestination(selectedNode.name));
-              navigate("/");
-              setSelectedNode(null);
-            }}
-          />
-          <Button title="Cancel" onPress={() => setSelectedNode(null)} />
-        </View>
-      )}
+  <View style={styles.mapOverlayCard}>
+    {/* Node Name - Styled like the Destination label */}
+    <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
 
+{/* Location Features Container */}
+<View style={styles.featuresContainer}>
+  <Text style={styles.featuresLabel}>Location Features:</Text>
+  {selectedNode.tags && selectedNode.tags.length > 0 ? (
+    selectedNode.tags.map((tag: string, index: number) => {
+      // Capitalize the first letter: "computers" -> "Computers"
+      const capitalizedTag = tag.charAt(0).toUpperCase() + tag.slice(1);
+      
+      return (
+        <Text key={index} style={styles.tagText}>
+          • {capitalizedTag}
+        </Text>
+      );
+    })
+  ) : (
+    <Text style={styles.tagText}>• No features listed</Text>
+  )}
+</View>
+
+    {/* Bubble Buttons Row */}
+    <View style={styles.buttonRow}>
+      <Pressable 
+        style={[styles.bubbleButton, styles.cancelButton]} 
+        onPress={() => setSelectedNode(null)}
+      >
+        <Text style={styles.buttonLabel}>CANCEL</Text>
+      </Pressable>
+
+      <Pressable 
+        style={[styles.bubbleButton, styles.goButton]} 
+        onPress={() => {
+          dispatch(setDestination(selectedNode.name));
+          navigate("/");
+          setSelectedNode(null);
+        }}
+      >
+        <Text style={styles.buttonLabel}>GO TO</Text>
+      </Pressable>
+    </View>
+  </View>
+)}
       {/* Toggle button */}
       {!isPanelOpen && (
         <Pressable style={styles.featureToggle} onPress={handleFeatureToggle}>
@@ -281,5 +312,68 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
     zIndex: 10,
+  },
+  mapOverlayCard: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
+    paddingHorizontal: 30,
+    paddingTop: 25,
+    paddingBottom: 40,
+    zIndex: 100,
+  },
+  buttonLabel: {
+    fontFamily: "OrelegaOne",
+    color: "#fff",
+    fontSize: 18,
+  },
+  
+  nodeTitle: {
+    fontSize: 26,
+    fontFamily: "OrelegaOne",
+    color: "#356EC4",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  featuresContainer: {
+    backgroundColor: "#C2DCF0", // Your JayWalk light blue
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 20,
+  },
+  featuresLabel: {
+    fontFamily: "OrelegaOne",
+    fontSize: 22,
+    color: "#356EC4",
+    marginBottom: 5,
+    
+  },
+  tagText: {
+    fontFamily: "OrelegaOne",
+    fontSize: 22,
+    color: "#356EC4",
+    lineHeight: 22,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  bubbleButton: {
+    flex: 1,
+    height: 60,
+    borderRadius: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#df010c", // jayhawk red
+  },
+  goButton: {
+    backgroundColor: "#356EC4", // Active Blue
   },
 });
