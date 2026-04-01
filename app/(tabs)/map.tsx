@@ -9,6 +9,7 @@ import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
 import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch } from "@/redux/appState";
+import { Asset } from 'expo-asset';
 import { useFonts } from "expo-font";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
@@ -33,6 +34,9 @@ export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
   const [selectedNode, setSelectedNode] = useState<any>(null);
+  useEffect(() => { //load custom marker
+    Asset.fromModule(require("../../assets/images/icons/pin.png")).downloadAsync();
+  }, []);
   const { width: screenWidth } = useWindowDimensions();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320); //calculate the panel width based on the screen width, but dont let it be wider than 320 pxs
@@ -200,6 +204,7 @@ const [fontsLoaded] = useFonts({
       latitude: selectedNode.y,
       longitude: selectedNode.x,
     }}
+    //tracksViewChanges={false}
   >
     <Image 
       source={require("../../assets/images/icons/pin.png")} 
