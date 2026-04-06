@@ -116,7 +116,7 @@ export default function HomeScreen() {
       );
 
       // Call the routing algorithm from the current to the destination nodes
-      const calculatedRoute = route(state, currLocation, destLocation);
+      const calculatedRoute = route(state, currLocation, [destLocation]);
 
       // If there is no route, log it and return
       if (!calculatedRoute) {

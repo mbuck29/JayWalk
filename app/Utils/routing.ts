@@ -35,12 +35,12 @@ export interface Route
  * @param end The node to route to.
  * @returns A Route object representing the route to take, or null if the two nodes are not connected.
  */
-export function route(state: JayWalkState, start: Node, end: Node): Route | null
+export function route(state: JayWalkState, start: Node, ends: Node[]): Route | null
 {
     // This is an impmlementaiton of Dijkstra's algorithm
 
     // Trivial case if start and end are the same
-    if(start == end)
+    if(ends.filter(n => n.id == start.id).length > 0)
     {
         return {route: [], stops: [start], directions: [], length: 0};
     }
@@ -83,6 +83,8 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
         edgeMap[next.id] = edge;
     }
 
+    let end = null;
+
     while(!heap.isEmpty())
     {
         // Get the distance to the nearest unfinished node, and the node itself
@@ -98,9 +100,19 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
         done.add(current.id);
 
         // If we have solved the end node, we are done
-        if(current == end)
+        for(const node of ends)
         {
-            console.log("Distance: " + distance + "m");
+            if(node.id == current.id)
+            {
+                end = node;
+
+                console.log("Distance: " + distance + "m");
+                break;
+            }
+        }
+
+        if(end)
+        {
             break;
         }
 
@@ -149,7 +161,7 @@ export function route(state: JayWalkState, start: Node, end: Node): Route | null
     }
 
     // If we didn't find a route to the end node, return null
-    if(!done.has(end.id))
+    if(!end || !done.has(end.id))
     {
         return null;
     }
