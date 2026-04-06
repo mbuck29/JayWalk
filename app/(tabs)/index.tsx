@@ -58,23 +58,24 @@ export default function HomeScreen() {
     "outdoors" | "indoors" | "nopreference"
   >("nopreference");
   const accessible = useAppSelector((s) => s.jayWalk.accessible ?? false);
-  const reduxDestination = useAppSelector((s) => s.jayWalk.destination);
+  const reduxDestinations = useAppSelector((s) => s.jayWalk.destinationIds);
+  const reduxDestinationString = useAppSelector((s) => s.jayWalk.destination);
 
   const [currLocation, setCurrLocation] = useState<Node | null>(null);
-  const [destLocation, setDestLocation] = useState<Node | null>(null);
+  const [destLocations, setDestLocations] = useState<Node[]>([]);
   const [currLocationText, setCurrLocationText] = useState("");
   const [destLocationText, setDestLocationText] = useState("");
 
   useEffect(() => {
-    if (!reduxDestination) return;
+    if (!reduxDestinationString) return;
 
-    setDestLocationText(reduxDestination);
+    setDestLocationText(reduxDestinationString);
 
-    const node = graph.nodes.find((n) => n.name === reduxDestination);
-    if (node) {
-      setDestLocation(node);
+    const nodes = graph.nodes.filter((n => reduxDestinations.some(d => n.id === d)));
+    if (nodes) {
+      setDestLocations(nodes);
     }
-  }, [reduxDestination]);
+  }, [reduxDestinationString, reduxDestinations]);
 
   const [showMissingLocation, setShowMissingLocation] = useState(false);
   const [showNeedLocationPermission, setShowNeedLocationPermission] =
@@ -109,14 +110,14 @@ export default function HomeScreen() {
   // location and a destination before starting routing.
   const handleStartRoutingPress = () => {
     console.log("Start routing pressed.");
-    if (currLocation && destLocation) {
+    if (currLocation && destLocationText) {
       // Before we start routing we need to know from and to for the algo to work
       console.log(
-        `Routing from ${currLocation.name} to ${destLocation.name}...`,
+        `Routing from ${currLocation.name} to ${destLocationText}...`,
       );
 
       // Call the routing algorithm from the current to the destination nodes
-      const calculatedRoute = route(state, currLocation, [destLocation]);
+      const calculatedRoute = route(state, currLocation, destLocations);
 
       // If there is no route, log it and return
       if (!calculatedRoute) {
@@ -129,7 +130,7 @@ export default function HomeScreen() {
       dispatch(setRoute(sanitize(calculatedRoute)));
 
       // Set the destination so it can be refernced later
-      dispatch(setDestination(destLocation.name));
+      dispatch(setDestination({text: destLocationText, ids: destLocations.map(l => l.id)}));
       dispatch(setStart(currLocation.name));
 
       // WIpe the text values so they will be gone if they pick a new route
@@ -287,7 +288,7 @@ export default function HomeScreen() {
               visible={isCurrentMenuVisible} // We only want to show the menu
               //when the user is actively using the text field
               onDismiss={() => setIsCurrentMenuVisible(false)}
-              oppisiteValue={destLocation}
+              oppisiteValue={null}
               anchor={
                 // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
                 //current location box
@@ -381,7 +382,7 @@ export default function HomeScreen() {
               }
               options={graph.nodes}
               locationText={destLocationText}
-              setLocation={setDestLocation}
+              setLocation={location => setDestLocations([location])}
               setLocationText={setDestLocationText}
               onSelect={() => destInputRef.current?.blur()}
             />

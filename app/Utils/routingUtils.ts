@@ -62,6 +62,11 @@ export function edgeOther(edge: Edge, known: Node): Node {
   return edge.startNode.id === known.id ? edge.endNode : edge.startNode;
 }
 
+export function isBuilding(node: Node): boolean
+{
+  return node.buildingTags != undefined;
+}
+
 function sanitizeNode(node: Node): Node
 {
   return {

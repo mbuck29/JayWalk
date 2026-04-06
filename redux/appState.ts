@@ -12,6 +12,7 @@ type JayWalkState = {
   start: string;
   currentNode: number;
   destination: string;
+  destinationIds: number[];
   selectedFeatures: String[];
 };
 
@@ -22,6 +23,7 @@ const initialState: JayWalkState = {
   start: "",
   currentNode: 0,
   destination: "",
+  destinationIds: [],
   selectedFeatures: [],
 };
 
@@ -69,8 +71,9 @@ const appSlice = createSlice({
     setStart(state: JayWalkState, payload: PayloadAction<string>) {
       state.start = payload.payload;
     },
-    setDestination(state: JayWalkState, payload: PayloadAction<string>) {
-      state.destination = payload.payload;
+    setDestination(state: JayWalkState, payload: PayloadAction<{text: string, ids: number[]}>) {
+      state.destination = payload.payload.text;
+      state.destinationIds = payload.payload.ids;
     },
     addToSelectedFeatures(state: JayWalkState, payload: PayloadAction<string>) {
       if (!state.selectedFeatures.includes(payload.payload)) {

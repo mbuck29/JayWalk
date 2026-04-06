@@ -104,7 +104,7 @@ export function route(state: JayWalkState, start: Node, ends: Node[]): Route | n
         {
             if(node.id == current.id)
             {
-                end = node;
+                end = current;
 
                 console.log("Distance: " + distance + "m");
                 break;

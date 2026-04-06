@@ -74,7 +74,7 @@ export default function ReroutePrompt(props: ReroutePromptProps) {
     } else {
       if (newStart && destNode) {
         // we need to make sure they have a valid start and dest then route them
-        const newRoute = route(state, newStart, destNode);
+        const newRoute = route(state, newStart, [destNode]);
         if (!newRoute) {
           // if we couldnt find a route we will just kick them to the main screen
           dispatch(clearRoute());

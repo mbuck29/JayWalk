@@ -47,8 +47,10 @@ export interface Node
     floor: number
     /** All of the edges with this node as one of their ends. */
     edges: Edge[]
-
+    /** The tags that this node has. */
     tags: Tag[]
+    /** If this is a building, a record that maps a Tag to the list of nodes in the building that have that tag. */
+    buildingTags: Record<Tag, Node[]> | undefined
 }
 
 /**
@@ -97,6 +99,7 @@ function loadGraph(): Graph
             floor: data.floor ?? -1000,
             edges: [],
             tags: data.tags ?? [],
+            buildingTags: data.buildingId > 0 && ((data.floor ?? -1000) == -1000) ? {} as Record<Tag, Node[]> : undefined
         };
 
         nodes.push(node);
@@ -119,6 +122,22 @@ function loadGraph(): Graph
         if(node && building)
         {
             node.building = building;
+
+            for(const tag of node.tags)
+            {
+                if(!building.buildingTags)
+                {
+                    continue;
+                }
+
+                if(!building.buildingTags[tag])
+                {
+                    building.buildingTags[tag] = [];
+                    building.tags.push(tag);
+                }
+
+                building.buildingTags[tag].push(node);
+            }
         }
     }
 
