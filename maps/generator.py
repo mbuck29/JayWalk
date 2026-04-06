@@ -55,7 +55,6 @@ def main():
     while True:
         # Get the base command from the user
         whatDo = input("What would you like to do: ").strip().lower()
-
         if whatDo.startswith("add"): # Add to the graph
             start = getNode("Please enter the starting coordinates: ", nodes)
             if not (start in nodes):
@@ -107,6 +106,109 @@ def main():
             if showProcess is not None and showProcess.is_alive():
                 showProcess.terminate()
             break
+        elif whatDo.startswith("scal"):
+            if building is None:
+                continue
+
+            true = whatDo.endswith("e")
+
+            floorEntry = building["floors"][str(floor)]
+
+            currentMetersPerPixel = float(floorEntry["metersPerPixel"])
+
+            newMetersPerPixel = float(input("Enter the new meters per pixel: " if true else "Enter the scaling factor: "))
+
+            correctionRatio = (newMetersPerPixel / currentMetersPerPixel) if true else newMetersPerPixel
+
+            nodeSet = set()
+
+            for node in nodes:
+                if "buildingId" not in node or "floor" not in node or node["buildingId"] != building["nodeId"] or node["floor"] != floor:
+                    continue
+
+                node["x"] = node["x"] * correctionRatio
+                node["y"] = node["y"] * correctionRatio
+
+                nodeSet.add(int(node["id"]))
+            
+            for edge in edges:
+                if not edge["indoors"]:
+                    continue
+
+                if int(edge["startNodeId"]) not in nodeSet:
+                    continue
+
+                if int(edge["endNodeId"]) not in nodeSet:
+                    continue
+
+                edge["length"] = edge["length"] * correctionRatio
+
+            if true:
+                buildingFile = open("buildings.json", "r")
+                buildings: list[dict] = load(buildingFile)
+
+                index = 0
+
+                for i, b in enumerate(buildings):
+                    if b["name"].lower() != building["name"].lower():
+                        continue
+                    index = i
+                
+                buildings[index]["floors"][str(floor)]["metersPerPixel"] = newMetersPerPixel
+
+                buildingFile.close()
+                buildingFile = open("buildings.json", "w")
+
+                dump(buildings, buildingFile, indent=4)
+                buildingFile.close()
+        elif whatDo.startswith("shift"):
+            if building is None:
+                continue
+
+            true = not whatDo.endswith("tt")
+
+            floorEntry = building["floors"][str(floor)]
+
+            currentOriginX = int(floorEntry["originPixelX"])
+            currentOriginY = int(floorEntry["originPixelY"])
+            currentMetersPerPixel = float(floorEntry["metersPerPixel"])
+
+            newOriginX = int(input("Enter the new origin x: " if true else "Enter the x shift: "))
+            newOriginY = int(input("Enter the new origin y: " if true else "Enter the y shift: "))
+
+            for node in nodes:
+                if "buildingId" not in node or "floor" not in node or node["buildingId"] != building["nodeId"] or node["floor"] != floor:
+                    continue
+
+                if true:
+                    node["x"] = ((node["x"] / currentMetersPerPixel) + currentOriginX - newOriginX) * currentMetersPerPixel
+                    node["y"] = ((node["y"] / currentMetersPerPixel) + currentOriginY - newOriginY) * currentMetersPerPixel
+                else:
+                    node["x"] = ((node["x"] / currentMetersPerPixel) + newOriginX) * currentMetersPerPixel
+                    node["y"] = ((node["y"] / currentMetersPerPixel) + newOriginY) * currentMetersPerPixel
+
+            if true:
+                buildingFile = open("buildings.json", "r")
+                buildings: list[dict] = load(buildingFile)
+
+                index = 0
+
+                for i, b in enumerate(buildings):
+                    if b["name"].lower() != building["name"].lower():
+                        continue
+                    index = i
+                
+                buildings[index]["floors"][str(floor)]["originPixelX"] = newOriginX
+                buildings[index]["floors"][str(floor)]["originPixelY"] = newOriginY
+
+                buildingFile.close()
+                buildingFile = open("buildings.json", "w")
+
+                dump(buildings, buildingFile, indent=4)
+                buildingFile.close()
+
+
+
 
 def getCoords(message: str) -> tuple[float, float]:
     """Get a pair of coordinates from the user
@@ -171,6 +273,8 @@ def mergeNodeAsNeeded(node: dict, nodes: list[dict], epsilon: float = 0.000009 *
         oX: float = otherNode["x"] * offset
         oY: float = otherNode["y"] * offset
         dSquared = (nodeX - oX) ** 2 + (nodeY - oY) ** 2
+
+        # print(f"{otherNode["name"]}: {dSquared} vs {epsilon}")
         
         if dSquared < closestDist:
             closest = otherNode
@@ -269,6 +373,12 @@ def add(start: dict, edges: list[dict], nodes: list[dict], stay: bool = False):
             edgeAccess = lastEdgeAccess
         else:
             edgeAccess = (edgeAccess == "y") or (edgeAccess == "yes") or (edgeAccess == "true")
+
+        tags = input("Enter all tags the end node should have: ")
+
+        tags = [t.strip() for t in tags.split(",")]
+
+        next["tags"] = tags
         
         global building
         edgeIndoors = building != None
