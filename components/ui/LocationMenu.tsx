@@ -11,7 +11,8 @@ type LocationMenuProps = {
   setLocation: (node: Node) => void;
   setLocationText: (text: string) => void;
   onSelect: () => void | undefined;
-  oppisiteValue: Node | null;
+  oppisiteValue?: Node | null;
+  oppisiteName?: string | null;
   currentStartValue?: Node | null;
 };
 
@@ -25,6 +26,7 @@ export default function LocationMenu({
   setLocationText,
   onSelect,
   oppisiteValue,
+  oppisiteName,
   currentStartValue,
 }: LocationMenuProps) {
   return (
@@ -42,7 +44,8 @@ export default function LocationMenu({
             o.name.toLowerCase().includes(locationText.toLowerCase()) && // This filters out options based on the user input
             !o.name.includes("~") && // This filters out options that are not real locations,
             o.id !== oppisiteValue?.id && // This filters out the opposite value so that the user doesn't select the same location for both current and destination
-            o.id !== currentStartValue?.id, // This is for the reroute flow, making sure they cant create a route that has the start and dest the same
+            o.id !== currentStartValue?.id && // This is for the reroute flow, making sure they cant create a route that has the start and dest the same
+            o.name.toLowerCase() !== oppisiteName?.toLowerCase(),
         )
         .slice(0, 5) // This limits the number of options shown to 5 so that it doesnt get too long
 

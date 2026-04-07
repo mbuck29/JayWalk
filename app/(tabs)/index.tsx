@@ -71,7 +71,9 @@ export default function HomeScreen() {
 
     setDestLocationText(reduxDestinationString);
 
-    const nodes = graph.nodes.filter((n => reduxDestinations.some(d => n.id === d)));
+    const nodes = graph.nodes.filter((n) =>
+      reduxDestinations.some((d) => n.id === d),
+    );
     if (nodes) {
       setDestLocations(nodes);
     }
@@ -130,7 +132,12 @@ export default function HomeScreen() {
       dispatch(setRoute(sanitize(calculatedRoute)));
 
       // Set the destination so it can be refernced later
-      dispatch(setDestination({text: destLocationText, ids: destLocations.map(l => l.id)}));
+      dispatch(
+        setDestination({
+          text: destLocationText,
+          ids: destLocations.map((l) => l.id),
+        }),
+      );
       dispatch(setStart(currLocation.name));
 
       // WIpe the text values so they will be gone if they pick a new route
@@ -197,7 +204,9 @@ export default function HomeScreen() {
     if (!closestNode) return;
 
     console.log(
-      `Closest node: ${closestNode.node.name} (id: ${closestNode.node.id}), distance: ${closestNode.distanceM.toFixed(1)} m`,
+      `Closest node: ${closestNode.node.name} (id: ${
+        closestNode.node.id
+      }), distance: ${closestNode.distanceM.toFixed(1)} m`,
     );
 
     const MAX_ACCEPTABLE_ACC = 25; // don’t trust worse than this
@@ -224,7 +233,9 @@ export default function HomeScreen() {
       // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
       // So we tell the user that with a toast message.
       console.log(
-        `Not near any node (closest=${closestNode.distanceM.toFixed(1)}m, threshold=${snapThresholdM.toFixed(1)}m).`,
+        `Not near any node (closest=${closestNode.distanceM.toFixed(
+          1,
+        )}m, threshold=${snapThresholdM.toFixed(1)}m).`,
       );
       setShowTooFarAway(true);
     }
@@ -287,8 +298,11 @@ export default function HomeScreen() {
             <LocationMenu
               visible={isCurrentMenuVisible} // We only want to show the menu
               //when the user is actively using the text field
-              onDismiss={() => setIsCurrentMenuVisible(false)}
-              oppisiteValue={null}
+              onDismiss={() => {
+                setIsCurrentMenuVisible(false);
+                currLocInputRef.current?.blur();
+              }}
+              oppisiteName={destLocationText} // This is used to make sure that the user doesnt select the same location for both current and destination, as that would break our routing algo. So we pass the destination name here so that the menu can filter it out from the options.
               anchor={
                 // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
                 //current location box
@@ -348,7 +362,10 @@ export default function HomeScreen() {
 
             <LocationMenu
               visible={isDestinationMenuVisible}
-              onDismiss={() => setIsDestinationMenuVisible(false)}
+              onDismiss={() => {
+                setIsDestinationMenuVisible(false);
+                destInputRef.current?.blur();
+              }}
               oppisiteValue={currLocation}
               anchor={
                 <TextInput
@@ -382,7 +399,7 @@ export default function HomeScreen() {
               }
               options={graph.nodes}
               locationText={destLocationText}
-              setLocation={location => setDestLocations([location])}
+              setLocation={(location) => setDestLocations([location])}
               setLocationText={setDestLocationText}
               onSelect={() => destInputRef.current?.blur()}
             />
