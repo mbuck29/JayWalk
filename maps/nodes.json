@@ -299,7 +299,8 @@
         "floor": -1000,
         "edgeIds": [
             27,
-            28
+            28,
+            384
         ]
     },
     {
@@ -1561,7 +1562,8 @@
         "floor": -1000,
         "edgeIds": [
             148,
-            158
+            158,
+            390
         ]
     },
     {
@@ -1669,7 +1671,9 @@
         "floor": -1000,
         "edgeIds": [
             156,
-            157
+            157,
+            391,
+            392
         ]
     },
     {
@@ -1707,7 +1711,10 @@
             163,
             181
         ],
-        "tags": ["computers","printers"]
+        "tags": [
+            "computers",
+            "printers"
+        ]
     },
     {
         "id": 10146,
@@ -4053,6 +4060,467 @@
         "edgeIds": [
             382,
             383
+        ]
+    },
+    {
+        "id": 10340,
+        "name": "~lot54 south east corner 1",
+        "x": -95.25219459237158,
+        "y": 38.95616474870101,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            384,
+            385
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10341,
+        "name": "~lot54 south east corner crosswalk n",
+        "x": -95.25227583865758,
+        "y": 38.95605935668479,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            385,
+            386
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10342,
+        "name": "~debruce to lot54 south east corner crosswalk ",
+        "x": -95.25225605699339,
+        "y": 38.955893923898124,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            386,
+            387
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10343,
+        "name": "~allen parking lot or debruce",
+        "x": -95.2522512652608,
+        "y": 38.95579926808485,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            387,
+            388
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10344,
+        "name": "~stairs 1 down to debruce north entrance",
+        "x": -95.25216179784803,
+        "y": 38.95567408622495,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            388,
+            389
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10345,
+        "name": "Debruce North Entrance",
+        "x": -95.25215184873099,
+        "y": 38.95555863225286,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            389
+        ],
+        "tags": [
+            "food"
+        ]
+    },
+    {
+        "id": 10346,
+        "name": "Marvin Hall North Entrance",
+        "x": -95.25010795183516,
+        "y": 38.958555065348165,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            390
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10347,
+        "name": "Wescoe Top Level Lecture Halls Doors",
+        "x": -95.24807271586256,
+        "y": 38.957778007775346,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            391
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10348,
+        "name": "~End of strong hall entrance ",
+        "x": -95.24788015757383,
+        "y": 38.95811059860159,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            392,
+            393,
+            395
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10349,
+        "name": "~Strong hall below entrance stairs",
+        "x": -95.24771728048158,
+        "y": 38.95839778896045,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            393,
+            394
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10350,
+        "name": "Strong Hall Main Entrance",
+        "x": -95.24768442342112,
+        "y": 38.95845097411044,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            394
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10351,
+        "name": "~strong hall east end sidewalk entrance",
+        "x": -95.2473262267078,
+        "y": 38.95791862059808,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            395,
+            396
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10352,
+        "name": "Bus Stop 373",
+        "x": -95.24715829287393,
+        "y": 38.957838407616606,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            396,
+            397
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10353,
+        "name": "~western most sidewalk to behind bailey lot",
+        "x": -95.2469606316653,
+        "y": 38.95776112861155,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            397,
+            398
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10354,
+        "name": "~west of bailey crosswalk n",
+        "x": -95.24678416630485,
+        "y": 38.957714825367134,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            398,
+            399
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10355,
+        "name": "~sidewalk in front of bailey main",
+        "x": -95.24639614608112,
+        "y": 38.95760570639149,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            399,
+            400,
+            401
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10356,
+        "name": "Bailey Hall Main Entrance",
+        "x": -95.2463726767522,
+        "y": 38.95764846356181,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            400
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10357,
+        "name": "~bailey east corner before crosswalk",
+        "x": -95.24602821611629,
+        "y": 38.95749755250069,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            401,
+            402
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10358,
+        "name": "~bailey corner of big crosswalk",
+        "x": -95.24596652530889,
+        "y": 38.95747930245327,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            402,
+            403
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10359,
+        "name": "~north east corner of big crosswalk",
+        "x": -95.24571418959998,
+        "y": 38.957431131200494,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            403,
+            404
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10360,
+        "name": "~past the big crosswalk north 1",
+        "x": -95.24507034767704,
+        "y": 38.95741126420011,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            404,
+            405
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10361,
+        "name": "~past the big crosswalk north 2",
+        "x": -95.24456264853295,
+        "y": 38.95751565718475,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            405,
+            406
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10362,
+        "name": "~crosswalk before east ticketbooth",
+        "x": -95.24451221264013,
+        "y": 38.957524258414296,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            406,
+            407
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10363,
+        "name": "Bus Stop 166",
+        "x": -95.24411467975193,
+        "y": 38.957697506995,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            407,
+            408
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10364,
+        "name": "~ in front of Lippincott Main",
+        "x": -95.24404983813591,
+        "y": 38.95775278925977,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            408,
+            409,
+            410
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10365,
+        "name": "Lippincot Hall Main Entrance",
+        "x": -95.24410317512324,
+        "y": 38.957815440237475,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            409
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10366,
+        "name": "~ east ticket booth crosswalk north",
+        "x": -95.24381040634812,
+        "y": 38.95788452908947,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            410,
+            411
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10367,
+        "name": "~ NH museum crosswalk",
+        "x": -95.24339080006479,
+        "y": 38.95834424275778,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            411,
+            412
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10368,
+        "name": "~union crosswalk 1 to lot 16",
+        "x": -95.24325655114778,
+        "y": 38.95890416017572,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            412,
+            413
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10369,
+        "name": "~union crosswalk 2 to lot 16",
+        "x": -95.2431586964353,
+        "y": 38.95926401260378,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            413,
+            414
+        ],
+        "tags": [
+            ""
+        ]
+    },
+    {
+        "id": 10370,
+        "name": "Union Main Entrance",
+        "x": -95.2431630033346,
+        "y": 38.959361845684946,
+        "buildingId": -1,
+        "floor": -1000,
+        "edgeIds": [
+            414
+        ],
+        "tags": [
+            ""
         ]
     }
 ]
