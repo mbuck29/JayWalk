@@ -33,6 +33,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 
 import {
@@ -254,15 +255,10 @@ export default function HomeScreen() {
   return (
     <View style={styles.background}>
       <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", flex: 1, justifyContent: "space-between" }}>
           <Text style={styles.appTitle}>JayWalk</Text>
           <TouchableOpacity onPress={() => setShowInfo(true)}>
-            <InfoIcon
-              width={24}
-              height={24}
-              color="#fff"
-              style={{ marginLeft: 8 }}
-            />
+            <InfoIcon width={24} height={24} color="#fff" />
           </TouchableOpacity>
         </View>
       </View>
@@ -642,6 +638,11 @@ export default function HomeScreen() {
 
           {/* Main body content of the dialog */}
           <Dialog.Content>
+            <ScrollView
+              showsVerticalScrollIndicator={true}
+              style={{ maxHeight: 400 }}        // caps height on small screens
+              contentContainerStyle={{ paddingBottom: 8 }}
+            >
             {/* Introductory description of what the app does */}
             <PaperText style={styles.infoBodyText}>
               JayWalk helps you navigate between campus locations with indoor
@@ -734,6 +735,7 @@ export default function HomeScreen() {
             <PaperText style={styles.infoBodyText}>
               You can stop navigation anytime by tapping End Route.
             </PaperText>
+            </ScrollView>
           </Dialog.Content>
 
           {/* Action buttons shown at the bottom of the dialog */}
