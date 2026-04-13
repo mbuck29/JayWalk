@@ -22,11 +22,15 @@ import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MapView, { Polyline } from "react-native-maps";
-import Reroute from "../../assets/images/icons/reroute.svg";
-import { watchLocation } from "../Utils/location";
-import { Route } from "../Utils/routing";
-import { calculateRouteTime, haversineMeters, remainingRouteMeters } from "../Utils/routingUtils";
-import { getRoute } from "../Utils/state";
+import Reroute from "../assets/images/icons/reroute.svg";
+import { watchLocation } from "./Utils/location";
+import { Route } from "./Utils/routing";
+import {
+  calculateRouteTime,
+  haversineMeters,
+  remainingRouteMeters,
+} from "./Utils/routingUtils";
+import { getRoute } from "./Utils/state";
 
 const DEBUG_SPOOF = false;
 
@@ -311,44 +315,49 @@ export default function TabTwoScreen() {
   //const currentRoute = { stops: [graph.nodes[0], graph.nodes[1], graph.nodes[2]] };
 
   // CURRENT ROUTE DISPLAY - makes a line through stops
-  function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number) {
+  function makeRoutePolyline(
+    stops: Node[],
+    currentNode: number,
+    baseIndex: number,
+  ) {
     if (!stops || stops.length < 2) return null; // return if route too short
 
-    const splitAt = Math.max(0, Math.min(currentNode - baseIndex, stops.length - 1));
+    const splitAt = Math.max(
+      0,
+      Math.min(currentNode - baseIndex, stops.length - 1),
+    );
     const traveled = stops.slice(0, splitAt + 1);
     const remaining = stops.slice(splitAt);
 
-  
-  const toCoords = (nodes: { y: number; x: number }[]) =>
-  nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
+    const toCoords = (nodes: { y: number; x: number }[]) =>
+      nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
 
     //displays route
-  return (
-    <>
-      {traveled.length >= 2 && (
-        <Polyline
-          coordinates={toCoords(traveled)}
-          strokeColor="#9ca3af"
-          strokeWidth={5}
-          lineCap="round"
-          lineJoin="round"
-          key={stops[0].name + "-traveled"}
-        />
-      )}
-      {remaining.length >= 2 && (
-        <Polyline
-          coordinates={toCoords(remaining)}
-          strokeColor="#0066ff"
-          strokeWidth={5}
-          lineCap="round"
-          lineJoin="round"
-          key={stops[0].name + "-remaining"}
-        />
-      )}
-    </>
-  );
-}
-
+    return (
+      <>
+        {traveled.length >= 2 && (
+          <Polyline
+            coordinates={toCoords(traveled)}
+            strokeColor="#9ca3af"
+            strokeWidth={5}
+            lineCap="round"
+            lineJoin="round"
+            key={stops[0].name + "-traveled"}
+          />
+        )}
+        {remaining.length >= 2 && (
+          <Polyline
+            coordinates={toCoords(remaining)}
+            strokeColor="#0066ff"
+            strokeWidth={5}
+            lineCap="round"
+            lineJoin="round"
+            key={stops[0].name + "-remaining"}
+          />
+        )}
+      </>
+    );
+  }
 
   function makeRoutePolylines(route: Route) {
     const polylines = [];
@@ -365,14 +374,21 @@ export default function TabTwoScreen() {
       }
 
       if (base != i - 1) {
-        polylines.push(makeRoutePolyline(route.stops.slice(base, i), currentNode, base));      }
+        polylines.push(
+          makeRoutePolyline(route.stops.slice(base, i), currentNode, base),
+        );
+      }
 
       base = -1;
     }
 
     if (base >= 0 && base != route.stops.length - 2) {
-        polylines.push(makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNode, base)
-
+      polylines.push(
+        makeRoutePolyline(
+          route.stops.slice(base, route.stops.length),
+          currentNode,
+          base,
+        ),
       );
     }
 
@@ -421,11 +437,12 @@ export default function TabTwoScreen() {
     ? calculateRouteTime(remainingRouteMeters(currentRoute, currentNode))
     : null;
 
-  const etaText = etaMinutes !== null
-    ? etaMinutes < 1
-      ? "< 1 min"
-      : `${Math.ceil(etaMinutes)} min`
-    : null
+  const etaText =
+    etaMinutes !== null
+      ? etaMinutes < 1
+        ? "< 1 min"
+        : `${Math.ceil(etaMinutes)} min`
+      : null;
 
   return (
     <View style={{ flex: 1 }}>
@@ -498,7 +515,9 @@ export default function TabTwoScreen() {
       >
         {/* if we're indoors, show the indoor nav screen instead of the map */}
         <IndoorNav
-          currentIndoorSegmentKey={`${currentRoute?.stops?.[currentNode]?.building?.id ?? "none"}-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
+          currentIndoorSegmentKey={`${
+            currentRoute?.stops?.[currentNode]?.building?.id ?? "none"
+          }-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
           instrList={currentRoute?.directions ?? []}
           setIsRouteStarted={setIsRouteStarted}
           setShowReroutePrompt={setShowReroutePrompt}
@@ -586,18 +605,18 @@ const styles = StyleSheet.create({
   },
   rerouteIcon: { alignSelf: "center", marginTop: 5 },
   etaPill: {
-  position: "absolute",
-  bottom: 20,
-  alignSelf: "center",
-  backgroundColor: "#0A2145",
-  paddingHorizontal: 16,
-  paddingVertical: 10,
-  borderRadius: 20,
-  zIndex: 1,
-},
-etaText: {
-  color: "#fff",
-  fontSize: 15,
-  fontFamily: "Orelega One",
-},
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    backgroundColor: "#0A2145",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    zIndex: 1,
+  },
+  etaText: {
+    color: "#fff",
+    fontSize: 15,
+    fontFamily: "Orelega One",
+  },
 });

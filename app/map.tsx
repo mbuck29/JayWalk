@@ -7,9 +7,13 @@
  */
 import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
-import { graph, Graph } from "@/maps/graph";
 import { Tag } from "@/maps/data";
-import { setDestination, useAppDispatch, useAppSelector } from "@/redux/appState";
+import { graph, Graph } from "@/maps/graph";
+import {
+  setDestination,
+  useAppDispatch,
+  useAppSelector,
+} from "@/redux/appState";
 import { Asset } from "expo-asset";
 import { useFonts } from "expo-font";
 import { navigate } from "expo-router/build/global-state/routing";
@@ -32,16 +36,23 @@ import Animated, {
 const DEBUG = false;
 
 // Tag → display config
-const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string }> = {
-  bathrooms:  { emoji: "🚻", color: "#4A90D9", label: "Restroom"  },
-  printers:   { emoji: "🖨️", color: "#7B68EE", label: "Printers"  },
-  "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop"  },
-  food:       { emoji: "🍽️", color: "#E05C3A", label: "Food"      },
-  computers:  { emoji: "💻", color: "#3AAE6E", label: "Computers" },
-};
+const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string }> =
+  {
+    bathrooms: { emoji: "🚻", color: "#4A90D9", label: "Restroom" },
+    printers: { emoji: "🖨️", color: "#7B68EE", label: "Printers" },
+    "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop" },
+    food: { emoji: "🍽️", color: "#E05C3A", label: "Food" },
+    computers: { emoji: "💻", color: "#3AAE6E", label: "Computers" },
+  };
 
 // Priority order — first matching tag wins for the marker icon
-const TAG_PRIORITY: Tag[] = ["food", "bus stop", "bathrooms", "printers", "computers"];
+const TAG_PRIORITY: Tag[] = [
+  "food",
+  "bus stop",
+  "bathrooms",
+  "printers",
+  "computers",
+];
 
 // ---------------------------------------------------------------------------
 // TagMarker is a self-contained component so React can manage its own
@@ -74,11 +85,15 @@ function TagMarker({
     >
       <View style={styles.markerContainer}>
         {/* Bubble */}
-        <View style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}>
+        <View
+          style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}
+        >
           <Text style={styles.tagMarkerEmoji}>{config.emoji}</Text>
         </View>
         {/* Tail / caret pointing down */}
-        <View style={[styles.tagMarkerTail, { borderTopColor: config.color }]} />
+        <View
+          style={[styles.tagMarkerTail, { borderTopColor: config.color }]}
+        />
       </View>
     </Marker>
   );
@@ -90,16 +105,18 @@ export default function TabTwoScreen() {
   const [selectedNode, setSelectedNode] = useState<any>(null);
 
   // Read the filter selections that FeatureFilter already manages in Redux.
-  const selectedFeatures = useAppSelector((state) => state.jayWalk.selectedFeatures);
+  const selectedFeatures = useAppSelector(
+    (state) => state.jayWalk.selectedFeatures,
+  );
 
   // Map FeatureFilter display strings -> Tag values used in node data.
   // "Study Area" has no matching Tag yet, so it is intentionally omitted.
   const FEATURE_TO_TAG: Record<string, Tag> = {
     "Private Restrooms": "bathrooms",
-    "Printers":          "printers",
-    "Food":              "food",
-    "Computers":         "computers",
-    "Bus Stop":          "bus stop",
+    Printers: "printers",
+    Food: "food",
+    Computers: "computers",
+    "Bus Stop": "bus stop",
   };
 
   // Derive the active tag set reactively — no separate local state needed.
@@ -111,9 +128,7 @@ export default function TabTwoScreen() {
 
   useEffect(() => {
     //load custom marker
-    Asset.fromModule(
-      require("../../assets/images/icons/pin.png"),
-    ).downloadAsync();
+    Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
   }, []);
 
   const { width: screenWidth } = useWindowDimensions();
@@ -125,15 +140,17 @@ export default function TabTwoScreen() {
   const animatedPanelStyle = useAnimatedStyle(() => ({
     transform: [
       {
-        translateX: withTiming(panelOpen.value ? 0 : PANEL_WIDTH, { duration: 250 }),
+        translateX: withTiming(panelOpen.value ? 0 : PANEL_WIDTH, {
+          duration: 250,
+        }),
       },
     ],
     opacity: withTiming(panelOpen.value ? 1 : 0, { duration: 200 }),
   }));
 
   const [fontsLoaded] = useFonts({
-    "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"),
-    OrelegaOne: require("../../assets/fonts/OrelegaOne-Regular.ttf"),
+    "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
+    OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
   });
 
   if (!fontsLoaded) return null;
@@ -155,8 +172,9 @@ export default function TabTwoScreen() {
       })
       .map((node) => {
         const primaryTag =
-          TAG_PRIORITY.find((t) => node.tags.includes(t) && activeTags.has(t)) ??
-          node.tags.find((t) => activeTags.has(t))!;
+          TAG_PRIORITY.find(
+            (t) => node.tags.includes(t) && activeTags.has(t),
+          ) ?? node.tags.find((t) => activeTags.has(t))!;
 
         const config = TAG_CONFIG[primaryTag];
 
@@ -280,7 +298,7 @@ export default function TabTwoScreen() {
             coordinate={{ latitude: selectedNode.y, longitude: selectedNode.x }}
           >
             <Image
-              source={require("../../assets/images/icons/pin.png")}
+              source={require("../assets/images/icons/pin.png")}
               style={{ width: 45, height: 45 }}
               resizeMode="contain"
             />
@@ -378,8 +396,8 @@ const styles = StyleSheet.create({
   // Wrapper so the anchor point sits at the tip of the tail
   markerContainer: {
     alignItems: "center",
-    
-  overflow: "visible",
+
+    overflow: "visible",
   },
 
   tagMarkerBubble: {

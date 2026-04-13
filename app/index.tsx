@@ -45,12 +45,12 @@ import {
   TextInput,
 } from "react-native-paper";
 
-import InfoIcon from "../../assets/images/icons/info.svg";
-import TargetIcon from "../../assets/images/icons/target.svg";
-import { watchLocation } from "../Utils/location";
-import { route } from "../Utils/routing";
-import { haversineMeters, sanitize } from "../Utils/routingUtils";
-import { getState } from "../Utils/state";
+import InfoIcon from "../assets/images/icons/info.svg";
+import TargetIcon from "../assets/images/icons/target.svg";
+import { watchLocation } from "./Utils/location";
+import { route } from "./Utils/routing";
+import { haversineMeters, sanitize } from "./Utils/routingUtils";
+import { getState } from "./Utils/state";
 
 export default function HomeScreen() {
   const [menuVisible, setMenuVisible] = useState(false);
@@ -242,9 +242,9 @@ export default function HomeScreen() {
   };
   //get fonts files from utils
   const [fontsLoaded] = useFonts({
-    "MuseoModerno-Regular": require("../../assets/fonts/MuseoModerno.ttf"),
-    "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"),
-    OrelegaOne: require("../../assets/fonts/OrelegaOne-Regular.ttf"),
+    "MuseoModerno-Regular": require("../assets/fonts/MuseoModerno.ttf"),
+    "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
+    OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
   });
 
   if (!fontsLoaded) {
@@ -269,7 +269,7 @@ export default function HomeScreen() {
 
       {/* campanile logo */}
       <Image
-        source={require("../../assets/images/JayWalk-Logo1.png")}
+        source={require("../assets/images/JayWalk-Logo1.png")}
         style={styles.heroImage}
         resizeMode="cover"
       />
@@ -634,7 +634,7 @@ export default function HomeScreen() {
             </Dialog.Title>
 
             <Image
-              source={require("../../assets/images/JayWalk-Logo1.png")}
+              source={require("../assets/images/JayWalk-Logo1.png")}
               style={{ width: 36, height: 36 }}
               resizeMode="contain"
             />
