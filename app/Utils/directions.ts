@@ -1,13 +1,13 @@
 /**
  * File: directions.ts
- * Purpose: handle generating directions for the user
+ * Purpose: Handle generating directions for the user
  * Author: C. Cooper
  * Date Created: 2026-02-20
- * Date Modified: 2026-03-01
+ * Date Modified: 2026-04-12
  */
 
 import { RouteType } from "@/maps/data";
-import { Node } from "@/maps/graph";
+import { Edge, Node } from "@/maps/graph";
 import { getDistanceMeters, Route } from "./routing";
 import { edgeHas, edgeOther } from "./routingUtils";
 
@@ -67,7 +67,7 @@ export function populateDirections(route: Route)
     // If it is starting indoors, pass the handling over to the indoor function
     if(paths[0].indoors)
     {
-        i = populateDirectionsIndoors(route, 0, false) - 1;
+        i = populateDirectionsIndoors(route, 0, false);
     }
     else if(!continueFrom) // If the first edge isn't going to be merged, make directions for it
     {
@@ -140,7 +140,7 @@ export function populateDirections(route: Route)
         const optionTurn = getTurnType(optionAngle);
 
         // Merge together same-type nodes in a line
-        if(continueFrom && (optionTurn == "straight" || optionsAtThisStop.length == 1) && correctOption.type == continueType)
+        if(continueFrom && (optionTurn == "straight" || optionsAtThisStop.length == 1) && edgeOut.type == continueType)
         {
             continue;
         }
@@ -168,8 +168,18 @@ export function populateDirections(route: Route)
             {
                 directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
-                    show: edgeIn.type != edgeOut.type,
+                    direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
+                    prompt: false
+                });
+            }
+
+            if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
                     prompt: false
                 });
             }
@@ -195,8 +205,18 @@ export function populateDirections(route: Route)
                 {
                     directions.push({
                         node: i,
-                        direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
-                        show: edgeIn.type != edgeOut.type,
+                        direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                        show: true,
+                        prompt: false
+                    });
+                }
+
+                if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+                {
+                    directions.push({
+                        node: i,
+                        direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                        show: true,
                         prompt: false
                     });
                 }
@@ -215,8 +235,18 @@ export function populateDirections(route: Route)
                 {
                     directions.push({
                         node: i,
-                        direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
-                        show: edgeIn.type != edgeOut.type,
+                        direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                        show: true,
+                        prompt: false
+                    });
+                }
+
+                if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+                {
+                    directions.push({
+                        node: i,
+                        direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                        show: true,
                         prompt: false
                     });
                 }
@@ -233,10 +263,20 @@ export function populateDirections(route: Route)
             // If they could be confused and have the same type, specify to choose the left or right one
             directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, -1, intersection, leftIsCorrect ? "left" : "right"),
+                    direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id, -1, intersection, leftIsCorrect ? "left" : "right"),
                     show: true,
                     prompt: false
                 });
+            
+            if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
+                    prompt: false
+                });
+            }
 
             continueFromIndex = i;
             continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
@@ -264,7 +304,7 @@ export function populateDirections(route: Route)
         // Check how many options of the same type there are
         for(const option of optionsAtThisStop)
         {
-            if(option.type == correctOption.type)
+            if(option.type == edgeOut.type)
             {
                 duiplicateCount++;
             }
@@ -277,8 +317,18 @@ export function populateDirections(route: Route)
             {
                 directions.push({
                     node: i,
-                    direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id),
-                    show: edgeIn.type != edgeOut.type,
+                    direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
+                    prompt: false
+                });
+            }
+
+            if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+            {
+                directions.push({
+                    node: i,
+                    direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                    show: true,
                     prompt: false
                 });
             }
@@ -300,7 +350,7 @@ export function populateDirections(route: Route)
                 break;
             }
 
-            if(option.type == correctOption.type)
+            if(option.type == edgeOut.type)
             {
                 left = true;
             }
@@ -309,10 +359,20 @@ export function populateDirections(route: Route)
         // Give a direction specifying which route (L/R) to take
         directions.push({
             node: i - 1,
-            direction: getRouteAction(optionTurn, correctOption.type, edgeOut.startNode.id == thisStop.id, distance, intersection, left ? "right" : "left"),
+            direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id, distance, intersection, left ? "right" : "left"),
             show: true,
             prompt: false
         });
+
+        if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
+        {
+            directions.push({
+                node: i,
+                direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                show: true,
+                prompt: false
+            });
+        }
 
         continueFromIndex = i;
         continueFrom = canBeMerged(edgeOut.type) ? thisStop : null;
@@ -467,11 +527,10 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         }
 
         // Get the correct turn type
-        const turnType = getTurnType(correctOption.relativeAngle)
-
+        const turnType = getTurnType(correctOption.relativeAngle);
 
         // Merge together same-type edges in a straight line
-        if((turnType == "straight" || turnType == "slight left" || turnType == "slight right") && correctOption.type == continueType && !changingBuildings)
+        if((turnType == "straight" || turnType == "slight left" || turnType == "slight right") && edgeOut.type == continueType && !changingBuildings)
         {
             // Keep track of the number of halls to the left/right along with landmarks
             for(let j = 0; j < optionsAtThisStop.length; j++)
@@ -508,9 +567,22 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
             continue;
         }
+        else if(continueFrom && isBigRoom(continueType) && couldBeInBigRoom(edgeOut.type) && !changingBuildings)
+        {
+            continue;
+        }
 
         // Add directions for the continueFrom
-        if(continueFrom && continueFrom != lastStop)
+        if(continueFrom && isBigRoom(continueType))
+        {
+            directions.push({
+                node: continueFromIndex,
+                direction: getBigRoomAction(continueFrom, stops[continueFromIndex + 1], thisStop, continueType, edgeOut),
+                show: true,
+                prompt: false
+            });
+        }
+        else if(continueFrom && continueFrom != lastStop)
         {
             const continueDistance = getTensOfFeetIndoors(continueFrom, thisStop);
 
@@ -577,9 +649,9 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         }
 
         // Handle swapping floors
-        if((correctOption.type == "stairs" || correctOption.type == "stairwell" || correctOption.type == "elevator") && thisStop.floor != nextStop.floor)
+        if((edgeOut.type == "stairs" || edgeOut.type == "stairwell" || edgeOut.type == "elevator") && thisStop.floor != nextStop.floor)
         {
-            i = takeElevatorDirections(route, i, correctOption.type);
+            i = takeElevatorDirections(route, i, edgeOut.type);
             while(i > stops.length)
             {
                 i--;
@@ -611,6 +683,16 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                     show: true,
                     prompt: false
                 });
+
+                if(turnType != "straight")
+                {
+                    directions.push({
+                        node: i,
+                        direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
+                        show: true,
+                        prompt: false
+                    });
+                }
             }
         }
         else
@@ -789,7 +871,8 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
 
     if(turnText != "")
     {
-        output += turnText + " to ";
+        return output + turnText;
+        // output += turnText + " to ";
     }
 
     if(specifier != "")
@@ -805,9 +888,28 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
         specifier = "";
     }
 
-    let action = "";
-
     // Add the action
+    let action = getBaseRouteAction(routeType, forwards, specifier, specLit);
+
+    if(output != "")
+    {
+        action = action.toLowerCase();
+    }
+
+    output += action;
+
+    if(distance > 0 && turnType == "straight" && shouldShowDistance(routeType))
+    {
+        output += ` for ${distance} feet`
+    }
+
+    return output;
+}
+
+function getBaseRouteAction(routeType: RouteType, forwards: boolean, specifier: string = "", specLit: string = ""): string
+{
+    let action = ""
+
     switch(routeType)
     {
         case "stairs":
@@ -847,19 +949,57 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
             action = `Take the ${specifier}${routeType}${specLit}`;
     }
 
-    if(output != "")
+    return action;
+}
+
+function getBigRoomAction(firstNode: Node, secondNode: Node, endNode: Node, edgeType: RouteType, outEdge: Edge | null): string
+{
+    // Should never happen
+    if(!isBigRoom(edgeType))
     {
-        action = action.toLowerCase();
+        return getRouteAction("straight", edgeType, true);
     }
 
-    output += action;
+    const angle = -getTurnAngle(firstNode, secondNode, endNode);
+    const turnType = getTurnType(angle);
 
-    if(distance > 0 && turnType == "straight" && shouldShowDistance(routeType))
+    let text = "";
+
+    switch(edgeType)
     {
-        output += ` for ${distance} feet`
+        case "atrium":
+            text += "Cross the atrium";
+            break;
     }
 
-    return output;
+    switch(turnType)
+    {
+        case "sharp right":
+            text += " and take a sharp right";
+            break;
+        case "sharp left":
+            text += " and take a sharp left";
+            break;
+        case "right":
+            text += " to the right";
+            break;
+        case "left":
+            text += " to the left";
+            break;
+        case "slight right":
+            text += " slightly to the right";
+            break;
+        case "slight left":
+            text += " slightly to the left";
+            break;
+    }
+
+    if(outEdge)
+    {
+        text += " to " + getBaseRouteAction(outEdge.type, outEdge.startNode.id == endNode.id).toLowerCase();
+    }
+
+    return text;
 }
 
 /**
@@ -971,6 +1111,25 @@ interface Option
 }
 
 /**
+ * Gets the angle of the turn when going from the line from nodeIn to node to the line from node to nodeOut
+ * @param nodeIn The Node leading to node
+ * @param node The pivot Node
+ * @param nodeOut The Node being turned towards
+ * @returns The angle of the turn when going from the line from nodeIn to node to the line from node to nodeOut
+ */
+function getTurnAngle(nodeIn: Node | undefined, node: Node, nodeOut: Node): number
+{
+    const baseAngle = nodeIn && nodeIn.building == node.building ? getAngle(nodeIn, node) : getAngle(node, nodeOut);
+
+    let angle = getAngle(node, nodeOut);
+
+    // Offset the angle by this edge's angle so it is relative
+    angle -= baseAngle;
+
+    return normalizeAngle(angle);
+}
+
+/**
  * Gets the options that the user could take at the given node
  * @param nodeIn The node we are coming from
  * @param node The current node
@@ -978,8 +1137,6 @@ interface Option
  */
 function getOptions(nodeIn: Node, node: Node, nodeOut: Node): Option[]
 {
-    const baseAngle = nodeIn.building == node.building ? getAngle(nodeIn, node) : getAngle(node, nodeOut);
-
     const options: Option[] = [];
 
     // Get the option for each edge that we aren't coming from
@@ -992,15 +1149,8 @@ function getOptions(nodeIn: Node, node: Node, nodeOut: Node): Option[]
 
         const otherNode = edgeOther(edge, node);
 
-        let angle = getAngle(node, otherNode);
-
-        // Offset the angle by this edge's angle so it is relative
-        angle -= baseAngle;
-
-        angle = normalizeAngle(angle);
-
         options.push({
-            relativeAngle: angle,
+            relativeAngle: getTurnAngle(nodeIn, node, nodeOut),
             type: edge.type,
             node: otherNode
         });
@@ -1053,6 +1203,11 @@ function getTensOfFeetOutdoors(a: Node, b: Node): number
     return dist;
 }
 
+/**
+ * Whether we should display how long the route is (e.g. "continue for 100 feet") for each type of route
+ * @param type The route type
+ * @returns Whether we should display how long the route is for the given route type
+ */
 function shouldShowDistance(type: RouteType): boolean
 {
     switch(type)
@@ -1070,6 +1225,11 @@ function shouldShowDistance(type: RouteType): boolean
     return true;
 }
 
+/**
+ * Checks whether routes of the same type may be merged together in directions when they are in a straight line
+ * @param type The type of route to check
+ * @returns Checks whether routes of the given type may be merged together in directions when they are in a straight line
+ */
 function canBeMerged(type: RouteType): boolean
 {
     switch(type)
@@ -1081,4 +1241,38 @@ function canBeMerged(type: RouteType): boolean
     }
 
     return true;
+}
+
+/**
+ * Checks whether the route type represents a large room which may be merged into one node
+ * @param type The route type to check
+ * @returns Whether the given route type represents a large room which may be merged into one node
+ */
+function isBigRoom(type: RouteType): boolean
+{
+    switch(type)
+    {
+        case "atrium":
+            return true;
+    }
+
+    return false;
+}
+
+/**
+ * Checks whether the given route type could be found in a large room and could be ignored when giving directions through said room
+ * For example, if an atrium has a few steps (not stairs), we don't really need to tell the user to go up the steps
+ * @param type The route type to check
+ * @returns Whether the given route type could be found in a large room and could be ignored when giving directions through said room
+ */
+function couldBeInBigRoom(type: RouteType): boolean
+{
+    switch(type)
+    {
+        case "ramp":
+        case "steps":
+            return true;
+    }
+
+    return isBigRoom(type);
 }
