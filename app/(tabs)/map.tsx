@@ -7,8 +7,8 @@
  */
 import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
-import { graph, Graph } from "@/maps/graph";
 import { Tag } from "@/maps/data";
+import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch, useAppSelector } from "@/redux/appState";
 import { Asset } from "expo-asset";
 import { useFonts } from "expo-font";
@@ -337,7 +337,7 @@ export default function TabTwoScreen() {
             <Pressable
               style={[styles.bubbleButton, styles.goButton]}
               onPress={() => {
-                dispatch(setDestination(selectedNode.name));
+                dispatch(setDestination({text: selectedNode.name, ids: [selectedNode.id]}));
                 navigate("/");
                 setSelectedNode(null);
               }}
