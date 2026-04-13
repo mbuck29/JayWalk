@@ -110,7 +110,10 @@ export default function TabTwoScreen() {
   );
 
   useEffect(() => {
-    Asset.fromModule(require("../../assets/images/icons/pin.png")).downloadAsync();
+    //load custom marker
+    Asset.fromModule(
+      require("../../assets/images/icons/pin.png"),
+    ).downloadAsync();
   }, []);
 
   const { width: screenWidth } = useWindowDimensions();
@@ -199,11 +202,18 @@ export default function TabTwoScreen() {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     const closest = getClosestNode(latitude, longitude, graph);
     if (closest != null) {
+      console.log("Closest node:", {
+        id: closest.id,
+        name: closest.name,
+        lat: closest.y,
+        lng: closest.x,
+      });
       const selectedNodeSafe = {
         ...closest,
-        tags: "tags" in closest ? closest.tags : [],
+        tags: "tags" in closest ? closest.tags : [], // only default if missing
       };
-      setSelectedNode(selectedNodeSafe);
+
+      setSelectedNode(selectedNodeSafe); // <-- only set state
     }
   }
 
@@ -292,19 +302,30 @@ export default function TabTwoScreen() {
       {/* Bottom info card */}
       {selectedNode && (
         <View style={styles.mapOverlayCard}>
+          {/* Node Name - Styled like the Destination label */}
           <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
+
+          {/* Location Features Container */}
           <View style={styles.featuresContainer}>
             <Text style={styles.featuresLabel}>Location Features:</Text>
             {selectedNode.tags && selectedNode.tags.length > 0 ? (
-              selectedNode.tags.map((tag: string, index: number) => (
-                <Text key={index} style={styles.tagText}>
-                  • {tag.charAt(0).toUpperCase() + tag.slice(1)}
-                </Text>
-              ))
+              selectedNode.tags.map((tag: string, index: number) => {
+                // Capitalize the first letter: "computers" -> "Computers"
+                const capitalizedTag =
+                  tag.charAt(0).toUpperCase() + tag.slice(1);
+
+                return (
+                  <Text key={index} style={styles.tagText}>
+                    • {capitalizedTag}
+                  </Text>
+                );
+              })
             ) : (
               <Text style={styles.tagText}>• No features listed</Text>
             )}
           </View>
+
+          {/* Bubble Buttons Row */}
           <View style={styles.buttonRow}>
             <Pressable
               style={[styles.bubbleButton, styles.cancelButton]}
@@ -312,6 +333,7 @@ export default function TabTwoScreen() {
             >
               <Text style={styles.buttonLabel}>CANCEL</Text>
             </Pressable>
+
             <Pressable
               style={[styles.bubbleButton, styles.goButton]}
               onPress={() => {
@@ -325,8 +347,7 @@ export default function TabTwoScreen() {
           </View>
         </View>
       )}
-
-      {/* ── Filter toggle button ── */}
+      {/* Toggle button */}
       {!isPanelOpen && (
         <Pressable style={styles.featureToggle} onPress={handleFeatureToggle}>
           <OptionsIcon height={42} width={42} />
@@ -410,15 +431,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 100,
     right: 0,
-    backgroundColor: "white",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
     zIndex: 10,
   },
   mapOverlayCard: {
