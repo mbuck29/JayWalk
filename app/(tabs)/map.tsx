@@ -1,14 +1,15 @@
 /**
  * File: map.tsx
  * Purpose: The map tab of the app. Defines a map that the user can use to view the layout of campus.
- * Authors: Michael B, C. Cooper, Blake Jesse
+ * Authors: Michael B, C. Cooper, Blake Jesse, Cole Charpentier
  * Date Created: 2026-02-07
- * Date Modified: 2026-02-14
+ * Date Modified: 2026-04-12
  */
 import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
 import { graph, Graph } from "@/maps/graph";
-import { setDestination, useAppDispatch } from "@/redux/appState";
+import { Tag } from "@/maps/data";
+import { setDestination, useAppDispatch, useAppSelector } from "@/redux/appState";
 import { Asset } from "expo-asset";
 import { useFonts } from "expo-font";
 import { navigate } from "expo-router/build/global-state/routing";
@@ -30,47 +31,111 @@ import Animated, {
 
 const DEBUG = false;
 
+// Tag → display config
+const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string }> = {
+  bathrooms:  { emoji: "🚻", color: "#4A90D9", label: "Restroom"  },
+  printers:   { emoji: "🖨️", color: "#7B68EE", label: "Printers"  },
+  "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop"  },
+  food:       { emoji: "🍽️", color: "#E05C3A", label: "Food"      },
+  computers:  { emoji: "💻", color: "#3AAE6E", label: "Computers" },
+};
+
+// Priority order — first matching tag wins for the marker icon
+const TAG_PRIORITY: Tag[] = ["food", "bus stop", "bathrooms", "printers", "computers"];
+
+// ---------------------------------------------------------------------------
+// TagMarker is a self-contained component so React can manage its own
+// tracksViewChanges lifecycle. Starts true so the native view has time to
+// measure, then flips to false after the first render to stop thrashing.
+function TagMarker({
+  node,
+  config,
+  onPress,
+}: {
+  node: any;
+  config: { emoji: string; color: string; label: string };
+  onPress: () => void;
+}) {
+  const [tracked, setTracked] = useState(true);
+
+  useEffect(() => {
+    // Give the native layer one frame to measure the custom view, then lock it.
+    const id = setTimeout(() => setTracked(false), 500);
+    return () => clearTimeout(id);
+  }, []);
+
+  return (
+    <Marker
+      key={`tag-${node.id}`}
+      coordinate={{ latitude: node.y, longitude: node.x }}
+      tracksViewChanges={tracked}
+      anchor={{ x: 0.5, y: 1 }}
+      onPress={onPress}
+    >
+      <View style={styles.markerContainer}>
+        {/* Bubble */}
+        <View style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}>
+          <Text style={styles.tagMarkerEmoji}>{config.emoji}</Text>
+        </View>
+        {/* Tail / caret pointing down */}
+        <View style={[styles.tagMarkerTail, { borderTopColor: config.color }]} />
+      </View>
+    </Marker>
+  );
+}
+
 export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
   const [selectedNode, setSelectedNode] = useState<any>(null);
+
+  // Read the filter selections that FeatureFilter already manages in Redux.
+  const selectedFeatures = useAppSelector((state) => state.jayWalk.selectedFeatures);
+
+  // Map FeatureFilter display strings -> Tag values used in node data.
+  // "Study Area" has no matching Tag yet, so it is intentionally omitted.
+  const FEATURE_TO_TAG: Record<string, Tag> = {
+    "Private Restrooms": "bathrooms",
+    "Printers":          "printers",
+    "Food":              "food",
+    "Computers":         "computers",
+    "Bus Stop":          "bus stop",
+  };
+
+  // Derive the active tag set reactively — no separate local state needed.
+  const activeTags = new Set<Tag>(
+    selectedFeatures
+      .map((f) => FEATURE_TO_TAG[f])
+      .filter((t): t is Tag => t !== undefined),
+  );
+
   useEffect(() => {
     //load custom marker
     Asset.fromModule(
       require("../../assets/images/icons/pin.png"),
     ).downloadAsync();
   }, []);
+
   const { width: screenWidth } = useWindowDimensions();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320); //calculate the panel width based on the screen width, but dont let it be wider than 320 pxs
+  const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
 
-  // shared value for whether the side panel is open
   const panelOpen = useSharedValue(false);
 
-  // This animated style will be applied to the side panel, and will cause it to slide in and out when the panelOpen value changes
-  const animatedPanelStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        // translateX will be 0 when the panel is open, and PANEL_WIDTH when it is closed, causing it to slide in and out from the right */
-        {
-          translateX: withTiming(panelOpen.value ? 0 : PANEL_WIDTH, {
-            duration: 250,
-          }),
-        },
-      ],
-      opacity: withTiming(panelOpen.value ? 1 : 0, {
-        // fade in the panel when it opens, and fade out when it closes
-        duration: 200,
-      }),
-    };
-  });
+  const animatedPanelStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: withTiming(panelOpen.value ? 0 : PANEL_WIDTH, { duration: 250 }),
+      },
+    ],
+    opacity: withTiming(panelOpen.value ? 1 : 0, { duration: 200 }),
+  }));
 
   const [fontsLoaded] = useFonts({
     "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"),
     OrelegaOne: require("../../assets/fonts/OrelegaOne-Regular.ttf"),
   });
 
-  // If fonts aren't ready, don't render yet (prevents style errors)
   if (!fontsLoaded) return null;
 
   const KU = {
@@ -80,13 +145,41 @@ export default function TabTwoScreen() {
     longitudeDelta: 0.01,
   };
 
+  // Render tag markers for every node that has at least one active tag.
+  // Uses the highest-priority matching tag for the icon.
+  function makeTagMarkers() {
+    return graph.nodes
+      .filter((node) => {
+        if (node.name?.startsWith("~")) return false;
+        return node.tags?.some((t) => activeTags.has(t));
+      })
+      .map((node) => {
+        const primaryTag =
+          TAG_PRIORITY.find((t) => node.tags.includes(t) && activeTags.has(t)) ??
+          node.tags.find((t) => activeTags.has(t))!;
+
+        const config = TAG_CONFIG[primaryTag];
+
+        return (
+          <TagMarker
+            key={`tag-${node.id}`}
+            node={node}
+            config={config}
+            onPress={() => {
+              const safe = { ...node, tags: node.tags ?? [] };
+              setSelectedNode(safe);
+            }}
+          />
+        );
+      });
+  }
+
+  // Debug helpers (unchanged)
   function makeDataLines(graph: Graph) {
     let i = 0;
     const out = [];
-
     for (const edge of graph.edges) {
       if (edge.indoors) continue;
-
       out.push(
         <Polyline
           coordinates={[
@@ -101,17 +194,13 @@ export default function TabTwoScreen() {
         />,
       );
     }
-
     return out;
   }
 
+  // Map press -> select closest named node
   function handleMapPress(e: any) {
     const { latitude, longitude } = e.nativeEvent.coordinate;
-
     const closest = getClosestNode(latitude, longitude, graph);
-
-    console.log("Tapped at:", latitude, longitude);
-
     if (closest != null) {
       console.log("Closest node:", {
         id: closest.id,
@@ -131,16 +220,11 @@ export default function TabTwoScreen() {
   function getClosestNode(lat: number, lng: number, graph: Graph) {
     let bestNode = null;
     let bestDist = Infinity;
-
     for (const node of graph.nodes) {
-      // Skip nodes whose name begins with "~"
       if (node.name?.startsWith("~")) continue;
-
       const dLat = lat - node.y;
       const dLng = lng - node.x;
-
-      const dist = dLat * dLat + dLng * dLng; // squared distance
-
+      const dist = dLat * dLat + dLng * dLng;
       if (dist < bestDist) {
         bestDist = dist;
         bestNode = node;
@@ -149,10 +233,9 @@ export default function TabTwoScreen() {
     return bestNode;
   }
 
-  // This function toggles if the side panel is open or not. But also sets the state value so that the toggle button will hide.
   function handleFeatureToggle() {
-    panelOpen.value = !panelOpen.value; // sets the shared value
-    setIsPanelOpen(!isPanelOpen); // sets the state values
+    panelOpen.value = !panelOpen.value;
+    setIsPanelOpen(!isPanelOpen);
   }
 
   const BOUNDS = { north: 38.972, south: 38.941, east: -95.23, west: -95.286 };
@@ -163,6 +246,7 @@ export default function TabTwoScreen() {
     mapRef.current?.animateToRegion(KU, 900);
   }, []);
 
+  // Render
   return (
     <View style={{ flex: 1 }}>
       <MapView
@@ -170,18 +254,15 @@ export default function TabTwoScreen() {
         mapType="hybrid"
         style={{ flex: 1 }}
         cameraZoomRange={{
-          // This is for limiting how far in and out the user can zoom. This might only work or apple users
           minCenterCoordinateDistance: 12,
           maxCenterCoordinateDistance: 7000,
         }}
-        initialRegion={KU} // This places them over the campus on load
-        showsUserLocation // This shows the user’s location as a blue dot on the map
+        initialRegion={KU}
+        showsUserLocation
         onPress={handleMapPress}
-        // This is a callback that is called when the user moves the map. We use it to clamp the map to the bounds of the campus, so that they dont get lost.
         onRegionChangeComplete={(r) => {
           const lat = clamp(r.latitude, BOUNDS.south, BOUNDS.north);
           const lng = clamp(r.longitude, BOUNDS.west, BOUNDS.east);
-
           if (lat !== r.latitude || lng !== r.longitude) {
             mapRef.current?.animateToRegion(
               { ...r, latitude: lat, longitude: lng },
@@ -190,6 +271,22 @@ export default function TabTwoScreen() {
           }
         }}
       >
+        {/* Tag markers  */}
+        {makeTagMarkers()}
+
+        {/* Selected-node pin  */}
+        {selectedNode && (
+          <Marker
+            coordinate={{ latitude: selectedNode.y, longitude: selectedNode.x }}
+          >
+            <Image
+              source={require("../../assets/images/icons/pin.png")}
+              style={{ width: 45, height: 45 }}
+              resizeMode="contain"
+            />
+          </Marker>
+        )}
+
         {DEBUG &&
           graph.nodes.map((node) => (
             <Marker
@@ -199,25 +296,10 @@ export default function TabTwoScreen() {
               title={`${node.name} (${node.id})`}
             />
           ))}
-
         {DEBUG && makeDataLines(graph)}
-        {selectedNode && (
-          <Marker
-            coordinate={{
-              latitude: selectedNode.y,
-              longitude: selectedNode.x,
-            }}
-            //tracksViewChanges={false}
-          >
-            <Image
-              source={require("../../assets/images/icons/pin.png")}
-              style={{ width: 45, height: 45 }}
-              resizeMode="contain"
-            />
-          </Marker>
-        )}
       </MapView>
 
+      {/* Bottom info card */}
       {selectedNode && (
         <View style={styles.mapOverlayCard}>
           {/* Node Name - Styled like the Destination label */}
@@ -272,7 +354,7 @@ export default function TabTwoScreen() {
         </Pressable>
       )}
 
-      {/* Sliding side panel */}
+      {/* ── Sliding filter panel ── */}
       <Animated.View
         style={[styles.sidePanel, { width: PANEL_WIDTH }, animatedPanelStyle]}
         pointerEvents="auto"
@@ -288,13 +370,51 @@ export default function TabTwoScreen() {
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1 },
+  map: { flex: 1 },
+
+  // Wrapper so the anchor point sits at the tip of the tail
+  markerContainer: {
+    alignItems: "center",
+    
+  overflow: "visible",
   },
-  map: {
-    flex: 1,
+
+  tagMarkerBubble: {
+    width: 40,
+    height: 40,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+    // White border so the bubble pops against the satellite map
+    borderWidth: 2,
+    borderColor: "#fff",
+    overflow: "visible",
   },
+  tagMarkerEmoji: {
+    fontSize: 22,
+    // Prevent the emoji from being clipped on Android
+    includeFontPadding: false,
+    textAlignVertical: "center",
+  },
+  tagMarkerTail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 7,
+    borderRightWidth: 7,
+    borderTopWidth: 10,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    // borderTopColor is set inline to match the bubble color
+  },
+
   featureToggle: {
     position: "absolute",
     top: 100,
@@ -331,7 +451,6 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
   },
-
   nodeTitle: {
     fontSize: 26,
     fontFamily: "OrelegaOne",
@@ -340,7 +459,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   featuresContainer: {
-    backgroundColor: "#C2DCF0", // Your JayWalk light blue
+    backgroundColor: "#C2DCF0",
     borderRadius: 20,
     padding: 15,
     marginBottom: 20,
@@ -369,10 +488,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cancelButton: {
-    backgroundColor: "#df010c", // jayhawk red
-  },
-  goButton: {
-    backgroundColor: "#356EC4", // Active Blue
-  },
+  cancelButton: { backgroundColor: "#df010c" },
+  goButton: { backgroundColor: "#356EC4" },
 });
