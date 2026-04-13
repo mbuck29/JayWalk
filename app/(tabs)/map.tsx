@@ -9,7 +9,7 @@ import OptionsIcon from "@/assets/images/icons/options.svg";
 import FeatureFilter from "@/components/ui/FeatureFilter";
 import { graph, Graph } from "@/maps/graph";
 import { setDestination, useAppDispatch } from "@/redux/appState";
-import { Asset } from 'expo-asset';
+import { Asset } from "expo-asset";
 import { useFonts } from "expo-font";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
@@ -19,7 +19,7 @@ import {
   StyleSheet,
   Text,
   useWindowDimensions,
-  View
+  View,
 } from "react-native";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Animated, {
@@ -34,8 +34,11 @@ export default function TabTwoScreen() {
   const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
   const [selectedNode, setSelectedNode] = useState<any>(null);
-  useEffect(() => { //load custom marker
-    Asset.fromModule(require("../../assets/images/icons/pin.png")).downloadAsync();
+  useEffect(() => {
+    //load custom marker
+    Asset.fromModule(
+      require("../../assets/images/icons/pin.png"),
+    ).downloadAsync();
   }, []);
   const { width: screenWidth } = useWindowDimensions();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -62,10 +65,10 @@ export default function TabTwoScreen() {
     };
   });
 
-const [fontsLoaded] = useFonts({
-  "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"), 
-  "OrelegaOne": require("../../assets/fonts/OrelegaOne-Regular.ttf"),
-});
+  const [fontsLoaded] = useFonts({
+    "MuseoModerno-Bold": require("../../assets/fonts/MuseoModerno-Bold.ttf"),
+    OrelegaOne: require("../../assets/fonts/OrelegaOne-Regular.ttf"),
+  });
 
   // If fonts aren't ready, don't render yet (prevents style errors)
   if (!fontsLoaded) return null;
@@ -116,10 +119,10 @@ const [fontsLoaded] = useFonts({
         lat: closest.y,
         lng: closest.x,
       });
-       const selectedNodeSafe = {
-    ...closest,
-    tags: "tags" in closest ? closest.tags : [], // only default if missing
-  };
+      const selectedNodeSafe = {
+        ...closest,
+        tags: "tags" in closest ? closest.tags : [], // only default if missing
+      };
 
       setSelectedNode(selectedNodeSafe); // <-- only set state
     }
@@ -198,69 +201,70 @@ const [fontsLoaded] = useFonts({
           ))}
 
         {DEBUG && makeDataLines(graph)}
- {selectedNode && (
-  <Marker
-    coordinate={{
-      latitude: selectedNode.y,
-      longitude: selectedNode.x,
-    }}
-    //tracksViewChanges={false}
-  >
-    <Image 
-      source={require("../../assets/images/icons/pin.png")} 
-      style={{ width: 45, height: 45 }} 
-      resizeMode="contain"
-    />
-  </Marker>
-)}
-</MapView>
+        {selectedNode && (
+          <Marker
+            coordinate={{
+              latitude: selectedNode.y,
+              longitude: selectedNode.x,
+            }}
+            //tracksViewChanges={false}
+          >
+            <Image
+              source={require("../../assets/images/icons/pin.png")}
+              style={{ width: 45, height: 45 }}
+              resizeMode="contain"
+            />
+          </Marker>
+        )}
+      </MapView>
 
       {selectedNode && (
-  <View style={styles.mapOverlayCard}>
-    {/* Node Name - Styled like the Destination label */}
-    <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
+        <View style={styles.mapOverlayCard}>
+          {/* Node Name - Styled like the Destination label */}
+          <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
 
-{/* Location Features Container */}
-<View style={styles.featuresContainer}>
-  <Text style={styles.featuresLabel}>Location Features:</Text>
-  {selectedNode.tags && selectedNode.tags.length > 0 ? (
-    selectedNode.tags.map((tag: string, index: number) => {
-      // Capitalize the first letter: "computers" -> "Computers"
-      const capitalizedTag = tag.charAt(0).toUpperCase() + tag.slice(1);
-      
-      return (
-        <Text key={index} style={styles.tagText}>
-          • {capitalizedTag}
-        </Text>
-      );
-    })
-  ) : (
-    <Text style={styles.tagText}>• No features listed</Text>
-  )}
-</View>
+          {/* Location Features Container */}
+          <View style={styles.featuresContainer}>
+            <Text style={styles.featuresLabel}>Location Features:</Text>
+            {selectedNode.tags && selectedNode.tags.length > 0 ? (
+              selectedNode.tags.map((tag: string, index: number) => {
+                // Capitalize the first letter: "computers" -> "Computers"
+                const capitalizedTag =
+                  tag.charAt(0).toUpperCase() + tag.slice(1);
 
-    {/* Bubble Buttons Row */}
-    <View style={styles.buttonRow}>
-      <Pressable 
-        style={[styles.bubbleButton, styles.cancelButton]} 
-        onPress={() => setSelectedNode(null)}
-      >
-        <Text style={styles.buttonLabel}>CANCEL</Text>
-      </Pressable>
+                return (
+                  <Text key={index} style={styles.tagText}>
+                    • {capitalizedTag}
+                  </Text>
+                );
+              })
+            ) : (
+              <Text style={styles.tagText}>• No features listed</Text>
+            )}
+          </View>
 
-      <Pressable 
-        style={[styles.bubbleButton, styles.goButton]} 
-        onPress={() => {
-          dispatch(setDestination(selectedNode.name));
-          navigate("/");
-          setSelectedNode(null);
-        }}
-      >
-        <Text style={styles.buttonLabel}>GO TO</Text>
-      </Pressable>
-    </View>
-  </View>
-)}
+          {/* Bubble Buttons Row */}
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={[styles.bubbleButton, styles.cancelButton]}
+              onPress={() => setSelectedNode(null)}
+            >
+              <Text style={styles.buttonLabel}>CANCEL</Text>
+            </Pressable>
+
+            <Pressable
+              style={[styles.bubbleButton, styles.goButton]}
+              onPress={() => {
+                dispatch(setDestination(selectedNode.name));
+                navigate("/");
+                setSelectedNode(null);
+              }}
+            >
+              <Text style={styles.buttonLabel}>GO TO</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
       {/* Toggle button */}
       {!isPanelOpen && (
         <Pressable style={styles.featureToggle} onPress={handleFeatureToggle}>
@@ -307,15 +311,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 100,
     right: 0,
-    backgroundColor: "white",
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderTopLeftRadius: 20,
-    borderBottomLeftRadius: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 8,
     zIndex: 10,
   },
   mapOverlayCard: {
@@ -336,7 +331,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 18,
   },
-  
+
   nodeTitle: {
     fontSize: 26,
     fontFamily: "OrelegaOne",
@@ -355,7 +350,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: "#356EC4",
     marginBottom: 5,
-    
   },
   tagText: {
     fontFamily: "OrelegaOne",
