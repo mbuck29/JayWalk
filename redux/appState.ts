@@ -13,7 +13,7 @@ type JayWalkState = {
   currentNode: number;
   destination: string;
   destinationIds: number[];
-  selectedFeatures: String[];
+  selectedFeatures: string[];
 };
 
 const initialState: JayWalkState = {
