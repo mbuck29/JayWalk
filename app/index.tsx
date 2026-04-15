@@ -1,880 +1,1044 @@
 /**
  * File: index.tsx
- * Purpose: The home menu for the app; used for searhcing for locations and starting routes
- * Author: Michael B, C. Cooper, Cole C, Delaney G., Blake Jesse
- * Date Created: 2026-02-03
- * Date Modified: 2026-02-28
+ * Purpose: The main tab of the app. Defines a map that the user can use to view the layout of campus.
+ * Authors: Michael B, C. Cooper, Blake Jesse, Cole Charpentier, Delaney G
+ * Date Created: 2026-02-07
+ * Date Modified: 2026-04-12
  */
-
-import LocationMenu from "@/components/ui/LocationMenu";
-import { graph, Node } from "@/maps/graph";
-
+import OptionsIcon from "@/assets/images/icons/options.svg";
+import Reroute from "@/assets/images/icons/reroute.svg";
+import EndRoute from "@/components/ui/EndRoute";
+import FeatureFilter from "@/components/ui/FeatureFilter";
+import IndoorNav from "@/components/ui/IndoorNav";
+import LockOnUser from "@/components/ui/lockOnUser";
+import ReroutePrompt from "@/components/ui/ReroutePrompt";
+import RouteSummary from "@/components/ui/RouteSummary";
+import { Tag } from "@/maps/data";
+import { graph, Graph, Node } from "@/maps/graph";
 import {
-  clearRoute,
-  setAccessiblePreference,
+  setCurrentNode,
   setDestination,
-  setIndoorOutdoorPreference,
-  setRoute,
-  setStart,
   useAppDispatch,
   useAppSelector,
 } from "@/redux/appState";
-
+import { Asset } from "expo-asset";
 import { useFonts } from "expo-font";
 import * as Location from "expo-location";
-import { navigate } from "expo-router/build/global-state/routing";
-import { useEffect, useRef, useState } from "react";
-
+import { default as React, useEffect, useRef, useState } from "react";
 import {
   Image,
-  TextInput as RNTextInput,
+  Pressable,
   StyleSheet,
-  Switch,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
-
-import {
-  Button,
-  Dialog,
-  Menu,
-  Text as PaperText,
-  Portal,
-  Snackbar,
-  TextInput,
-} from "react-native-paper";
-
-import InfoIcon from "../assets/images/icons/info.svg";
-import TargetIcon from "../assets/images/icons/target.svg";
+import MapView, { Marker, Polyline } from "react-native-maps";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { watchLocation } from "./Utils/location";
-import { route } from "./Utils/routing";
-import { haversineMeters, sanitize } from "./Utils/routingUtils";
-import { getState } from "./Utils/state";
+import { Route } from "./Utils/routing";
+import {
+  calculateRouteTime,
+  haversineMeters,
+  remainingRouteMeters
+} from "./Utils/routingUtils";
+import { getRoute } from "./Utils/state";
 
-export default function HomeScreen() {
-  const [menuVisible, setMenuVisible] = useState(false);
-  const [selectedEnvironment, setSelectedEnvironment] = useState<
-    "outdoors" | "indoors" | "nopreference"
-  >("nopreference");
-  const accessible = useAppSelector((s) => s.jayWalk.accessible ?? false);
-  const reduxDestinations = useAppSelector((s) => s.jayWalk.destinationIds);
-  const reduxDestinationString = useAppSelector((s) => s.jayWalk.destination);
+const DEBUG = false;
 
-  const [currLocation, setCurrLocation] = useState<Node | null>(null);
-  const [destLocations, setDestLocations] = useState<Node[]>([]);
-  const [currLocationText, setCurrLocationText] = useState("");
-  const [destLocationText, setDestLocationText] = useState("");
+const DEBUG_SPOOF = false;
+
+const BACK_WINDOW = 1; // allow recovery 1 stop behind
+const FORWARD_WINDOW = 3; // allow catch-up up to 3 stops ahead
+const NEAR_METERS = 14; // “you are at this stop”
+const SWITCH_HYST = 8; // must be this many meters closer than current stop
+const CONFIRM_HITS = 2; // consecutive confirmations
+const MAX_ACC = 50; // ignore worse accuracy than this
+const MAX_FORWARD_JUMP = 2; // prevent huge skips unless extremely near
+const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
+
+// Tag → display config
+const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string }> =
+  {
+    bathrooms: { emoji: "🚻", color: "#4A90D9", label: "Restroom" },
+    printers: { emoji: "🖨️", color: "#7B68EE", label: "Printers" },
+    "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop" },
+    food: { emoji: "🍽️", color: "#E05C3A", label: "Food" },
+    computers: { emoji: "💻", color: "#3AAE6E", label: "Computers" },
+  };
+
+// Priority order — first matching tag wins for the marker icon
+const TAG_PRIORITY: Tag[] = [
+  "food",
+  "bus stop",
+  "bathrooms",
+  "printers",
+  "computers",
+];
+
+// ---------------------------------------------------------------------------
+// TagMarker is a self-contained component so React can manage its own
+// tracksViewChanges lifecycle. Starts true so the native view has time to
+// measure, then flips to false after the first render to stop thrashing.
+function TagMarker({
+  node,
+  config,
+  onPress,
+}: {
+  node: any;
+  config: { emoji: string; color: string; label: string };
+  onPress: () => void;
+}) {
+  const [tracked, setTracked] = useState(true);
 
   useEffect(() => {
-    if (!reduxDestinationString) return;
+    // Give the native layer one frame to measure the custom view, then lock it.
+    const id = setTimeout(() => setTracked(false), 500);
+    return () => clearTimeout(id);
+  }, []);
 
-    setDestLocationText(reduxDestinationString);
+  return (
+    <Marker
+      key={`tag-${node.id}`}
+      coordinate={{ latitude: node.y, longitude: node.x }}
+      tracksViewChanges={tracked}
+      anchor={{ x: 0.5, y: 1 }}
+      onPress={onPress}
+    >
+      <View style={styles.markerContainer}>
+        {/* Bubble */}
+        <View
+          style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}
+        >
+          <Text style={styles.tagMarkerEmoji}>{config.emoji}</Text>
+        </View>
+        {/* Tail / caret pointing down */}
+        <View
+          style={[styles.tagMarkerTail, { borderTopColor: config.color }]}
+        />
+      </View>
+    </Marker>
+  );
+}
 
-    const nodes = graph.nodes.filter((n) =>
-      reduxDestinations.some((d) => n.id === d),
-    );
-    if (nodes) {
-      setDestLocations(nodes);
-    }
-  }, [reduxDestinationString, reduxDestinations]);
+export default function TabTwoScreen() {
+  const mapRef = useRef<MapView>(null);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state.jayWalk);
+  const currentNode = state.currentNode;
+  const [selectedNode, setSelectedNode] = useState<any>(null);
 
-  const [showMissingLocation, setShowMissingLocation] = useState(false);
-  const [showNeedLocationPermission, setShowNeedLocationPermission] =
-    useState(false);
-  const [showNotPerciseLocation, setShowNotPerciseLocation] = useState(false);
-  const [showTooFarAway, setShowTooFarAway] = useState(false);
-  const [isCurrentMenuVisible, setIsCurrentMenuVisible] = useState(false);
-  const [isDestinationMenuVisible, setIsDestinationMenuVisible] =
-    useState(false);
-  const [showInfo, setShowInfo] = useState(false);
-  const destInputRef = useRef<RNTextInput | null>(null);
-  const currLocInputRef = useRef<RNTextInput | null>(null);
-
-  const [locationPermissionStatus, requestLocationPermissions] =
-    Location.useForegroundPermissions();
-
-  function hasLocationPermissions(): boolean {
-    return locationPermissionStatus?.granted ?? false;
-  }
-
+  const currentRoute = getRoute(state); //get current route
+  
+  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); // a way to know if we should show componenets that are part of the route taking experince
+  const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
   );
+  const [showReroutePrompt, setShowReroutePrompt] = useState(false);
+  const [isManualReroute, setIsManualReroute] = useState(false);
+  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
+  const safeIndoors = currentRoute?.stops?.[currentNode]?.building !== undefined;
+  const [isCurrNodeInDoors, setIsCurrNodeInDoors] = useState<boolean>(safeIndoors);
+  const [mapReady, setMapReady] = useState(false);
 
-  // read current values from Redux
-  const indoors = useAppSelector((s) => s.jayWalk.indoors);
-  useEffect(() => {
-    console.log("[filters] accessible:", accessible, "indoors:", indoors);
-  }, [accessible, indoors]);
+  // Read the filter selections that FeatureFilter already manages in Redux.
+  const selectedFeatures = state.selectedFeatures;
 
-  // This function handles making sure that the user has entered both a current
-  // location and a destination before starting routing.
-  const handleStartRoutingPress = () => {
-    console.log("Start routing pressed.");
-    if (currLocation && destLocationText) {
-      // Before we start routing we need to know from and to for the algo to work
-      console.log(
-        `Routing from ${currLocation.name} to ${destLocationText}...`,
-      );
+  const { width: screenWidth } = useWindowDimensions();
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
 
-      // Call the routing algorithm from the current to the destination nodes
-      const calculatedRoute = route(state, currLocation, destLocations);
+  const panelOpen = useSharedValue(false);
 
-      // If there is no route, log it and return
-      if (!calculatedRoute) {
-        dispatch(clearRoute());
-        console.log("No route found!");
-        return;
-      }
-
-      // Sanitize the route and then push it to the global state
-      dispatch(setRoute(sanitize(calculatedRoute)));
-
-      // Set the destination so it can be refernced later
-      dispatch(
-        setDestination({
-          text: destLocationText,
-          ids: destLocations.map((l) => l.id),
+  const animatedPanelStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        translateX: withTiming(panelOpen.value ? 0 : PANEL_WIDTH, {
+          duration: 250,
         }),
-      );
-      dispatch(setStart(currLocation.name));
+      },
+    ],
+    opacity: withTiming(panelOpen.value ? 1 : 0, { duration: 200 }),
+  }));
 
-      // WIpe the text values so they will be gone if they pick a new route
-      setCurrLocationText("");
-      setDestLocationText("");
+  const [fontsLoaded] = useFonts({
+    "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
+    OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
+  });
 
-      // This will navigate them to the map screen where they can see the route we just calculated.
-      navigate("/routing");
-    } else {
-      // If they dont provide both we will show a message telling them to provide both.
-      setShowMissingLocation(true);
-    }
+  // Map FeatureFilter display strings -> Tag values used in node data.
+  // "Study Area" has no matching Tag yet, so it is intentionally omitted.
+  const FEATURE_TO_TAG: Record<string, Tag> = {
+    "Private Restrooms": "bathrooms",
+    Printers: "printers",
+    Food: "food",
+    Computers: "computers",
+    "Bus Stop": "bus stop",
   };
 
-  // Get the user's permission to use their location
+  // Derive the active tag set reactively — no separate local state needed.
+  const activeTags = new Set<Tag>(
+    selectedFeatures
+      .map((f) => FEATURE_TO_TAG[f])
+      .filter((t): t is Tag => t !== undefined),
+  );
+
   useEffect(() => {
+    //load custom marker
+    Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
+  }, []);
+
+  // Simple boolean to represent if we have the users location
+    const hasFix =
+      (location?.coords?.latitude ?? 0) !== 0 &&
+      (location?.coords?.longitude ?? 0) !== 0;
+  
+    // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
+    const candidateRef = useRef<number | null>(null);
+    const hitsRef = useRef(0);
+    const missRef = useRef(0);
+    const lastSetAtRef = useRef(0);
+  
+  const hasRoute = currentRoute != null;
+  const routeNotStarted = routeStatus == "not started";
+  const routeStarted = routeStatus == "started" && hasRoute;
+  const isPreviewingRoute = routeStatus == "previewing";
+
+  useEffect(() => {
+    if (!routeStarted) return; // only track location and advance if the route has started
+    if (!location) return; // need location to do anything
+    if (!hasRoute) return; // need a route to do anything
+
+    // Determine indoor/outdoor based on the stop itself, since outdoor stops have real GPS coords
+    // and indoor stops use indoor-map coordinates
+    const isCurrNodeInDoors =
+      currentRoute?.stops?.[currentNode]?.building !== undefined;
+    if (isCurrNodeInDoors) return; // only track outdoors here
+
+    const now = Date.now();
+    if (now - lastSetAtRef.current < 800) return; // small cooldown between polling the locaiton
+
+    // Grab the users gps accuracy to see if its to bad to use
+    const acc = location.coords.accuracy ?? 999;
+    if (acc > MAX_ACC) return;
+
+    // Get the users cordiantes
+    const { latitude: userLat, longitude: userLng } = location.coords;
+
+    const n = currentRoute.stops.length;
+    if (!n) return; // Small check to make sure we are doing operations on an empty list
+
+    // -------- Transition cooldown (prevents big jumps right after indoor->outdoor flips) --------
+    // If we *just* flipped to outdoors, be conservative for a few seconds.
+    // (This prevents "press next -> go outside -> GPS jumps 6 nodes ahead".)
+    const TRANSITION_COOLDOWN_MS = 3500;
+    const prevIndoorsRef = (TabTwoScreen as any)._prevIndoorsRef ?? {
+      current: isCurrNodeInDoors,
+    };
+    const lastFlipAtRef = (TabTwoScreen as any)._lastFlipAtRef ?? {
+      current: 0,
+    };
+    (TabTwoScreen as any)._prevIndoorsRef = prevIndoorsRef;
+    (TabTwoScreen as any)._lastFlipAtRef = lastFlipAtRef;
+
+    if (prevIndoorsRef.current !== isCurrNodeInDoors) {
+      lastFlipAtRef.current = now;
+      prevIndoorsRef.current = isCurrNodeInDoors;
+    }
+
+    const inCooldown = now - lastFlipAtRef.current < TRANSITION_COOLDOWN_MS;
+
+    // We have set windows on which we will compare
+    const start = Math.max(0, currentNode - BACK_WINDOW);
+    const end = Math.min(
+      n - 1,
+      currentNode + (inCooldown ? 1 : FORWARD_WINDOW),
+    );
+
+    // Grab the currenet stop and if we have it then we will see the distance between the user
+    // and the current stop. Only use it if it is actually an outdoor stop with valid GPS coords.
+    const curStop =
+      currentRoute.stops[currentNode]?.building === undefined
+        ? currentRoute.stops[currentNode]
+        : null;
+
+    const curDist = curStop
+      ? haversineMeters(userLat, userLng, curStop.y, curStop.x)
+      : Number.POSITIVE_INFINITY;
+
+    // Initalize a best index and best distance as the current node so we can use it to comapre
+    // against the other nodes
+    let bestIdx = currentNode;
+    let bestDist = curDist;
+
+    // Loop through the allowable stops that can be jumped to from the current stop based on the forward
+    // and backward windows. For each one use its cordinates and get its distance from the users location.
+    // IMPORTANT: only consider OUTDOOR stops while outdoors
+    for (let i = start; i <= end; i++) {
+      const isIndoorCandidate = currentRoute.stops[i]?.building !== undefined;
+      if (isIndoorCandidate) continue;
+
+      const s = currentRoute.stops[i];
+      const d = haversineMeters(userLat, userLng, s.y, s.x);
+      if (d < bestDist) {
+        bestDist = d;
+        bestIdx = i;
+      }
+    }
+
+    // This checks if the best is actually within range to jump to
+    const isNearBest = bestDist <= NEAR_METERS;
+
+    // This keeps it from flipping back and forth between two nodes, that is it needs to be clearly better than the
+    // current node
+    const isClearlyBetter = bestDist + SWITCH_HYST < curDist;
+
+    if (!isNearBest && !isClearlyBetter) {
+      // no strong evidence, reset candidate/hits
+      candidateRef.current = null;
+      hitsRef.current = 0;
+      return;
+    }
+
+    // This prevents big forward skips unless we are really sure and really close to that node
+    const delta = bestIdx - currentNode;
+    const maxJumpNow = inCooldown ? 1 : MAX_FORWARD_JUMP;
+    if (delta > maxJumpNow && bestDist > SUPER_NEAR) {
+      missRef.current += 1; // if we are not close to any nodes then we want to count that as a miss
+
+      // If we miss enough times that means that we are no longer on the path
+      // So we will show the message to the user that need to reroute so we can give them acurate info
+      if (missRef.current > 3) {
+        setIsManualReroute(false);
+        setShowReroutePrompt(true);
+        missRef.current = 0;
+      }
+      return;
+    }
+
+    // Increment the hits ref if we got the same index twice
+    if (candidateRef.current === bestIdx) {
+      hitsRef.current += 1;
+    } else {
+      // If we got a new best then start the count for that
+      candidateRef.current = bestIdx;
+      hitsRef.current = 1;
+    }
+
+    // If the amount of hits for a node has passed the threshold needed and its not the current node
+    // then we want to set that as the current node, even if its backwards or forwards more than one
+    // As well as reset all the refs
+    if (hitsRef.current >= CONFIRM_HITS && bestIdx !== currentNode) {
+      // -------- Doorway snap logic (outdoors -> indoors) --------
+      // Find the next indoor stop after our chosen outdoor bestIdx.
+      // Only snap inside if we are *actually near the outdoor doorway stop*.
+      let nextIndoorIdx = -1;
+      for (let j = bestIdx + 1; j < n; j++) {
+        if (currentRoute.stops[j]?.building !== undefined) {
+          nextIndoorIdx = j;
+          break;
+        }
+        // stop scanning once we find the first indoor stop after this outdoor run
+      }
+
+      if (nextIndoorIdx !== -1) {
+        const doorwayIdx = nextIndoorIdx - 1; // last outdoor stop before going indoors
+        const doorwayIsOutdoor =
+          doorwayIdx >= 0 &&
+          currentRoute.stops[doorwayIdx]?.building === undefined;
+
+        if (doorwayIsOutdoor) {
+          const doorStop = currentRoute.stops[doorwayIdx];
+          const distToDoor = haversineMeters(
+            userLat,
+            userLng,
+            doorStop.y,
+            doorStop.x,
+          );
+
+          // Only snap indoors when we're actually at the doorway outdoor stop
+          if (distToDoor <= NEAR_METERS) {
+            dispatch(setCurrentNode(nextIndoorIdx));
+            lastSetAtRef.current = now;
+            candidateRef.current = null;
+            hitsRef.current = 0;
+            return;
+          }
+        }
+      }
+
+      // normal advance to best candidate
+      dispatch(setCurrentNode(bestIdx));
+
+      // After either of those outcomes we want to reset everything
+      lastSetAtRef.current = now;
+      candidateRef.current = null;
+      hitsRef.current = 0;
+    }
+  }, [location, routeStatus, currentRoute, currentNode]);
+
+  // Update whether we're indoors or outdoors whenever we change nodes or routes
+  useEffect(() => {
+    setIsCurrNodeInDoors(
+      currentRoute?.stops?.[currentNode]?.building !== undefined,
+    );
+    //console.log("currentNode", currentRoute?.stops[currentNode]);
+    //console.log("isCurrNodeInDoors", isCurrNodeInDoors);
+  }, [currentNode, currentRoute]);
+
+  // Request location permissions on mount and set up location tracking if granted
+  function hasLocationPermissions(): boolean {
+    return locationPermissionStatus?.granted ?? false;
+  }
+  
+  useEffect(() => {
+    // Request location permissions on mount and set up location tracking if granted
     if (!hasLocationPermissions()) {
       requestLocationPermissions();
     }
 
     // If we have location permissions, add a watcher for when they move
-    if (hasLocationPermissions()) {
+    if (hasLocationPermissions() && !DEBUG_SPOOF) {
       watchLocation(setLocation, (errorReason) =>
         console.log("Location error: " + errorReason),
       );
     }
   }, [locationPermissionStatus]);
 
-  const state = getState();
-  const dispatch = useAppDispatch();
+  const KU = {
+    latitude: 38.9541967,
+    longitude: -95.2597806,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
 
-  const handleCurrentAreaPress = () => {
-    if (!hasLocationPermissions()) {
-      // If we dont have permission for distance we cant use this feature, so we tell the user that.
-      setShowNeedLocationPermission(true);
-      return;
+  const halfWayIndex = hasRoute
+      ? Math.floor(currentRoute.stops.length / 2)
+      : 0;
+    const routeOverview = {
+      latitude: currentRoute ? currentRoute.stops[halfWayIndex].y - 0.0005 : 0, // Subtract .0008 so that the route Summary isnt blocking the route
+      longitude: currentRoute ? currentRoute.stops[halfWayIndex].x : 0,
+      latitudeDelta: 0.001, // smaller = more zoomed in
+      longitudeDelta: 0.004, // smaller = more zoomed in
+    };
+
+  // CURRENT ROUTE DISPLAY - makes a line through stops
+  function makeRoutePolyline(
+    stops: Node[],
+    currentNode: number,
+    baseIndex: number,
+  ) {
+    if (!stops || stops.length < 2) return null; // return if route too short
+
+    const splitAt = Math.max(
+      0,
+      Math.min(currentNode - baseIndex, stops.length - 1),
+    );
+    const traveled = stops.slice(0, splitAt + 1);
+    const remaining = stops.slice(splitAt);
+
+    const toCoords = (nodes: Node[]) =>
+      nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
+
+    //displays route
+    return (
+      <>
+        {traveled.length >= 2 && (
+          <Polyline
+            coordinates={toCoords(traveled)}
+            strokeColor="#9ca3af"
+            strokeWidth={5}
+            lineCap="round"
+            lineJoin="round"
+            key={stops[0].name + "-traveled"}
+          />
+        )}
+        {remaining.length >= 2 && (
+          <Polyline
+            coordinates={toCoords(remaining)}
+            strokeColor="#0066ff"
+            strokeWidth={5}
+            lineCap="round"
+            lineJoin="round"
+            key={stops[0].name + "-remaining"}
+          />
+        )}
+      </>
+    );
+  }
+
+  function makeRoutePolylines(route: Route) {
+    const polylines = [];
+
+    let base = 0;
+
+    for (let i = 1; i < route.stops.length; i++) {
+      if (!route.route[i - 1].indoors) {
+        if (base < 0) {
+          base = i - 1;
+        }
+
+        continue;
+      }
+
+      if (base != i - 1) {
+        polylines.push(
+          makeRoutePolyline(route.stops.slice(base, i), currentNode, base),
+        );
+      }
+
+      base = -1;
     }
-    // If they havent given us a location we cant do anything so we just return.
-    // This also helps with typing the the const lines below as we know that location is not null.
-    if (!location) return;
 
-    // Get the accuracy and coordinates of the location. We will use these to determine whether we can snap to a node and which node to snap to.
-    const gpsAcc = location.coords.accuracy ?? 9999;
-    const userLat = location.coords.latitude;
-    const userLon = location.coords.longitude;
+    if (base >= 0 && base != route.stops.length - 2) {
+      polylines.push(
+        makeRoutePolyline(
+          route.stops.slice(base, route.stops.length),
+          currentNode,
+          base,
+        ),
+      );
+    }
 
-    console.log(`Location accuracy: ${gpsAcc.toFixed(2)} m`);
-    console.log(`Current location: ${userLat}, ${userLon}`);
+    return polylines.length > 0 ? polylines : null;
+  }
 
-    // Initalize closestNode to null, we will use it to keep track of the closesnt node to the user as we loop through the nodes.
-    let closestNode: { node: any; distanceM: number } | null = null;
+  // The bounds of where the map will go. These are a rough measurement. If the user
+  // goes outside of these bounds, the map will bring them back in.
+  const BOUNDS = { north: 38.972, south: 38.941, east: -95.23, west: -95.286 };
+  const clamp = (v: number, min: number, max: number) =>
+    Math.min(max, Math.max(min, v));
 
+  useEffect(() => {
+    // Optional “cool” zoom-in animation on mount
+    mapRef.current?.animateToRegion(routeOverview, 900);
+  }, []);
+
+  // Render tag markers for every node that has at least one active tag.
+  // Uses the highest-priority matching tag for the icon.
+  function makeTagMarkers() {
+    return graph.nodes
+      .filter((node) => {
+        if (node.name?.startsWith("~")) return false;
+        return node.tags?.some((t) => activeTags.has(t));
+      })
+      .map((node) => {
+        const primaryTag =
+          TAG_PRIORITY.find(
+            (t) => node.tags.includes(t) && activeTags.has(t),
+          ) ?? node.tags.find((t) => activeTags.has(t))!;
+
+        const config = TAG_CONFIG[primaryTag];
+
+        return (
+          <TagMarker
+            key={`tag-${node.id}`}
+            node={node}
+            config={config}
+            onPress={() => {
+              const safe = { ...node, tags: node.tags ?? [] };
+              setSelectedNode(safe);
+            }}
+          />
+        );
+      });
+  }
+
+  // Debug helpers (unchanged)
+  function makeDataLines(graph: Graph) {
+    let i = 0;
+    const out = [];
+    for (const edge of graph.edges) {
+      if (edge.indoors) continue;
+      out.push(
+        <Polyline
+          coordinates={[
+            { latitude: edge.startNode.y, longitude: edge.startNode.x },
+            { latitude: edge.endNode.y, longitude: edge.endNode.x },
+          ]}
+          strokeColor="#ff00c3"
+          strokeWidth={5}
+          lineCap="round"
+          lineJoin="round"
+          key={"edge" + (i++).toString()}
+        />,
+      );
+    }
+    return out;
+  }
+
+  // Map press -> select closest named node
+  function handleMapPress(e: any) {
+    const { latitude, longitude } = e.nativeEvent.coordinate;
+    const closest = getClosestNode(latitude, longitude, graph);
+    if (closest != null) {
+      console.log("Closest node:", {
+        id: closest.id,
+        name: closest.name,
+        lat: closest.y,
+        lng: closest.x,
+      });
+      const selectedNodeSafe = {
+        ...closest,
+        tags: "tags" in closest ? closest.tags : [], // only default if missing
+      };
+
+      setSelectedNode(selectedNodeSafe); // <-- only set state
+    }
+  }
+
+  function getClosestNode(lat: number, lng: number, graph: Graph) {
+    let bestNode = null;
+    let bestDist = Infinity;
     for (const node of graph.nodes) {
-      // Calculate distance from user to node in meters using the haversine formula
-      const dM = haversineMeters(userLat, userLon, node.y, node.x);
-
-      // If there isnt a closest node or its closer than the current closest node, then set it as the closest node
-      if (!closestNode || dM < closestNode.distanceM) {
-        closestNode = { node, distanceM: dM };
+      if (node.name?.startsWith("~")) continue;
+      const dLat = lat - node.y;
+      const dLng = lng - node.x;
+      const dist = dLat * dLat + dLng * dLng;
+      if (dist < bestDist) {
+        bestDist = dist;
+        bestNode = node;
       }
     }
-
-    // This covers the case where for some reason our graph has no nodes, it also helps with typing below.
-    if (!closestNode) return;
-
-    console.log(
-      `Closest node: ${closestNode.node.name} (id: ${
-        closestNode.node.id
-      }), distance: ${closestNode.distanceM.toFixed(1)} m`,
-    );
-
-    const MAX_ACCEPTABLE_ACC = 25; // don’t trust worse than this
-    const snapThresholdM = Math.max(10, gpsAcc * 1.5); // dynamic threshold
-
-    // In the case that the GPS accuracy is really bad, we dont want to use that as the starting location as it is most likely not
-    // correct so we tell the user that and return/
-    if (gpsAcc > MAX_ACCEPTABLE_ACC) {
-      console.log(`GPS too noisy to snap (acc=${gpsAcc.toFixed(1)}m).`);
-      setShowNotPerciseLocation(true); // Let the user know that their location is not precise enough to use current location feature
-      return;
-    }
-
-    // If the user is close enough to a node we will assume that that is there starting location and set that for them.
-    if (closestNode.distanceM <= snapThresholdM) {
-      console.log(
-        `Snapping to node (threshold=${snapThresholdM.toFixed(1)}m).`,
-      );
-      // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
-      // we will need to come up for what the UI looks like for that.
-      setCurrLocationText(closestNode.node.name); // update text field to show assumed location
-      setCurrLocation(closestNode.node);
-    } else {
-      // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
-      // So we tell the user that with a toast message.
-      console.log(
-        `Not near any node (closest=${closestNode.distanceM.toFixed(
-          1,
-        )}m, threshold=${snapThresholdM.toFixed(1)}m).`,
-      );
-      setShowTooFarAway(true);
-    }
-  };
-  //get fonts files from utils
-  const [fontsLoaded] = useFonts({
-    "MuseoModerno-Regular": require("../assets/fonts/MuseoModerno.ttf"),
-    "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
-    OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return null;
+    return bestNode;
   }
-  //Title
+
+  function handleFeatureToggle() {
+    panelOpen.value = !panelOpen.value;
+    setIsPanelOpen(!isPanelOpen);
+  }
+
+  useEffect(() => {
+    mapRef.current?.animateToRegion(KU, 900);
+  }, []);
+
+  // If we're locked on the user and the route has started and we have a location fix, keep the map centered on them
+  useEffect(() => {
+    if (!mapReady) return; //
+    if (!isLockedOnUser) return; // only auto-center if we're locked on the user
+    if (!routeStarted) return; // only auto-center if the route has started
+    if (!hasFix) return; // only auto-center if we have a location fix
+    if (!location) return;
+
+    // Animate the map to the user's current location with a nice zoom level for walking
+    mapRef.current?.animateToRegion(
+      {
+        latitude: location!.coords.latitude,
+        longitude: location!.coords.longitude,
+        latitudeDelta: 0.0008,
+        longitudeDelta: 0.0016,
+      },
+      300, // animation duration in ms
+    );
+  }, [location, isLockedOnUser, routeStatus, hasFix]);
+
+  // We have automatic reroute if the user leaves the path, but we also allow the user to
+  // manually reroute in the case that we didnt catch that they left the route or other reasons
+  function handleManualReroute() {
+    setIsManualReroute(true);
+    setShowReroutePrompt(true);
+  }
+
+  // Compute remaining ETA in minutes whenever the route or currentNode changes
+    const etaMinutes = hasRoute
+      ? calculateRouteTime(remainingRouteMeters(currentRoute, currentNode))
+      : null;
+  
+    const etaText =
+      etaMinutes !== null
+        ? etaMinutes < 1
+          ? "< 1 min"
+          : `${Math.ceil(etaMinutes)} min`
+        : null;
+
+  if (!fontsLoaded) return null;
+
+  // Render
   return (
-    <View style={styles.background}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-          <Text style={styles.appTitle}>JayWalk</Text>
-          <TouchableOpacity onPress={() => setShowInfo(true)}>
-            <InfoIcon
-              width={24}
-              height={24}
-              color="#fff"
-              style={{ marginLeft: 8 }}
-            />
-          </TouchableOpacity>
-        </View>
+    <View style={{ flex: 1 }}>
+      {/* MAP LAYER (always mounted so tiles stay cached) */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { display: isCurrNodeInDoors ? "none" : "flex" },
+        ]}
+        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}> 
       </View>
-
-      {/* campanile logo */}
-      <Image
-        source={require("../assets/images/JayWalk-Logo1.png")}
-        style={styles.heroImage}
-        resizeMode="cover"
-      />
-
-      {/* background and white box with text  */}
-      <View style={styles.whiteBox}>
-        <View style={styles.content}>
-          {/* Current Location label */}
-          <View
-            style={{
-              position: "absolute",
-              top: 160,
-              width: 316,
-              height: 70,
-              left: "50%",
-              transform: [{ translateX: -159 }],
-            }}
-          >
-            <Text style={[styles.subtitle, { marginBottom: 8 }]}>
-              Current Location:
+      {routeStarted && (
+        <View style={styles.instructionBar}>
+          {currentRoute?.directions[currentNode] ? (
+            <Text style={styles.instructionText}>
+              {currentRoute.directions[currentNode].direction}
             </Text>
-            {/* Text input with LocationMenu */}
-            {/* When the user looks for a location we populate and display a 
-                menu of locations for them to select. Making it easier to find there
-                locaiton.*/}
-            <LocationMenu
-              visible={isCurrentMenuVisible} // We only want to show the menu
-              //when the user is actively using the text field
-              onDismiss={() => {
-                setIsCurrentMenuVisible(false);
-                currLocInputRef.current?.blur();
-              }}
-              oppisiteName={destLocationText} // This is used to make sure that the user doesnt select the same location for both current and destination, as that would break our routing algo. So we pass the destination name here so that the menu can filter it out from the options.
-              anchor={
-                // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
-                //current location box
-                <TextInput
-                  ref={currLocInputRef}
-                  value={currLocationText}
-                  activeUnderlineColor="transparent"
-                  activeOutlineColor="#356EC4"
-                  underlineColor="transparent"
-                  textColor="#356EC4"
-                  mode="outlined"
-                  theme={{ roundness: 44 }}
-                  outlineColor="transparent"
-                  onChangeText={setCurrLocationText}
-                  style={{
-                    backgroundColor: "#C2DCF0",
-                    borderRadius: 44,
-                    borderTopEndRadius: 44,
-                    borderTopStartRadius: 44,
-                    height: 68,
-                    width: 316,
-                    paddingHorizontal: 16,
-                    justifyContent: "center",
-                    fontSize: 18,
-                  }}
-                  contentStyle={{
-                    fontFamily: "OrelegaOne",
-                  }}
-                  onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
-                  onChange={() => setIsCurrentMenuVisible(true)}
-                />
-              }
-              options={graph.nodes} // They are selecting from the nodes so we pass them here
-              // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
-              // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
-              locationText={currLocationText}
-              setLocation={setCurrLocation}
-              setLocationText={setCurrLocationText}
-              onSelect={() => currLocInputRef.current?.blur()}
-            />
-          </View>
-
-          {/* Destination label and box*/}
-          <View
-            style={{
-              position: "absolute",
-              top: 265,
-              left: "50%",
-              transform: [{ translateX: -158 }],
-              width: 316,
-              height: 68,
-            }}
-          >
-            <Text style={[styles.subtitle, { marginBottom: 8 }]}>
-              Destination:
-            </Text>
-
-            <LocationMenu
-              visible={isDestinationMenuVisible}
-              onDismiss={() => {
-                setIsDestinationMenuVisible(false);
-                destInputRef.current?.blur();
-              }}
-              oppisiteValue={currLocation}
-              anchor={
-                <TextInput
-                  ref={destInputRef}
-                  value={destLocationText}
-                  activeUnderlineColor="transparent"
-                  activeOutlineColor="#356EC4"
-                  underlineColor="transparent"
-                  textColor="#356EC4"
-                  mode="outlined"
-                  theme={{ roundness: 44 }}
-                  outlineColor="transparent"
-                  onChangeText={setDestLocationText}
-                  style={{
-                    backgroundColor: "#C2DCF0",
-                    borderRadius: 44,
-                    borderTopEndRadius: 44,
-                    borderTopStartRadius: 44,
-                    height: 68,
-                    width: 316,
-                    paddingHorizontal: 16,
-                    justifyContent: "center",
-                    fontSize: 18,
-                  }}
-                  contentStyle={{
-                    fontFamily: "OrelegaOne",
-                  }}
-                  onFocus={() => setIsDestinationMenuVisible(true)}
-                  onChange={() => setIsDestinationMenuVisible(true)}
-                />
-              }
-              options={graph.nodes}
-              locationText={destLocationText}
-              setLocation={(location) => setDestLocations([location])}
-              setLocationText={setDestLocationText}
-              onSelect={() => destInputRef.current?.blur()}
-            />
-          </View>
-
-          {/* Accessible Path label */}
-          <PaperText
-            variant="titleMedium"
-            style={{
-              position: "absolute",
-              top: 369,
-              left: 36,
-              fontFamily: "OrelegaOne",
-              fontSize: 20,
-              color: "#000",
-            }}
-          >
-            Accessible:
-          </PaperText>
-
-          {/* container for toggle & environment button */}
-          <View
-            style={{
-              position: "absolute",
-              top: 370,
-              left: 68,
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "row",
-
-              gap: 60, // space between toggle and button
-            }}
-          >
-            {/* Accessible toggle */}
-
-            <Switch
-              value={accessible}
-              onValueChange={(newValue: boolean) => {
-                dispatch(setAccessiblePreference(newValue));
-              }}
-              trackColor={{
-                false: "#0A2145",
-                true: "#356EC4",
-              }}
-              thumbColor="#ffffff"
-              ios_backgroundColor="#0A2145"
-              style={{
-                transform: [{ scaleX: 2.2 }, { scaleY: 2.2 }],
-                marginTop: 51,
-              }}
-            />
-
-            {/* Environment dropdown + label container */}
-            <View style={{ flexDirection: "column" }}>
-              {/* Environment label */}
-              <PaperText
-                variant="titleMedium"
-                style={{
-                  fontFamily: "OrelegaOne",
-                  fontSize: 20,
-                  color: "#000",
-                  marginBottom: 8,
-                }}
-              >
-                Environment:
-              </PaperText>
-
-              {/* Environment button */}
-              <Menu
-                visible={menuVisible}
-                onDismiss={() => setMenuVisible(false)}
-                anchor={
-                  <Button
-                    mode="contained"
-                    onPress={() => setMenuVisible(true)}
-                    style={{
-                      width: 170,
-                      backgroundColor: "#C2DCF0",
-                      borderRadius: 44,
-                    }}
-                    contentStyle={{ height: 68 }}
-                    labelStyle={{
-                      color: "#356EC4",
-                      fontSize: 18,
-                      fontFamily: "OrelegaOne",
-                    }}
-                  >
-                    {selectedEnvironment === "nopreference"
-                      ? "Select Filter"
-                      : selectedEnvironment.charAt(0).toUpperCase() +
-                        selectedEnvironment.slice(1)}
-                  </Button>
-                }
-              >
-                <Menu.Item
-                  onPress={() => {
-                    setSelectedEnvironment("outdoors");
-                    dispatch(setIndoorOutdoorPreference("outdoors"));
-                    setMenuVisible(false);
-                  }}
-                  title="Outdoors"
-                />
-                <Menu.Item
-                  onPress={() => {
-                    setSelectedEnvironment("indoors");
-                    dispatch(setIndoorOutdoorPreference("indoors"));
-                    setMenuVisible(false);
-                  }}
-                  title="Indoors"
-                />
-                <Menu.Item
-                  onPress={() => {
-                    setSelectedEnvironment("nopreference");
-                    dispatch(setIndoorOutdoorPreference(""));
-                    setMenuVisible(false);
-                  }}
-                  title="No Preference"
-                />
-              </Menu>
-            </View>
-          </View>
-
-          {/* LETS GO */}
-          {/* This is the start route button, it will call our routing algorithm if has two valid locations*/}
-          <Button
-            mode="contained"
-            style={{
-              ...styles.button,
-              position: "absolute",
-              width: 288,
-              borderRadius: 44,
-              top: 485,
-              alignSelf: "center",
-            }}
-            contentStyle={{
-              justifyContent: "center",
-              height: 69,
-            }}
-            labelStyle={{
-              fontFamily: "OrelegaOne",
-              fontSize: 20,
-              color: "#fff",
-            }}
-            disabled={!(currLocationText && destLocationText)} // if they havent put in both locations
-            onPress={handleStartRoutingPress}
-          >
-            LET'S GO!
-          </Button>
-
-          {/*get curr location*/}
-
-          {/*This is the button that will allows the user to use the current location as the starting location*/}
-          {/*TODO: Find a way to hide this for if a user is inside as we cannot use */}
-          <TouchableOpacity
-            style={styles.currAreaButton}
-            onPress={handleCurrentAreaPress}
-          >
-            <TargetIcon width={24} height={24} color="#2e18be" />
-          </TouchableOpacity>
+          ) : (
+            <></>
+          )}
         </View>
-        {/* Small message to tell the user that they need to put both locations*/}
-        <Snackbar
-          visible={showMissingLocation} // The local state that controls whether this snackbar is visible or not
-          onDismiss={() => setShowMissingLocation(false)} // When the snackbar is dismissed we set the state to false so that it hides
-          duration={2000} // This makes the snackbar go away after 2 seconds
-        >
-          You need to enter both your currenet location and destination to start
-          routing.
-        </Snackbar>
-        {/* This is a snackbar that is shown when the user tries to use current location but hasnt given location permissions. */}
-        <Snackbar
-          visible={showNeedLocationPermission}
-          onDismiss={() => setShowNeedLocationPermission(false)}
-          duration={2000}
-        >
-          You need to enable location permissions to use this feature.
-        </Snackbar>
-        {/* This is a snackbar that is shown when the user tries to use current location but their location is not precise enough. */}
-        <Snackbar
-          visible={showNotPerciseLocation}
-          onDismiss={() => setShowNotPerciseLocation(false)}
-          duration={2000}
-        >
-          Your location is not precise enough to start routing.
-        </Snackbar>
-        {/* This is a snackbar that is shown when the user tries to use current location but is to far away. */}
-        <Snackbar
-          visible={showTooFarAway}
-          onDismiss={() => setShowTooFarAway(false)}
-          duration={2000}
-        >
-          Your are not close enough to a starting location.
-        </Snackbar>
-      </View>
-
-      {/* 
-        Portal allows the Dialog to render above all other UI elements.
-        This ensures the modal appears on top of the entire screen.
-      */}
-      <Portal>
-        {/* 
-          Dialog component from react-native-paper.
-          - visible controls whether the dialog is shown.
-          - onDismiss is called when the user taps outside the dialog or presses back.
-        */}
-        <Dialog
-          visible={showInfo}
-          onDismiss={() => setShowInfo(false)}
-          style={{
-            borderRadius: 28,
-            backgroundColor: "#ffffff",
+      )}
+      <MapView
+        ref={mapRef}
+        mapType={mapReady ? "satellite" : "standard"}
+        style={{ flex: 1 }}
+        cameraZoomRange={{
+          minCenterCoordinateDistance: 12,
+          maxCenterCoordinateDistance: 7000,
+        }}
+        initialRegion={KU}
+        pitchEnabled={!isPreviewingRoute} // lock changing the pitch till they start the route
+        rotateEnabled={!isPreviewingRoute} // lock rotating till they start
+        scrollEnabled={!isPreviewingRoute} // Lock panning if not started
+        zoomEnabled={!isPreviewingRoute} // Lock zooming if not started
+        showsUserLocation
+        onMapReady={() => setMapReady(true)}
+        onPanDrag={() => {
+            // If the user manually moves the map, we unlock the "lock on user" mode so they can explore the map freely. They can always re-enable lock on user with the button.
+            if (routeStarted && isLockedOnUser) setIsLockedOnUser(false);
           }}
-        >
-          {/* Custom header */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              paddingHorizontal: 20,
-              paddingTop: 10,
-            }}
-          >
-            <Dialog.Title
-              style={{
-                fontFamily: "MuseoModerno-Bold",
-                fontSize: 22,
-                color: "#0A2145",
-              }}
-            >
-              About JayWalk
-            </Dialog.Title>
+        onPress={handleMapPress}
+        onRegionChangeComplete={(r) => {
+          const lat = clamp(r.latitude, BOUNDS.south, BOUNDS.north);
+          const lng = clamp(r.longitude, BOUNDS.west, BOUNDS.east);
+          if (lat !== r.latitude || lng !== r.longitude) {
+            mapRef.current?.animateToRegion(
+              { ...r, latitude: lat, longitude: lng },
+              120,
+            );
+          }
+        }}
+      >
+        {/* Tag markers  */}
+        {routeNotStarted && makeTagMarkers()}
+        {currentRoute && makeRoutePolylines(currentRoute)}
 
+        {/* Selected-node pin  */}
+        {routeNotStarted && selectedNode && (
+          <Marker
+            coordinate={{ latitude: selectedNode.y, longitude: selectedNode.x }}
+          >
             <Image
-              source={require("../assets/images/JayWalk-Logo1.png")}
-              style={{ width: 36, height: 36 }}
+              source={require("../assets/images/icons/pin.png")}
+              style={{ width: 45, height: 45 }}
               resizeMode="contain"
             />
+          </Marker>
+        )}
+
+        {DEBUG &&
+          graph.nodes.map((node) => (
+            <Marker
+              key={`node-${node.id}`}
+              coordinate={{ latitude: node.y, longitude: node.x }}
+              pinColor="blue"
+              title={`${node.name} (${node.id})`}
+            />
+          ))}
+        {DEBUG && makeDataLines(graph)}
+      </MapView>
+
+      {/* Bottom info card */}
+      {routeNotStarted && selectedNode && (
+        <View style={styles.mapOverlayCard}>
+          {/* Node Name - Styled like the Destination label */}
+          <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
+
+          {/* Location Features Container */}
+          <View style={styles.featuresContainer}>
+            <Text style={styles.featuresLabel}>Location Features:</Text>
+            {selectedNode.tags && selectedNode.tags.length > 0 ? (
+              selectedNode.tags.map((tag: string, index: number) => {
+                // Capitalize the first letter: "computers" -> "Computers"
+                const capitalizedTag =
+                  tag.charAt(0).toUpperCase() + tag.slice(1);
+
+                return (
+                  <Text key={index} style={styles.tagText}>
+                    • {capitalizedTag}
+                  </Text>
+                );
+              })
+            ) : (
+              <Text style={styles.tagText}>• No features listed</Text>
+            )}
           </View>
 
-          {/* Main body content of the dialog */}
-          <Dialog.Content>
-            {/* Introductory description of what the app does */}
-            <PaperText style={styles.infoBodyText}>
-              JayWalk helps you navigate between campus locations with indoor
-              step-by-step directions and outdoor map routing.
-            </PaperText>
+          {/* Bubble Buttons Row */}
+          <View style={styles.buttonRow}>
+            <Pressable
+              style={[styles.bubbleButton, styles.cancelButton]}
+              onPress={() => setSelectedNode(null)}
+            >
+              <Text style={styles.buttonLabel}>CANCEL</Text>
+            </Pressable>
 
-            {/* Section header: Step 1 */}
-            <PaperText style={styles.infoSectionTitle}>
-              1) Choose your start & destination
-            </PaperText>
-
-            {/* Explanation of how to select starting location */}
-            <PaperText style={styles.infoBodyText}>
-              • Use the first search bar to pick your starting location.
-            </PaperText>
-
-            {/* Explanation of how to select destination */}
-            <PaperText style={styles.infoBodyText}>
-              • Use the second search bar to pick your destination.
-            </PaperText>
-
-            {/* Extra tip explaining the GPS shortcut button behavior */}
-            <PaperText style={styles.infoBodyText}>
-              Tip: Tap the target button in the first search bar to use your
-              current GPS location as your starting point (outdoors only). If
-              GPS accuracy is low or you’re too far from a known start point,
-              JayWalk will ask you to choose manually.
-            </PaperText>
-
-            {/* Section header: Step 2 */}
-            <PaperText style={styles.infoSectionTitle}>
-              2) Set your preferences (optional)
-            </PaperText>
-
-            {/* Description of accessibility filter */}
-            <PaperText style={styles.infoBodyText}>
-              • Accessible: Specify whether the route should be accessible (when
-              available).
-            </PaperText>
-
-            {/* Description of indoor/outdoor environment filter */}
-            <PaperText style={styles.infoBodyText}>
-              • Environment: Choose if you want your route to prefer indoor
-              paths, outdoor paths, or if you don’t care.
-            </PaperText>
-
-            {/* Section header: Step 3 */}
-            <PaperText style={styles.infoSectionTitle}>
-              3) Preview your route
-            </PaperText>
-
-            {/* Explanation of what happens after pressing "Let's Go!" */}
-            <PaperText style={styles.infoBodyText}>
-              Tap Let’s Go! to build a route and open the Route tab, where
-              you’ll see a preview before starting.
-            </PaperText>
-
-            {/* Section header: Step 4 */}
-            <PaperText style={styles.infoSectionTitle}>
-              4) Start navigating
-            </PaperText>
-
-            {/* Explains how to begin active navigation */}
-            <PaperText style={styles.infoBodyText}>
-              • Tap Start Route to begin.
-            </PaperText>
-
-            {/* Indoor navigation instructions */}
-            <PaperText style={styles.infoBodyText}>
-              • When indoors, directions appear as sequential steps and you use
-              Previous/Next buttons to navigate through them.
-            </PaperText>
-
-            {/* Indoor floor plan feature explanation */}
-            <PaperText style={styles.infoBodyText}>
-              Tip: While indoors, you can also open the a floor plan of the
-              building at any time.
-            </PaperText>
-
-            {/* Map recenter explanation when user pans away */}
-            <PaperText style={styles.infoBodyText}>
-              If you pan around the map, use the target button to jump back to
-              your position.
-            </PaperText>
-
-            {/* Section header: Ending navigation */}
-            <PaperText style={styles.infoSectionTitle}>Ending early</PaperText>
-
-            {/* Explains how to cancel an active route */}
-            <PaperText style={styles.infoBodyText}>
-              You can stop navigation anytime by tapping End Route.
-            </PaperText>
-          </Dialog.Content>
-
-          {/* Action buttons shown at the bottom of the dialog */}
-          <Dialog.Actions style={{ padding: 16 }}>
-            <Button
-              mode="contained"
-              onPress={() => setShowInfo(false)}
-              style={{
-                backgroundColor: "#356EC4",
-                borderRadius: 44,
-                paddingHorizontal: 16,
-              }}
-              labelStyle={{
-                fontFamily: "OrelegaOne",
-                fontSize: 16,
-                color: "#fff",
+            <Pressable
+              style={[styles.bubbleButton, styles.goButton]}
+              onPress={() => {
+                dispatch(setDestination(selectedNode.name));
+                setSelectedNode(null);
               }}
             >
-              Close
-            </Button>
-          </Dialog.Actions>
-        </Dialog>
-      </Portal>
+              <Text style={styles.buttonLabel}>GO TO</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+      {/* Toggle button */}
+      {!isPanelOpen && (
+        <Pressable style={styles.featureToggle} onPress={handleFeatureToggle}>
+          <OptionsIcon height={42} width={42} />
+        </Pressable>
+      )}
 
-      {/* Small message to tell the user that they need to put both locations*/}
-      <Snackbar
-        visible={showMissingLocation} // The local state that controls whether this snackbar is visible or not
-        onDismiss={() => setShowMissingLocation(false)} // When the snackbar is dismissed we set the state to false so that it hides
-        duration={2000} // This makes the snackbar go away after 2 seconds
+      {/* ── Sliding filter panel ── */}
+      <Animated.View
+        style={[styles.sidePanel, { width: PANEL_WIDTH }, animatedPanelStyle]}
+        pointerEvents="auto"
       >
-        You need to enter both your currenet location and destination to start
-        routing.
-      </Snackbar>
-      {/* This is a snackbar that is shown when the user tries to use current location but hasnt given location permissions. */}
-      <Snackbar
-        visible={showNeedLocationPermission}
-        onDismiss={() => setShowNeedLocationPermission(false)}
-        duration={2000}
+        <FeatureFilter
+          onClose={() => {
+            panelOpen.value = false;
+            setIsPanelOpen(false);
+          }}
+        />
+      </Animated.View>
+
+      {/* INDOOR LAYER */}
+      <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { display: isCurrNodeInDoors ? "flex" : "none" },
+        ]}
+        pointerEvents={isCurrNodeInDoors ? "auto" : "none"}
       >
-        You need to enable location permissions to use this feature.
-      </Snackbar>
-      {/* This is a snackbar that is shown when the user tries to use current location but their location is not precise enough. */}
-      <Snackbar
-        visible={showNotPerciseLocation}
-        onDismiss={() => setShowNotPerciseLocation(false)}
-        duration={2000}
-      >
-        Your location is not precise enough to start routing.
-      </Snackbar>
-      {/* This is a snackbar that is shown when the user tries to use current location but is to far away. */}
-      <Snackbar
-        visible={showTooFarAway}
-        onDismiss={() => setShowTooFarAway(false)}
-        duration={2000}
-      >
-        Your are not close enough to a starting location.
-      </Snackbar>
+        {/* if we're indoors, show the indoor nav screen instead of the map */}
+        <IndoorNav
+          currentIndoorSegmentKey={`${
+            currentRoute?.stops?.[currentNode]?.building?.id ?? "none"
+          }-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
+          instrList={currentRoute?.directions ?? []}
+          setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")}
+          setShowReroutePrompt={setShowReroutePrompt}
+          setIsManualReroute={setIsManualReroute}
+        />
+      </View>
+      {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
+      {isPreviewingRoute && (
+        <RouteSummary
+          setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")}
+          routeLength={currentRoute?.length ?? 0}
+          startingLocation={currentRoute?.stops[0]?.name}
+          endingLocation={
+            currentRoute?.stops[currentRoute.stops.length - 1]?.name
+          }
+        />
+      )}
+      {/* only show end route button if we're outdoors, since indoors we have the end route button in the indoor nav screen */}
+      {routeStarted && !isCurrNodeInDoors && (
+        <EndRoute setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")} />
+      )}
+      {/* only show lock on user button if we're outdoors and the route has started */}
+      {!isLockedOnUser && !isCurrNodeInDoors && routeStarted && (
+        <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
+      )}
+      {/* ETA pill — shown between recenter and reroute buttons */}
+      {routeStarted && !isCurrNodeInDoors && etaText && (
+        <View style={styles.etaPill}>
+          <Text style={styles.etaText}>ETA {etaText}</Text>
+        </View>
+      )}
+      {/* A button that will allow the user to reroute manually */}
+      {!isCurrNodeInDoors && routeStarted && !showReroutePrompt && (
+        <TouchableOpacity
+          style={styles.rerouteButton}
+          onPress={handleManualReroute}
+        >
+          <Reroute width={30} height={30} style={styles.rerouteIcon} />
+        </TouchableOpacity>
+      )}
+      {showReroutePrompt && (
+        <ReroutePrompt
+          isManualReroute={isManualReroute}
+          setShowReroutePrompt={setShowReroutePrompt}
+          setIsRouteStarted={() => {}}
+          isIndoors={isCurrNodeInDoors}
+        />
+      )}
     </View>
   );
 }
 
+// Styles
 const styles = StyleSheet.create({
-  background: {
-    flex: 1,
-    gap: 8,
-    backgroundColor: "#0A2145",
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "flex-end",
-    justifyContent: "space-between",
-    backgroundColor: "#0A2145",
-    paddingHorizontal: 30,
-    paddingBottom: 10,
-    height: 90,
-  },
-  appTitle: {
-    color: "#fff",
-    fontSize: 24,
-    fontFamily: "MuseoModerno-Bold",
+  container: { flex: 1 },
+  map: { flex: 1 },
+
+  // Wrapper so the anchor point sits at the tip of the tail
+  markerContainer: {
+    alignItems: "center",
+
+    overflow: "visible",
   },
 
-  heroImage: {
-    position: "absolute",
-    top: 96,
-    left: 94,
-    right: 0,
-    height: 240,
-    width: 211,
-    zIndex: 1,
+  tagMarkerBubble: {
+    width: 40,
+    height: 40,
+    borderRadius: 22,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 6,
+    // White border so the bubble pops against the satellite map
+    borderWidth: 2,
+    borderColor: "#fff",
+    overflow: "visible",
   },
-  whiteBox: {
+  tagMarkerEmoji: {
+    fontSize: 22,
+    // Prevent the emoji from being clipped on Android
+    includeFontPadding: false,
+    textAlignVertical: "center",
+  },
+  tagMarkerTail: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 7,
+    borderRightWidth: 7,
+    borderTopWidth: 10,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    // borderTopColor is set inline to match the bubble color
+  },
+
+  featureToggle: {
     position: "absolute",
-    top: 177,
+    top: 100,
+    right: 16,
+    width: 84,
+    height: 56,
+    borderRadius: 38,
+    backgroundColor: "#356EC4",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 20,
+  },
+  sidePanel: {
+    position: "absolute",
+    top: 100,
+    right: 0,
+    zIndex: 10,
+  },
+  mapOverlayCard: {
+    position: "absolute",
+    bottom: 0,
     left: 0,
     right: 0,
-    bottom: 0,
-    backgroundColor: "#fff",
+    backgroundColor: "#ffffff",
     borderTopLeftRadius: 60,
     borderTopRightRadius: 60,
-    padding: 16,
+    paddingHorizontal: 30,
+    paddingTop: 25,
+    paddingBottom: 40,
+    zIndex: 100,
   },
-  content: {},
-  currAreaButton: {
-    position: "absolute",
-    top: 202,
-    right: 47,
-    backgroundColor: "#356EC4",
-    borderRadius: 44,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-  button: {
-    marginTop: 16,
+  buttonLabel: {
+    fontFamily: "OrelegaOne",
     color: "#fff",
-    fontFamily: "OrelagaOne",
-    backgroundColor: "#356EC4",
-    borderRadius: 8,
-    width: 120,
-  },
-  title: { fontSize: 22, fontWeight: "bold", color: "#E8000d" },
-  textField: {
-    width: 200,
-    backgroundColor: "transparent",
-  },
-  subtitle: {
-    fontSize: 20,
-    color: "#000000",
-    fontFamily: "OrelegaOne",
-  },
-  infoBodyText: {
-    fontFamily: "OrelegaOne",
-    fontSize: 15,
-    color: "#0A2145",
-    marginBottom: 6,
-  },
-  infoSectionTitle: {
-    fontFamily: "OrelegaOne",
     fontSize: 18,
+  },
+  nodeTitle: {
+    fontSize: 26,
+    fontFamily: "OrelegaOne",
     color: "#356EC4",
-    marginTop: 14,
-    marginBottom: 6,
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  featuresContainer: {
+    backgroundColor: "#C2DCF0",
+    borderRadius: 20,
+    padding: 15,
+    marginBottom: 20,
+  },
+  featuresLabel: {
+    fontFamily: "OrelegaOne",
+    fontSize: 22,
+    color: "#356EC4",
+    marginBottom: 5,
+  },
+  tagText: {
+    fontFamily: "OrelegaOne",
+    fontSize: 22,
+    color: "#356EC4",
+    lineHeight: 22,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  bubbleButton: {
+    flex: 1,
+    height: 60,
+    borderRadius: 44,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelButton: { backgroundColor: "#df010c" },
+  goButton: { backgroundColor: "#356EC4" },
+  instructionBar: {
+    position: "absolute",
+    top: 50,
+    alignSelf: "center",
+    backgroundColor: "#356EC4",
+    padding: 10,
+    borderRadius: 40,
+    marginTop: 10,
+    width: "90%",
+    height: "8%",
+    zIndex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  instructionText: {
+    fontSize: 18,
+    fontFamily: "Orelega One",
+    color: "#ffffff",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  rerouteButton: {
+    position: "absolute",
+    alignContent: "center",
+    bottom: 100,
+    left: 20,
+    backgroundColor: "#356EC4",
+    padding: 10,
+    borderRadius: 40,
+    height: "8%",
+    width: "16%",
+  },
+  rerouteIcon: { alignSelf: "center", marginTop: 5 },
+  etaPill: {
+    position: "absolute",
+    bottom: 20,
+    alignSelf: "center",
+    backgroundColor: "#0A2145",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    zIndex: 1,
+  },
+  etaText: {
+    color: "#fff",
+    fontSize: 15,
+    fontFamily: "Orelega One",
   },
 });
