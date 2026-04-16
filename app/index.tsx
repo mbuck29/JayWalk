@@ -28,18 +28,21 @@ import { default as React, useEffect, useRef, useState } from "react";
 import {
   Image,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   useWindowDimensions,
   View,
 } from "react-native";
+import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withTiming,
+  withTiming
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { watchLocation } from "./Utils/location";
 import { Route } from "./Utils/routing";
 import {
@@ -135,7 +138,8 @@ export default function TabTwoScreen() {
 
   const currentRoute = getRoute(state); //get current route
   
-  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); // a way to know if we should show componenets that are part of the route taking experince
+  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); 
+  const [bottomPanePosition, setBottomPanePosition] = useState<"hamburger" | "mid" | "high">("mid");
   const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
   const [location, setLocation] = useState<Location.LocationObject | null>(
     null,
@@ -150,7 +154,7 @@ export default function TabTwoScreen() {
   // Read the filter selections that FeatureFilter already manages in Redux.
   const selectedFeatures = state.selectedFeatures;
 
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
 
@@ -166,6 +170,53 @@ export default function TabTwoScreen() {
     ],
     opacity: withTiming(panelOpen.value ? 1 : 0, { duration: 200 }),
   }));
+
+  const bottomPaneOffset = useSharedValue<number>(0);
+  const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] = useState(false);
+
+  const BOTTOM_OFFSET_HIGH = -0.27;
+  const BOTTOM_OFFSET_LOW = 0.3;
+
+  const bottomPaneAnimatedStyle = useAnimatedStyle(() => {
+    return ({
+    
+    transform: [
+      {
+        translateY: bottomPaneOffset.value
+      },
+    ],
+  })});
+
+  const bottomPanePan = Gesture.Pan()
+    .onChange((event) => {
+      const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
+      bottomPaneOffset.value = baseTarget + event.translationY;
+      console.log("O:", bottomPaneOffset.value, "P:", bottomPanePosition);
+    })
+    .onFinalize((event) => {
+      const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
+      let newPosition = bottomPanePosition;
+      if(Math.abs(event.translationY) > 0.07 * screenHeight)
+      {
+        const down = event.translationY > 0;
+        if(bottomPanePosition == "high" && down)
+        {
+          newPosition = event.translationY > 0.7 * screenHeight ? "hamburger" : "mid";
+        }
+        else if(bottomPanePosition == "mid")
+        {
+          newPosition = down ? "hamburger" : "high";
+        }
+        else if(bottomPanePosition == "hamburger" && !down)
+        {
+          newPosition = event.translationY < -0.7 * screenHeight ? "high" : "mid";
+        }
+      }
+
+      const newTarget = newPosition == "mid" ? 0 : newPosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
+      bottomPaneOffset.value = withTiming(newTarget, {duration: 100 + 500 * Math.abs(newTarget - baseTarget - event.translationY) / screenHeight});
+      scheduleOnRN(setBottomPanePosition, newPosition);
+    });
 
   const [fontsLoaded] = useFonts({
     "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
@@ -742,6 +793,22 @@ export default function TabTwoScreen() {
       </MapView>
 
       {/* Bottom info card */}
+      <GestureHandlerRootView style = {styles.bottomPaneWrapper}>
+        <GestureDetector gesture={bottomPanePan}>
+          <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
+            <View style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
+              <View style = {styles.bottomPaneGrabHandle}></View>
+              <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
+                <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
+                  {selectedNode && <Text>Blake Stuff Here</Text>}
+                  {!selectedNode && <Text>Cole Stuff Here</Text>}
+                </ScrollView>
+              </View>
+            </View>
+          </Animated.View>
+        </GestureDetector>
+      </GestureHandlerRootView>
+
       {routeNotStarted && selectedNode && (
         <View style={styles.mapOverlayCard}>
           {/* Node Name - Styled like the Destination label */}
@@ -948,6 +1015,39 @@ const styles = StyleSheet.create({
     paddingTop: 25,
     paddingBottom: 40,
     zIndex: 100,
+  },
+  bottomPaneWrapper: {
+  },
+  bottomPane: {
+    position: "absolute",
+    flexDirection: "column",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#ffffff",
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
+    paddingHorizontal: 30,
+    paddingTop: 15,
+    paddingBottom: 40,
+    zIndex: 100,
+  },
+  bottomPaneGrabHandle: {
+    alignSelf: "center",
+    display: "flex",
+    width: 50,
+    height: 2,
+    borderRadius: 1,
+    paddingTop: 0,
+    backgroundColor: "#356EC4",
+  },
+  bottomPaneChild: {
+    alignSelf: "center",
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#DDDDDD"
   },
   buttonLabel: {
     fontFamily: "OrelegaOne",
