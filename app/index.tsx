@@ -22,6 +22,7 @@ import {
   useAppSelector,
 } from "@/redux/appState";
 import { Asset } from "expo-asset";
+import { BlurView } from "expo-blur";
 import { useFonts } from "expo-font";
 import * as Location from "expo-location";
 import { default as React, useEffect, useRef, useState } from "react";
@@ -246,15 +247,15 @@ export default function TabTwoScreen() {
   }, []);
 
   // Simple boolean to represent if we have the users location
-    const hasFix =
-      (location?.coords?.latitude ?? 0) !== 0 &&
-      (location?.coords?.longitude ?? 0) !== 0;
-  
-    // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
-    const candidateRef = useRef<number | null>(null);
-    const hitsRef = useRef(0);
-    const missRef = useRef(0);
-    const lastSetAtRef = useRef(0);
+  const hasFix =
+    (location?.coords?.latitude ?? 0) !== 0 &&
+    (location?.coords?.longitude ?? 0) !== 0;
+
+  // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
+  const candidateRef = useRef<number | null>(null);
+  const hitsRef = useRef(0);
+  const missRef = useRef(0);
+  const lastSetAtRef = useRef(0);
   
   const hasRoute = currentRoute != null;
   const routeNotStarted = routeStatus == "not started";
@@ -796,7 +797,7 @@ export default function TabTwoScreen() {
       <GestureHandlerRootView style = {styles.bottomPaneWrapper}>
         <GestureDetector gesture={bottomPanePan}>
           <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
-            <View style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
+            <BlurView intensity={40} tint="dark" style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
               <View style = {styles.bottomPaneGrabHandle}></View>
               <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
                 <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
@@ -804,7 +805,7 @@ export default function TabTwoScreen() {
                   {!selectedNode && <Text>Cole Stuff Here</Text>}
                 </ScrollView>
               </View>
-            </View>
+            </BlurView>
           </Animated.View>
         </GestureDetector>
       </GestureHandlerRootView>
@@ -1022,15 +1023,17 @@ const styles = StyleSheet.create({
     position: "absolute",
     flexDirection: "column",
     bottom: 0,
-    left: 0,
+    left: "1%",
     right: 0,
-    backgroundColor: "#ffffff",
+    width: "98%",
+    borderRadius: 60,
     borderTopLeftRadius: 60,
     borderTopRightRadius: 60,
     paddingHorizontal: 30,
     paddingTop: 15,
     paddingBottom: 40,
     zIndex: 100,
+    overflow: "hidden"
   },
   bottomPaneGrabHandle: {
     alignSelf: "center",
