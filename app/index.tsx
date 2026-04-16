@@ -13,7 +13,9 @@ import FeatureFilter from "@/components/ui/FeatureFilter";
 import IndoorNav from "@/components/ui/IndoorNav";
 import LockOnUser from "@/components/ui/lockOnUser";
 import ReroutePrompt from "@/components/ui/ReroutePrompt";
+import RoutePolyline from "@/components/ui/RoutePolyline";
 import RouteSummary from "@/components/ui/RouteSummary";
+import TagMarker from "@/components/ui/TagMarker";
 import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
 import {
@@ -48,7 +50,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { watchLocation } from "./Utils/location";
-import { Route } from "./Utils/routing";
 import {
   calculateRouteTime,
   haversineMeters,
@@ -88,83 +89,86 @@ const TAG_PRIORITY: Tag[] = [
   "computers",
 ];
 
-// ---------------------------------------------------------------------------
-// TagMarker is a self-contained component so React can manage its own
-// tracksViewChanges lifecycle. Starts true so the native view has time to
-// measure, then flips to false after the first render to stop thrashing.
-function TagMarker({
-  node,
-  config,
-  onPress,
-}: {
-  node: any;
-  config: { emoji: string; color: string; label: string };
-  onPress: () => void;
-}) {
-  const [tracked, setTracked] = useState(true);
+// Map FeatureFilter display strings -> Tag values used in node data.
+// "Study Area" has no matching Tag yet, so it is intentionally omitted.
+const FEATURE_TO_TAG: Record<string, Tag> = {
+  "Private Restrooms": "bathrooms",
+  Printers: "printers",
+  Food: "food",
+  Computers: "computers",
+  "Bus Stop": "bus stop",
+};
 
-  useEffect(() => {
-    // Give the native layer one frame to measure the custom view, then lock it.
-    const id = setTimeout(() => setTracked(false), 500);
-    return () => clearTimeout(id);
-  }, []);
+// The bounds of where the map will go. These are a rough measurement. If the user
+// goes outside of these bounds, the map will bring them back in.
+const BOUNDS = { north: 38.972, south: 38.941, east: -95.23, west: -95.286 };
 
-  return (
-    <Marker
-      key={`tag-${node.id}`}
-      coordinate={{ latitude: node.y, longitude: node.x }}
-      tracksViewChanges={tracked}
-      anchor={{ x: 0.5, y: 1 }}
-      onPress={onPress}
-    >
-      <View style={styles.markerContainer}>
-        {/* Bubble */}
-        <View
-          style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}
-        >
-          <Text style={styles.tagMarkerEmoji}>{config.emoji}</Text>
-        </View>
-        {/* Tail / caret pointing down */}
-        <View
-          style={[styles.tagMarkerTail, { borderTopColor: config.color }]}
-        />
-      </View>
-    </Marker>
-  );
-}
+// Outline of the KU campus
+const KU = {
+    latitude: 38.9541967,
+    longitude: -95.2597806,
+    latitudeDelta: 0.01,
+    longitudeDelta: 0.01,
+  };
+
+// Variables for what percent of the screen the bottom pane offsets by at various positions
+const BOTTOM_OFFSET_HIGH_HIGH = -0.55;
+const BOTTOM_OFFSET_HIGH = -0.27;
+const BOTTOM_OFFSET_LOW = 0.5;
 
 export default function TabTwoScreen() {
-  const mapRef = useRef<MapView>(null);
   const dispatch = useAppDispatch();
+
+  // STATE VARIABLES
   const state = useAppSelector((state) => state.jayWalk);
   const currentNode = state.currentNode;
-  const [selectedNode, setSelectedNode] = useState<any>(null);
-
   const currentRoute = getRoute(state); //get current route
-  
-  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); 
-  const [bottomPanePosition, setBottomPanePosition] = useState<"hamburger" | "mid" | "high">("mid");
-  const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null,
+  const hasRoute = currentRoute != null;
+  const halfWayIndex = hasRoute ? Math.floor(currentRoute.stops.length / 2) : 0;
+  const safeIndoors = currentRoute?.stops?.[currentNode]?.building !== undefined;
+  const selectedFeatures = state.selectedFeatures; // Read the filter selections that FeatureFilter already manages in Redux.
+  // Derive the active tag set reactively — no separate local state needed.
+  const activeTags = new Set<Tag>(
+    selectedFeatures
+      .map((f) => FEATURE_TO_TAG[f])
+      .filter((t): t is Tag => t !== undefined),
   );
+
+  const routeOverview = {
+    latitude: currentRoute ? currentRoute.stops[halfWayIndex].y - 0.0005 : 0, // Subtract .0005 so that the route Summary isnt blocking the route
+    longitude: currentRoute ? currentRoute.stops[halfWayIndex].x : 0,
+    latitudeDelta: 0.001, // smaller = more zoomed in
+    longitudeDelta: 0.004, // smaller = more zoomed in
+  };
+  
+  // COMPONENT REF VARIABLES
+  const mapRef = useRef<MapView>(null);
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
+  
+  // INTERNAL STATE VARIABLES
+  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); 
+  const routeNotStarted = routeStatus == "not started";
+  const routeStarted = routeStatus == "started" && hasRoute;
+  const isPreviewingRoute = routeStatus == "previewing";
+  const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
+  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
+  const [isCurrNodeInDoors, setIsCurrNodeInDoors] = useState<boolean>(safeIndoors);
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [mapReady, setMapReady] = useState(false);
   const [showReroutePrompt, setShowReroutePrompt] = useState(false);
   const [isManualReroute, setIsManualReroute] = useState(false);
-  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
-  const safeIndoors = currentRoute?.stops?.[currentNode]?.building !== undefined;
-  const [isCurrNodeInDoors, setIsCurrNodeInDoors] = useState<boolean>(safeIndoors);
-  const [mapReady, setMapReady] = useState(false);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const hasFix = (location?.coords?.latitude ?? 0) !== 0 && (location?.coords?.longitude ?? 0) !== 0; // Simple boolean to represent if we have the users location
+
+  // UI STATE VARIABLES
+  const [bottomPanePosition, setBottomPanePosition] = useState<"hamburger" | "mid" | "high">("mid");
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // TODO: Figure out how to detect this (Michael knows)
   const darkLightMode: "dark" | "light" = "light";
 
-  // Read the filter selections that FeatureFilter already manages in Redux.
-  const selectedFeatures = state.selectedFeatures;
-
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
-  const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
-
+  // FILTER PANEL ANIMATION VARIABLES
   const panelOpen = useSharedValue(false);
 
   const animatedPanelStyle = useAnimatedStyle(() => ({
@@ -178,12 +182,9 @@ export default function TabTwoScreen() {
     opacity: withTiming(panelOpen.value ? 1 : 0, { duration: 200 }),
   }));
 
+  // BOTTOM PANE ANIMATION VARIABLES
   const bottomPaneOffset = useSharedValue<number>(0);
   const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] = useState(false);
-
-  const BOTTOM_OFFSET_HIGH_HIGH = -0.55;
-  const BOTTOM_OFFSET_HIGH = -0.27;
-  const BOTTOM_OFFSET_LOW = 0.5;
 
   const bottomPaneAnimatedStyle = useAnimatedStyle(() => {
     return ({
@@ -234,48 +235,22 @@ export default function TabTwoScreen() {
       scheduleOnRN(setBottomPanePosition, newPosition);
     });
 
+  // FONT VARIABLE
   const [fontsLoaded] = useFonts({
     "MuseoModerno-Bold": require("../assets/fonts/MuseoModerno-Bold.ttf"),
     OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
   });
-
-  // Map FeatureFilter display strings -> Tag values used in node data.
-  // "Study Area" has no matching Tag yet, so it is intentionally omitted.
-  const FEATURE_TO_TAG: Record<string, Tag> = {
-    "Private Restrooms": "bathrooms",
-    Printers: "printers",
-    Food: "food",
-    Computers: "computers",
-    "Bus Stop": "bus stop",
-  };
-
-  // Derive the active tag set reactively — no separate local state needed.
-  const activeTags = new Set<Tag>(
-    selectedFeatures
-      .map((f) => FEATURE_TO_TAG[f])
-      .filter((t): t is Tag => t !== undefined),
-  );
 
   useEffect(() => {
     //load custom marker
     Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
   }, []);
 
-  // Simple boolean to represent if we have the users location
-  const hasFix =
-    (location?.coords?.latitude ?? 0) !== 0 &&
-    (location?.coords?.longitude ?? 0) !== 0;
-
   // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
   const candidateRef = useRef<number | null>(null);
   const hitsRef = useRef(0);
   const missRef = useRef(0);
   const lastSetAtRef = useRef(0);
-  
-  const hasRoute = currentRoute != null;
-  const routeNotStarted = routeStatus == "not started";
-  const routeStarted = routeStatus == "started" && hasRoute;
-  const isPreviewingRoute = routeStatus == "previewing";
 
   useEffect(() => {
     if (!routeStarted) return; // only track location and advance if the route has started
@@ -459,7 +434,7 @@ export default function TabTwoScreen() {
     //console.log("isCurrNodeInDoors", isCurrNodeInDoors);
   }, [currentNode, currentRoute]);
 
-  // Request location permissions on mount and set up location tracking if granted
+  // Function to check current location permissions
   function hasLocationPermissions(): boolean {
     return locationPermissionStatus?.granted ?? false;
   }
@@ -478,107 +453,6 @@ export default function TabTwoScreen() {
     }
   }, [locationPermissionStatus]);
 
-  const KU = {
-    latitude: 38.9541967,
-    longitude: -95.2597806,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  };
-
-  const halfWayIndex = hasRoute
-      ? Math.floor(currentRoute.stops.length / 2)
-      : 0;
-    const routeOverview = {
-      latitude: currentRoute ? currentRoute.stops[halfWayIndex].y - 0.0005 : 0, // Subtract .0008 so that the route Summary isnt blocking the route
-      longitude: currentRoute ? currentRoute.stops[halfWayIndex].x : 0,
-      latitudeDelta: 0.001, // smaller = more zoomed in
-      longitudeDelta: 0.004, // smaller = more zoomed in
-    };
-
-  // CURRENT ROUTE DISPLAY - makes a line through stops
-  function makeRoutePolyline(
-    stops: Node[],
-    currentNode: number,
-    baseIndex: number,
-  ) {
-    if (!stops || stops.length < 2) return null; // return if route too short
-
-    const splitAt = Math.max(
-      0,
-      Math.min(currentNode - baseIndex, stops.length - 1),
-    );
-    const traveled = stops.slice(0, splitAt + 1);
-    const remaining = stops.slice(splitAt);
-
-    const toCoords = (nodes: Node[]) =>
-      nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
-
-    //displays route
-    return (
-      <>
-        {traveled.length >= 2 && (
-          <Polyline
-            coordinates={toCoords(traveled)}
-            strokeColor="#9ca3af"
-            strokeWidth={5}
-            lineCap="round"
-            lineJoin="round"
-            key={stops[0].name + "-traveled"}
-          />
-        )}
-        {remaining.length >= 2 && (
-          <Polyline
-            coordinates={toCoords(remaining)}
-            strokeColor="#0066ff"
-            strokeWidth={5}
-            lineCap="round"
-            lineJoin="round"
-            key={stops[0].name + "-remaining"}
-          />
-        )}
-      </>
-    );
-  }
-
-  function makeRoutePolylines(route: Route) {
-    const polylines = [];
-
-    let base = 0;
-
-    for (let i = 1; i < route.stops.length; i++) {
-      if (!route.route[i - 1].indoors) {
-        if (base < 0) {
-          base = i - 1;
-        }
-
-        continue;
-      }
-
-      if (base != i - 1) {
-        polylines.push(
-          makeRoutePolyline(route.stops.slice(base, i), currentNode, base),
-        );
-      }
-
-      base = -1;
-    }
-
-    if (base >= 0 && base != route.stops.length - 2) {
-      polylines.push(
-        makeRoutePolyline(
-          route.stops.slice(base, route.stops.length),
-          currentNode,
-          base,
-        ),
-      );
-    }
-
-    return polylines.length > 0 ? polylines : null;
-  }
-
-  // The bounds of where the map will go. These are a rough measurement. If the user
-  // goes outside of these bounds, the map will bring them back in.
-  const BOUNDS = { north: 38.972, south: 38.941, east: -95.23, west: -95.286 };
   const clamp = (v: number, min: number, max: number) =>
     Math.min(max, Math.max(min, v));
 
@@ -724,7 +598,10 @@ export default function TabTwoScreen() {
           : `${Math.ceil(etaMinutes)} min`
         : null;
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded)
+  {
+    return null;
+  } 
 
   // Render
   return (
@@ -781,7 +658,7 @@ export default function TabTwoScreen() {
       >
         {/* Tag markers  */}
         {routeNotStarted && makeTagMarkers()}
-        {currentRoute && makeRoutePolylines(currentRoute)}
+        {currentRoute && <RoutePolyline route={currentRoute} currentNodeIndex={currentNode}></RoutePolyline>}
 
         {/* Selected-node pin  */}
         {routeNotStarted && selectedNode && (
@@ -873,7 +750,7 @@ export default function TabTwoScreen() {
             <Pressable
               style={[styles.bubbleButton, styles.goButton]}
               onPress={() => {
-                dispatch(setDestination(selectedNode.name));
+                dispatch(setDestination({text: selectedNode.name, ids: [selectedNode.id]}));
                 setSelectedNode(null);
               }}
             >
@@ -971,47 +848,6 @@ export default function TabTwoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { flex: 1 },
-
-  // Wrapper so the anchor point sits at the tip of the tail
-  markerContainer: {
-    alignItems: "center",
-
-    overflow: "visible",
-  },
-
-  tagMarkerBubble: {
-    width: 40,
-    height: 40,
-    borderRadius: 22,
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.4,
-    shadowRadius: 4,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 6,
-    // White border so the bubble pops against the satellite map
-    borderWidth: 2,
-    borderColor: "#fff",
-    overflow: "visible",
-  },
-  tagMarkerEmoji: {
-    fontSize: 22,
-    // Prevent the emoji from being clipped on Android
-    includeFontPadding: false,
-    textAlignVertical: "center",
-  },
-  tagMarkerTail: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 7,
-    borderRightWidth: 7,
-    borderTopWidth: 10,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    // borderTopColor is set inline to match the bubble color
-  },
-
   featureToggle: {
     position: "absolute",
     top: 100,
