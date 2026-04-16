@@ -1,6 +1,5 @@
 import { clearRoute, useAppDispatch } from "@/redux/appState";
 import { useFonts } from "expo-font";
-import { navigate } from "expo-router/build/global-state/routing";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 
@@ -19,7 +18,6 @@ export default function EndRoute(props: EndRouteProps) {
   const handleEndRoute = () => {
     setIsRouteStarted(false);
     dispatch(clearRoute()); // Clear the route from the state when ending the route
-    navigate("/(tabs)");
   };
   return (
     <TouchableOpacity onPress={handleEndRoute} style={styles.endButton}>
