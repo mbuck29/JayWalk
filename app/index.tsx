@@ -5,6 +5,7 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-04-12
  */
+import Burger from "@/assets/images/icons/Misc/burger.svg";
 import OptionsIcon from "@/assets/images/icons/options.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import EndRoute from "@/components/ui/EndRoute";
@@ -39,6 +40,8 @@ import {
 import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Animated, {
+  FadeInDown,
+  FadeOutDown,
   useAnimatedStyle,
   useSharedValue,
   withTiming
@@ -152,6 +155,9 @@ export default function TabTwoScreen() {
   const [isCurrNodeInDoors, setIsCurrNodeInDoors] = useState<boolean>(safeIndoors);
   const [mapReady, setMapReady] = useState(false);
 
+  // TODO: Figure out how to detect this (Michael knows)
+  const darkLightMode: "dark" | "light" = "light";
+
   // Read the filter selections that FeatureFilter already manages in Redux.
   const selectedFeatures = state.selectedFeatures;
 
@@ -175,8 +181,9 @@ export default function TabTwoScreen() {
   const bottomPaneOffset = useSharedValue<number>(0);
   const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] = useState(false);
 
+  const BOTTOM_OFFSET_HIGH_HIGH = -0.55;
   const BOTTOM_OFFSET_HIGH = -0.27;
-  const BOTTOM_OFFSET_LOW = 0.3;
+  const BOTTOM_OFFSET_LOW = 0.5;
 
   const bottomPaneAnimatedStyle = useAnimatedStyle(() => {
     return ({
@@ -192,6 +199,14 @@ export default function TabTwoScreen() {
     .onChange((event) => {
       const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
       bottomPaneOffset.value = baseTarget + event.translationY;
+      if(bottomPaneOffset.value > BOTTOM_OFFSET_LOW * screenHeight)
+      {
+        bottomPaneOffset.value = BOTTOM_OFFSET_LOW * screenHeight;
+      }
+      else if(bottomPaneOffset.value < BOTTOM_OFFSET_HIGH_HIGH * screenHeight)
+      {
+        bottomPaneOffset.value = BOTTOM_OFFSET_HIGH_HIGH * screenHeight;
+      }
       console.log("O:", bottomPaneOffset.value, "P:", bottomPanePosition);
     })
     .onFinalize((event) => {
@@ -202,7 +217,7 @@ export default function TabTwoScreen() {
         const down = event.translationY > 0;
         if(bottomPanePosition == "high" && down)
         {
-          newPosition = event.translationY > 0.7 * screenHeight ? "hamburger" : "mid";
+          newPosition = event.translationY > 0.4 * screenHeight ? "hamburger" : "mid";
         }
         else if(bottomPanePosition == "mid")
         {
@@ -797,18 +812,29 @@ export default function TabTwoScreen() {
       <GestureHandlerRootView style = {styles.bottomPaneWrapper}>
         <GestureDetector gesture={bottomPanePan}>
           <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
-            <BlurView intensity={40} tint="dark" style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
+            <BlurView intensity={40} tint={darkLightMode} style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
               <View style = {styles.bottomPaneGrabHandle}></View>
               <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
                 <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
                   {selectedNode && <Text>Blake Stuff Here</Text>}
-                  {!selectedNode && <Text>Cole Stuff Here</Text>}
+                  {!selectedNode && (<Text>Cole Stuff Here</Text>)}
                 </ScrollView>
               </View>
             </BlurView>
           </Animated.View>
         </GestureDetector>
       </GestureHandlerRootView>
+      {bottomPanePosition == "hamburger" &&
+        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style = {[styles.hamburgerButton, {borderRadius: 0.07 * screenWidth, height: 0.14 * screenWidth, width: 0.22 * screenWidth}]}>
+          <BlurView intensity={40} tint={darkLightMode} style = {styles.hamburgerBlur}>
+            <Pressable style = {styles.hamburgerBlur} onPress={() => {setBottomPanePosition("mid"); bottomPaneOffset.value = withTiming(0, {duration: 500})}}>
+              <Burger fill = "#3C67A8" stroke = "#3C67A8" strokeWidth = {0.5}
+                style={[styles.hamburger]}
+              />
+            </Pressable>
+          </BlurView>
+        </Animated.View>
+      }
 
       {routeNotStarted && selectedNode && (
         <View style={styles.mapOverlayCard}>
@@ -1033,7 +1059,7 @@ const styles = StyleSheet.create({
     paddingTop: 15,
     paddingBottom: 40,
     zIndex: 100,
-    overflow: "hidden"
+    overflow: "hidden",
   },
   bottomPaneGrabHandle: {
     alignSelf: "center",
@@ -1051,6 +1077,21 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     backgroundColor: "#DDDDDD"
+  },
+  hamburgerButton: {
+    position: "absolute",
+    bottom: 25,
+    left: 25,
+    overflow: "hidden",
+  },
+  hamburgerBlur: {
+    width: "100%",
+    height: "100%"
+  },
+  hamburger: {
+    maxWidth: "100%", 
+    maxHeight: "100%", 
+    alignSelf: "center" 
   },
   buttonLabel: {
     fontFamily: "OrelegaOne",
