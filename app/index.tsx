@@ -208,7 +208,6 @@ export default function TabTwoScreen() {
       {
         bottomPaneOffset.value = BOTTOM_OFFSET_HIGH_HIGH * screenHeight;
       }
-      console.log("O:", bottomPaneOffset.value, "P:", bottomPanePosition);
     })
     .onFinalize((event) => {
       const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
