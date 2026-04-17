@@ -689,21 +689,23 @@ export default function TabTwoScreen() {
         <GestureDetector gesture={bottomPanePan}>
           <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
             <BlurView intensity={40} tint={darkLightMode} style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
-              <View style = {styles.bottomPaneGrabHandle}></View>
-              <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
-                <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
-                  {selectedNode && <Text>Blake Stuff Here</Text>}
-                  {!selectedNode && (<Text>Cole Stuff Here</Text>)}
-                </ScrollView>
+              <View style = {[styles.blurredInterior, styles.bottomPaneInterior]}>
+                <View style = {styles.bottomPaneGrabHandle}></View>
+                <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
+                  <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
+                    {selectedNode && <Text>Blake Stuff Here</Text>}
+                    {!selectedNode && (<Text>Cole Stuff Here</Text>)}
+                  </ScrollView>
+                </View>
               </View>
             </BlurView>
           </Animated.View>
         </GestureDetector>
       </GestureHandlerRootView>
       {bottomPanePosition == "hamburger" &&
-        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style = {[styles.hamburgerButton, {borderRadius: 0.07 * screenWidth, height: 0.14 * screenWidth, width: 0.22 * screenWidth}]}>
-          <BlurView intensity={40} tint={darkLightMode} style = {styles.hamburgerBlur}>
-            <Pressable style = {styles.hamburgerBlur} onPress={() => {setBottomPanePosition("mid"); bottomPaneOffset.value = withTiming(0, {duration: 500})}}>
+        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style = {[styles.hamburgerButton, {borderRadius: Math.round(0.07 * screenWidth), height: Math.round(0.14 * screenWidth), width: Math.round(0.22 * screenWidth)}]}>
+          <BlurView intensity={40} tint={darkLightMode} style = {[styles.hamburgerBlur]}>
+            <Pressable style = {[styles.blurredInterior, styles.hamburgerBlur, {borderRadius: Math.round(0.07 * screenWidth)}]} onPress={() => {setBottomPanePosition("mid"); bottomPaneOffset.value = withTiming(0, {duration: 500})}}>
               <Burger fill = "#3C67A8" stroke = "#3C67A8" strokeWidth = {0.5}
                 style={[styles.hamburger]}
               />
@@ -878,11 +880,15 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     zIndex: 100,
   },
+  blurredInterior: {
+    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1,
+    borderStyle: "solid",
+  },
   bottomPaneWrapper: {
   },
   bottomPane: {
     position: "absolute",
-    flexDirection: "column",
     bottom: 0,
     left: "1%",
     right: 0,
@@ -890,11 +896,20 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     borderTopLeftRadius: 60,
     borderTopRightRadius: 60,
+    zIndex: 100,
+    overflow: "hidden",
+  },
+  bottomPaneInterior: {
+    flexDirection: "column",
+    borderRadius: 60,
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
     paddingHorizontal: 30,
     paddingTop: 15,
     paddingBottom: 40,
-    zIndex: 100,
     overflow: "hidden",
+    height: "100%",
+    width: "100%"
   },
   bottomPaneGrabHandle: {
     alignSelf: "center",
