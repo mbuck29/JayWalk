@@ -19,8 +19,11 @@ import TagMarker from "@/components/ui/TagMarker";
 import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
 import {
+  clearRoute,
   setCurrentNode,
   setDestination,
+  setRoute,
+  setStart,
   useAppDispatch,
   useAppSelector,
 } from "@/redux/appState";
@@ -50,10 +53,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { watchLocation } from "./Utils/location";
+import { route } from "./Utils/routing";
 import {
   calculateRouteTime,
   haversineMeters,
-  remainingRouteMeters
+  remainingRouteMeters,
+  sanitize
 } from "./Utils/routingUtils";
 import { getRoute } from "./Utils/state";
 
@@ -751,7 +756,27 @@ export default function TabTwoScreen() {
             <Pressable
               style={[styles.bubbleButton, styles.goButton]}
               onPress={() => {
-                dispatch(setDestination({text: selectedNode.name, ids: [selectedNode.id]}));
+                const calculatedRoute = route(state, graph.nodes[0], [selectedNode]);
+                
+                // If there is no route, log it and return
+                if (!calculatedRoute) {
+                  dispatch(clearRoute());
+                  console.log("No route found!");
+                  return;
+                }
+          
+                // Sanitize the route and then push it to the global state
+                dispatch(setRoute(sanitize(calculatedRoute)));
+          
+                // Set the destination so it can be refernced later
+                dispatch(
+                  setDestination({
+                    text: selectedNode.name,
+                    ids: [selectedNode.id],
+                  }),
+                );
+                dispatch(setStart(graph.nodes[0].name));
+                setRouteStatus("previewing");
                 setSelectedNode(null);
               }}
             >
