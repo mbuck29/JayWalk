@@ -750,7 +750,7 @@ export default function TabTwoScreen() {
                   <View
                     style={[
                       styles.bottomPaneChild,
-                      { height: 0.64 * screenHeight, overflow: "hidden" },
+                      { height: 0.64 * screenHeight },
                     ]}
                   >
                     <ScrollView
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     width: "100%",
     height: "100%",
-    backgroundColor: "#DDDDDD",
+    overflow: "hidden"
   },
   hamburgerButton: {
     position: "absolute",
