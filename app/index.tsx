@@ -690,6 +690,7 @@ export default function TabTwoScreen() {
       </MapView>
 
       {/* Bottom info card */}
+      {routeNotStarted &&
       <GestureHandlerRootView style = {styles.bottomPaneWrapper}>
         <GestureDetector gesture={bottomPanePan}>
           <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
@@ -707,7 +708,8 @@ export default function TabTwoScreen() {
           </Animated.View>
         </GestureDetector>
       </GestureHandlerRootView>
-      {bottomPanePosition == "hamburger" &&
+      }
+      {routeNotStarted && bottomPanePosition == "hamburger" &&
         <Animated.View entering={FadeInDown} exiting={FadeOutDown} style = {[styles.hamburgerButton, {borderRadius: Math.round(0.07 * screenWidth), height: Math.round(0.14 * screenWidth), width: Math.round(0.22 * screenWidth)}]}>
           <BlurView intensity={40} tint={darkLightMode} style = {[styles.hamburgerBlur]}>
             <Pressable style = {[styles.blurredInterior, styles.hamburgerBlur, {borderRadius: Math.round(0.07 * screenWidth)}]} onPress={() => {setBottomPanePosition("mid"); bottomPaneOffset.value = withTiming(0, {duration: 500})}}>
