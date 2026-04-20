@@ -147,94 +147,96 @@ export default function SearchHeader(props: SearchHeaderProps) {
   };
   return (
     <BlurView style={styles.SearchHeaderContainer} intensity={100} tint="light">
-      <View style={styles.TopRowContainer}>
-        {/* campanile logo */}
-        <View style={{ flexDirection: "row" }}>
-          <Image
-            source={require("../../assets/images/JayWalk-Logo1.png")}
-            style={styles.logo}
-            resizeMode="cover"
-          />{" "}
-          {/* Text input with LocationMenu */}
-          {/* When the user looks for a location we populate and display a 
+      <View style={styles.insideBlurContainer}>
+        <View style={styles.TopRowContainer}>
+          {/* campanile logo */}
+          <View style={{ flexDirection: "row" }}>
+            <Image
+              source={require("../../assets/images/JayWalk-Logo1.png")}
+              style={styles.logo}
+              resizeMode="cover"
+            />{" "}
+            {/* Text input with LocationMenu */}
+            {/* When the user looks for a location we populate and display a 
                 menu of locations for them to select. Making it easier to find there
                 locaiton.*/}
-          <LocationMenu
-            visible={isCurrentMenuVisible} // We only want to show the menu
-            //when the user is actively using the text field
-            onDismiss={() => {
+            <LocationMenu
+              visible={isCurrentMenuVisible} // We only want to show the menu
+              //when the user is actively using the text field
+              onDismiss={() => {
+                setIsCurrentMenuVisible(false);
+                currLocInputRef.current?.blur();
+              }}
+              oppisiteName={destLocationText} // This is used to make sure that the user doesnt select the same location for both current and destination, as that would break our routing algo. So we pass the destination name here so that the menu can filter it out from the options.
+              anchor={
+                // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
+                //current location box
+                <TextInput
+                  ref={currLocInputRef}
+                  value={currLocationText}
+                  placeholder={"Where to?"}
+                  underlineStyle={{ height: 0 }}
+                  activeUnderlineColor="transparent"
+                  activeOutlineColor="transparent"
+                  underlineColor="transparent"
+                  textColor="#000"
+                  cursorColor="#000"
+                  selectionColor="#356EC4"
+                  mode="outlined"
+                  theme={{ roundness: 44 }}
+                  outlineColor="transparent"
+                  onChangeText={setCurrLocationText}
+                  style={{
+                    backgroundColor: "transparent",
+                    justifyContent: "center",
+                    fontSize: 18,
+                    flex: 1,
+                  }}
+                  contentStyle={{
+                    fontFamily: "SF Pro",
+                  }}
+                  onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
+                  onChange={() => setIsCurrentMenuVisible(true)}
+                />
+              }
+              options={graph.nodes} // They are selecting from the nodes so we pass them here
+              // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
+              // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
+              locationText={currLocationText}
+              setLocation={setCurrLocation}
+              setLocationText={setCurrLocationText}
+              onSelect={() => currLocInputRef.current?.blur()}
+            />{" "}
+          </View>
+          {/* The search button */}
+          <TouchableOpacity
+            onPress={() => {
               setIsCurrentMenuVisible(false);
               currLocInputRef.current?.blur();
             }}
-            oppisiteName={destLocationText} // This is used to make sure that the user doesnt select the same location for both current and destination, as that would break our routing algo. So we pass the destination name here so that the menu can filter it out from the options.
-            anchor={
-              // The location menu needs something to anchor it, so that it knows where to appear. In this case we anchor it to the text input for the current location.
-              //current location box
-              <TextInput
-                ref={currLocInputRef}
-                value={currLocationText}
-                placeholder={"Where to?"}
-                underlineStyle={{ height: 0 }}
-                activeUnderlineColor="transparent"
-                activeOutlineColor="transparent"
-                underlineColor="transparent"
-                textColor="#000"
-                cursorColor="#000"
-                selectionColor="#356EC4"
-                mode="outlined"
-                theme={{ roundness: 44 }}
-                outlineColor="transparent"
-                onChangeText={setCurrLocationText}
-                style={{
-                  backgroundColor: "transparent",
-                  justifyContent: "center",
-                  fontSize: 18,
-                  flex: 1,
-                }}
-                contentStyle={{
-                  fontFamily: "SF Pro",
-                }}
-                onFocus={() => setIsCurrentMenuVisible(true)} // When the user focuses on the text input we want to show the menu so that they can select there location from the list of options.
-                onChange={() => setIsCurrentMenuVisible(true)}
-              />
-            }
-            options={graph.nodes} // They are selecting from the nodes so we pass them here
-            // We pass the current text in the text field to the menu so that it can filter the options based on what the user has typed.
-            // This makes it easier for the user to find there location. We also pass the set function so when they select something we can set it as there choice
-            locationText={currLocationText}
-            setLocation={setCurrLocation}
-            setLocationText={setCurrLocationText}
-            onSelect={() => currLocInputRef.current?.blur()}
-          />{" "}
+            style={{
+              backgroundColor: "#356EC4",
+              borderRadius: 20,
+              height: 40,
+              width: 40,
+              marginTop: 4,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <SearchIcon width={24} height={24} />
+          </TouchableOpacity>
         </View>
-        {/* The search button */}
-        <TouchableOpacity
-          onPress={() => {
-            setIsCurrentMenuVisible(false);
-            currLocInputRef.current?.blur();
-          }}
-          style={{
-            backgroundColor: "#356EC4",
-            borderRadius: 20,
-            height: 40,
-            width: 40,
-            marginTop: 4,
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <SearchIcon width={24} height={24} />
-        </TouchableOpacity>
-      </View>
-      {hasDestination && <View style={styles.MiddleRowContainer}></View>}
-      <View style={styles.BottomRowContainer}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8 }}
-        >
-          {renderRoutePrefrenceButtons()}
-        </ScrollView>
+        {hasDestination && <View style={styles.MiddleRowContainer}></View>}
+        <View style={styles.BottomRowContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 8 }}
+          >
+            {renderRoutePrefrenceButtons()}
+          </ScrollView>
+        </View>
       </View>
     </BlurView>
   );
@@ -248,6 +250,12 @@ const styles = StyleSheet.create({
     right: "5%",
     borderRadius: 20,
     overflow: "hidden",
+  },
+  insideBlurContainer: {
+    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1,
+    borderStyle: "solid",
+    borderRadius: 20,
   },
   logo: {
     width: 40,
