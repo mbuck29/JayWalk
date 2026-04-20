@@ -6,15 +6,14 @@
  * Date Modified: 2026-04-12
  */
 import Burger from "@/assets/images/icons/Misc/burger.svg";
-import OptionsIcon from "@/assets/images/icons/options.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import EndRoute from "@/components/ui/EndRoute";
-import FeatureFilter from "@/components/ui/FeatureFilter";
 import IndoorNav from "@/components/ui/IndoorNav";
 import LockOnUser from "@/components/ui/lockOnUser";
 import ReroutePrompt from "@/components/ui/ReroutePrompt";
 import RoutePolyline from "@/components/ui/RoutePolyline";
 import RouteSummary from "@/components/ui/RouteSummary";
+import SearchHeader from "@/components/ui/SearchHeader";
 import TagMarker from "@/components/ui/TagMarker";
 import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
@@ -42,14 +41,18 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
 import MapView, { Marker, Polyline } from "react-native-maps";
 import Animated, {
   FadeInDown,
   FadeOutDown,
   useAnimatedStyle,
   useSharedValue,
-  withTiming
+  withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { watchLocation } from "./Utils/location";
@@ -58,7 +61,7 @@ import {
   calculateRouteTime,
   haversineMeters,
   remainingRouteMeters,
-  sanitize
+  sanitize,
 } from "./Utils/routingUtils";
 import { getRoute } from "./Utils/state";
 
@@ -110,11 +113,11 @@ const BOUNDS = { north: 38.972, south: 38.941, east: -95.23, west: -95.286 };
 
 // Outline of the KU campus
 const KU = {
-    latitude: 38.9541967,
-    longitude: -95.2597806,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  };
+  latitude: 38.9541967,
+  longitude: -95.2597806,
+  latitudeDelta: 0.01,
+  longitudeDelta: 0.01,
+};
 
 // Variables for what percent of the screen the bottom pane offsets by at various positions
 const BOTTOM_OFFSET_HIGH_HIGH = -0.55;
@@ -130,7 +133,8 @@ export default function TabTwoScreen() {
   const currentRoute = getRoute(state); //get current route
   const hasRoute = currentRoute != null;
   const halfWayIndex = hasRoute ? Math.floor(currentRoute.stops.length / 2) : 0;
-  const safeIndoors = currentRoute?.stops?.[currentNode]?.building !== undefined;
+  const safeIndoors =
+    currentRoute?.stops?.[currentNode]?.building !== undefined;
   const selectedFeatures = state.selectedFeatures; // Read the filter selections that FeatureFilter already manages in Redux.
   // Derive the active tag set reactively — no separate local state needed.
   const activeTags = new Set<Tag>(
@@ -145,29 +149,41 @@ export default function TabTwoScreen() {
     latitudeDelta: 0.001, // smaller = more zoomed in
     longitudeDelta: 0.004, // smaller = more zoomed in
   };
-  
+
   // COMPONENT REF VARIABLES
   const mapRef = useRef<MapView>(null);
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const PANEL_WIDTH = Math.min(screenWidth * 0.6, 320);
-  
+
   // INTERNAL STATE VARIABLES
-  const [routeStatus, setRouteStatus] = useState<"not started" | "previewing" | "started">("not started"); 
+  const [routeStatus, setRouteStatus] = useState<
+    "not started" | "previewing" | "started"
+  >("not started");
   const routeNotStarted = routeStatus == "not started";
   const routeStarted = routeStatus == "started" && hasRoute;
   const isPreviewingRoute = routeStatus == "previewing";
   const [isLockedOnUser, setIsLockedOnUser] = useState(true); // a way to know if we are "following" the user
-  const [locationPermissionStatus, requestLocationPermissions] = Location.useForegroundPermissions();
-  const [isCurrNodeInDoors, setIsCurrNodeInDoors] = useState<boolean>(safeIndoors);
+  const [locationPermissionStatus, requestLocationPermissions] =
+    Location.useForegroundPermissions();
+  const [isCurrNodeInDoors, setIsCurrNodeInDoors] =
+    useState<boolean>(safeIndoors);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [showReroutePrompt, setShowReroutePrompt] = useState(false);
   const [isManualReroute, setIsManualReroute] = useState(false);
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const hasFix = (location?.coords?.latitude ?? 0) !== 0 && (location?.coords?.longitude ?? 0) !== 0; // Simple boolean to represent if we have the users location
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+  const [currLocation, setCurrLocation] = useState<Node | null>(null); // These are used as start and stop for routing.
+  const [destLocations, setDestLocations] = useState<Node[]>([]);
+  const hasFix =
+    (location?.coords?.latitude ?? 0) !== 0 &&
+    (location?.coords?.longitude ?? 0) !== 0; // Simple boolean to represent if we have the users location
 
   // UI STATE VARIABLES
-  const [bottomPanePosition, setBottomPanePosition] = useState<"hamburger" | "mid" | "high">("mid");
+  const [bottomPanePosition, setBottomPanePosition] = useState<
+    "hamburger" | "mid" | "high"
+  >("mid");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // TODO: Figure out how to detect this (Michael knows)
@@ -189,53 +205,70 @@ export default function TabTwoScreen() {
 
   // BOTTOM PANE ANIMATION VARIABLES
   const bottomPaneOffset = useSharedValue<number>(0);
-  const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] = useState(false);
+  const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] =
+    useState(false);
 
   const bottomPaneAnimatedStyle = useAnimatedStyle(() => {
-    return ({
-    
-    transform: [
-      {
-        translateY: bottomPaneOffset.value
-      },
-    ],
-  })});
+    return {
+      transform: [
+        {
+          translateY: bottomPaneOffset.value,
+        },
+      ],
+    };
+  });
 
   const bottomPanePan = Gesture.Pan()
     .onChange((event) => {
-      const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
+      const baseTarget =
+        bottomPanePosition == "mid"
+          ? 0
+          : bottomPanePosition == "high"
+            ? BOTTOM_OFFSET_HIGH * screenHeight
+            : BOTTOM_OFFSET_LOW * screenHeight;
       bottomPaneOffset.value = baseTarget + event.translationY;
-      if(bottomPaneOffset.value > BOTTOM_OFFSET_LOW * screenHeight)
-      {
+      if (bottomPaneOffset.value > BOTTOM_OFFSET_LOW * screenHeight) {
         bottomPaneOffset.value = BOTTOM_OFFSET_LOW * screenHeight;
-      }
-      else if(bottomPaneOffset.value < BOTTOM_OFFSET_HIGH_HIGH * screenHeight)
-      {
+      } else if (
+        bottomPaneOffset.value <
+        BOTTOM_OFFSET_HIGH_HIGH * screenHeight
+      ) {
         bottomPaneOffset.value = BOTTOM_OFFSET_HIGH_HIGH * screenHeight;
       }
     })
     .onFinalize((event) => {
-      const baseTarget = bottomPanePosition == "mid" ? 0 : bottomPanePosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
+      const baseTarget =
+        bottomPanePosition == "mid"
+          ? 0
+          : bottomPanePosition == "high"
+            ? BOTTOM_OFFSET_HIGH * screenHeight
+            : BOTTOM_OFFSET_LOW * screenHeight;
       let newPosition = bottomPanePosition;
-      if(Math.abs(event.translationY) > 0.07 * screenHeight)
-      {
+      if (Math.abs(event.translationY) > 0.07 * screenHeight) {
         const down = event.translationY > 0;
-        if(bottomPanePosition == "high" && down)
-        {
-          newPosition = event.translationY > 0.4 * screenHeight ? "hamburger" : "mid";
-        }
-        else if(bottomPanePosition == "mid")
-        {
+        if (bottomPanePosition == "high" && down) {
+          newPosition =
+            event.translationY > 0.4 * screenHeight ? "hamburger" : "mid";
+        } else if (bottomPanePosition == "mid") {
           newPosition = down ? "hamburger" : "high";
-        }
-        else if(bottomPanePosition == "hamburger" && !down)
-        {
-          newPosition = event.translationY < -0.7 * screenHeight ? "high" : "mid";
+        } else if (bottomPanePosition == "hamburger" && !down) {
+          newPosition =
+            event.translationY < -0.7 * screenHeight ? "high" : "mid";
         }
       }
 
-      const newTarget = newPosition == "mid" ? 0 : newPosition == "high" ? BOTTOM_OFFSET_HIGH * screenHeight : BOTTOM_OFFSET_LOW * screenHeight;
-      bottomPaneOffset.value = withTiming(newTarget, {duration: 100 + 500 * Math.abs(newTarget - baseTarget - event.translationY) / screenHeight});
+      const newTarget =
+        newPosition == "mid"
+          ? 0
+          : newPosition == "high"
+            ? BOTTOM_OFFSET_HIGH * screenHeight
+            : BOTTOM_OFFSET_LOW * screenHeight;
+      bottomPaneOffset.value = withTiming(newTarget, {
+        duration:
+          100 +
+          (500 * Math.abs(newTarget - baseTarget - event.translationY)) /
+            screenHeight,
+      });
       scheduleOnRN(setBottomPanePosition, newPosition);
     });
 
@@ -442,7 +475,7 @@ export default function TabTwoScreen() {
   function hasLocationPermissions(): boolean {
     return locationPermissionStatus?.granted ?? false;
   }
-  
+
   useEffect(() => {
     // Request location permissions on mount and set up location tracking if granted
     if (!hasLocationPermissions()) {
@@ -591,21 +624,20 @@ export default function TabTwoScreen() {
   }
 
   // Compute remaining ETA in minutes whenever the route or currentNode changes
-    const etaMinutes = hasRoute
-      ? calculateRouteTime(remainingRouteMeters(currentRoute, currentNode))
-      : null;
-  
-    const etaText =
-      etaMinutes !== null
-        ? etaMinutes < 1
-          ? "< 1 min"
-          : `${Math.ceil(etaMinutes)} min`
-        : null;
+  const etaMinutes = hasRoute
+    ? calculateRouteTime(remainingRouteMeters(currentRoute, currentNode))
+    : null;
 
-  if (!fontsLoaded)
-  {
+  const etaText =
+    etaMinutes !== null
+      ? etaMinutes < 1
+        ? "< 1 min"
+        : `${Math.ceil(etaMinutes)} min`
+      : null;
+
+  if (!fontsLoaded) {
     return null;
-  } 
+  }
 
   // Render
   return (
@@ -616,8 +648,8 @@ export default function TabTwoScreen() {
           StyleSheet.absoluteFillObject,
           { display: isCurrNodeInDoors ? "none" : "flex" },
         ]}
-        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}> 
-      </View>
+        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}
+      ></View>
       {routeStarted && (
         <View style={styles.instructionBar}>
           {currentRoute?.directions[currentNode] ? (
@@ -645,9 +677,9 @@ export default function TabTwoScreen() {
         showsUserLocation
         onMapReady={() => setMapReady(true)}
         onPanDrag={() => {
-            // If the user manually moves the map, we unlock the "lock on user" mode so they can explore the map freely. They can always re-enable lock on user with the button.
-            if (routeStarted && isLockedOnUser) setIsLockedOnUser(false);
-          }}
+          // If the user manually moves the map, we unlock the "lock on user" mode so they can explore the map freely. They can always re-enable lock on user with the button.
+          if (routeStarted && isLockedOnUser) setIsLockedOnUser(false);
+        }}
         onPress={handleMapPress}
         onRegionChangeComplete={(r) => {
           const lat = clamp(r.latitude, BOUNDS.south, BOUNDS.north);
@@ -662,7 +694,12 @@ export default function TabTwoScreen() {
       >
         {/* Tag markers  */}
         {routeNotStarted && makeTagMarkers()}
-        {currentRoute && <RoutePolyline route={currentRoute} currentNodeIndex={currentNode}></RoutePolyline>}
+        {currentRoute && (
+          <RoutePolyline
+            route={currentRoute}
+            currentNodeIndex={currentNode}
+          ></RoutePolyline>
+        )}
 
         {/* Selected-node pin  */}
         {routeNotStarted && selectedNode && (
@@ -690,36 +727,92 @@ export default function TabTwoScreen() {
       </MapView>
 
       {/* Bottom info card */}
-      {routeNotStarted &&
-      <GestureHandlerRootView style = {styles.bottomPaneWrapper}>
-        <GestureDetector gesture={bottomPanePan}>
-          <Animated.View /*entering={FadeInDown} exiting={FadeOutDown}*/ style={bottomPaneAnimatedStyle}>
-            <BlurView intensity={40} tint={darkLightMode} style = {[styles.bottomPane, {height: (2) * screenHeight, bottom: (-1.6) * screenHeight}]}>
-              <View style = {[styles.blurredInterior, styles.bottomPaneInterior]}>
-                <View style = {styles.bottomPaneGrabHandle}></View>
-                <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
-                  <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
-                    {selectedNode && <Text>Blake Stuff Here</Text>}
-                    {!selectedNode && (<Text>Cole Stuff Here</Text>)}
-                  </ScrollView>
+      {routeNotStarted && (
+        <GestureHandlerRootView style={styles.bottomPaneWrapper}>
+          <GestureDetector gesture={bottomPanePan}>
+            <Animated.View
+              /*entering={FadeInDown} exiting={FadeOutDown}*/ style={
+                bottomPaneAnimatedStyle
+              }
+            >
+              <BlurView
+                intensity={40}
+                tint={darkLightMode}
+                style={[
+                  styles.bottomPane,
+                  { height: 2 * screenHeight, bottom: -1.6 * screenHeight },
+                ]}
+              >
+                <View
+                  style={[styles.blurredInterior, styles.bottomPaneInterior]}
+                >
+                  <View style={styles.bottomPaneGrabHandle}></View>
+                  <View
+                    style={[
+                      styles.bottomPaneChild,
+                      { height: 0.64 * screenHeight, overflow: "hidden" },
+                    ]}
+                  >
+                    <ScrollView
+                      scrollEnabled={
+                        bottomPanePosition == "high" ||
+                        bottomPaneContentIsScrolled
+                      }
+                      onScroll={(e) =>
+                        setBottomPaneContentIsScrolled(
+                          e.nativeEvent.contentOffset.y != 0,
+                        )
+                      }
+                    >
+                      {selectedNode && <Text>Blake Stuff Here</Text>}
+                      {!selectedNode && <Text>Cole Stuff Here</Text>}
+                    </ScrollView>
+                  </View>
                 </View>
-              </View>
-            </BlurView>
-          </Animated.View>
-        </GestureDetector>
-      </GestureHandlerRootView>
-      }
-      {routeNotStarted && bottomPanePosition == "hamburger" &&
-        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style = {[styles.hamburgerButton, {borderRadius: Math.round(0.07 * screenWidth), height: Math.round(0.14 * screenWidth), width: Math.round(0.22 * screenWidth)}]}>
-          <BlurView intensity={40} tint={darkLightMode} style = {[styles.hamburgerBlur]}>
-            <Pressable style = {[styles.blurredInterior, styles.hamburgerBlur, {borderRadius: Math.round(0.07 * screenWidth)}]} onPress={() => {setBottomPanePosition("mid"); bottomPaneOffset.value = withTiming(0, {duration: 500})}}>
-              <Burger fill = "#3C67A8" stroke = "#3C67A8" strokeWidth = {0.5}
+              </BlurView>
+            </Animated.View>
+          </GestureDetector>
+        </GestureHandlerRootView>
+      )}
+      {routeNotStarted && bottomPanePosition == "hamburger" && (
+        <Animated.View
+          entering={FadeInDown}
+          exiting={FadeOutDown}
+          style={[
+            styles.hamburgerButton,
+            {
+              borderRadius: Math.round(0.07 * screenWidth),
+              height: Math.round(0.14 * screenWidth),
+              width: Math.round(0.22 * screenWidth),
+            },
+          ]}
+        >
+          <BlurView
+            intensity={40}
+            tint={darkLightMode}
+            style={[styles.hamburgerBlur]}
+          >
+            <Pressable
+              style={[
+                styles.blurredInterior,
+                styles.hamburgerBlur,
+                { borderRadius: Math.round(0.07 * screenWidth) },
+              ]}
+              onPress={() => {
+                setBottomPanePosition("mid");
+                bottomPaneOffset.value = withTiming(0, { duration: 500 });
+              }}
+            >
+              <Burger
+                fill="#3C67A8"
+                stroke="#3C67A8"
+                strokeWidth={0.5}
                 style={[styles.hamburger]}
               />
             </Pressable>
           </BlurView>
         </Animated.View>
-      }
+      )}
 
       {routeNotStarted && selectedNode && (
         <View style={styles.mapOverlayCard}>
@@ -758,18 +851,20 @@ export default function TabTwoScreen() {
             <Pressable
               style={[styles.bubbleButton, styles.goButton]}
               onPress={() => {
-                const calculatedRoute = route(state, graph.nodes[0], [selectedNode]);
-                
+                const calculatedRoute = route(state, graph.nodes[0], [
+                  selectedNode,
+                ]);
+
                 // If there is no route, log it and return
                 if (!calculatedRoute) {
                   dispatch(clearRoute());
                   console.log("No route found!");
                   return;
                 }
-          
+
                 // Sanitize the route and then push it to the global state
                 dispatch(setRoute(sanitize(calculatedRoute)));
-          
+
                 // Set the destination so it can be refernced later
                 dispatch(
                   setDestination({
@@ -788,14 +883,20 @@ export default function TabTwoScreen() {
         </View>
       )}
       {/* Toggle button */}
-      {!isPanelOpen && (
+      {/* {!isPanelOpen && (
         <Pressable style={styles.featureToggle} onPress={handleFeatureToggle}>
           <OptionsIcon height={42} width={42} />
         </Pressable>
-      )}
+      )} */}
+
+      {/* Search header to allow the user to build a route */}
+      <SearchHeader
+        setDestination={setDestLocations}
+        setCurrLocation={setCurrLocation}
+      />
 
       {/* ── Sliding filter panel ── */}
-      <Animated.View
+      {/* <Animated.View
         style={[styles.sidePanel, { width: PANEL_WIDTH }, animatedPanelStyle]}
         pointerEvents="auto"
       >
@@ -805,7 +906,7 @@ export default function TabTwoScreen() {
             setIsPanelOpen(false);
           }}
         />
-      </Animated.View>
+      </Animated.View> */}
 
       {/* INDOOR LAYER */}
       <View
@@ -821,7 +922,9 @@ export default function TabTwoScreen() {
             currentRoute?.stops?.[currentNode]?.building?.id ?? "none"
           }-${currentRoute?.stops?.[currentNode]?.floor ?? "none"}`}
           instrList={currentRoute?.directions ?? []}
-          setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")}
+          setIsRouteStarted={(isStarted) =>
+            setRouteStatus(isStarted ? "started" : "not started")
+          }
           setShowReroutePrompt={setShowReroutePrompt}
           setIsManualReroute={setIsManualReroute}
         />
@@ -829,7 +932,9 @@ export default function TabTwoScreen() {
       {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
       {isPreviewingRoute && (
         <RouteSummary
-          setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")}
+          setIsRouteStarted={(isStarted) =>
+            setRouteStatus(isStarted ? "started" : "not started")
+          }
           routeLength={currentRoute?.length ?? 0}
           startingLocation={currentRoute?.stops[0]?.name}
           endingLocation={
@@ -839,7 +944,11 @@ export default function TabTwoScreen() {
       )}
       {/* only show end route button if we're outdoors, since indoors we have the end route button in the indoor nav screen */}
       {routeStarted && !isCurrNodeInDoors && (
-        <EndRoute setIsRouteStarted={isStarted => setRouteStatus(isStarted ? "started" : "not started")} />
+        <EndRoute
+          setIsRouteStarted={(isStarted) =>
+            setRouteStatus(isStarted ? "started" : "not started")
+          }
+        />
       )}
       {/* only show lock on user button if we're outdoors and the route has started */}
       {!isLockedOnUser && !isCurrNodeInDoors && routeStarted && (
@@ -912,8 +1021,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "solid",
   },
-  bottomPaneWrapper: {
-  },
+  bottomPaneWrapper: {},
   bottomPane: {
     position: "absolute",
     bottom: 0,
@@ -936,7 +1044,7 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
     overflow: "hidden",
     height: "100%",
-    width: "100%"
+    width: "100%",
   },
   bottomPaneGrabHandle: {
     alignSelf: "center",
@@ -953,7 +1061,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     width: "100%",
     height: "100%",
-    backgroundColor: "#DDDDDD"
+    backgroundColor: "#DDDDDD",
   },
   hamburgerButton: {
     position: "absolute",
@@ -963,12 +1071,12 @@ const styles = StyleSheet.create({
   },
   hamburgerBlur: {
     width: "100%",
-    height: "100%"
+    height: "100%",
   },
   hamburger: {
-    maxWidth: "100%", 
-    maxHeight: "100%", 
-    alignSelf: "center" 
+    maxWidth: "100%",
+    maxHeight: "100%",
+    alignSelf: "center",
   },
   buttonLabel: {
     fontFamily: "OrelegaOne",
