@@ -120,7 +120,7 @@ const KU = {
 };
 
 // Variables for what percent of the screen the bottom pane offsets by at various positions
-const BOTTOM_OFFSET_HIGH_HIGH = -0.55;
+const BOTTOM_OFFSET_HIGH_HIGH = -0.36;
 const BOTTOM_OFFSET_HIGH = -0.27;
 const BOTTOM_OFFSET_LOW = 0.5;
 
@@ -750,7 +750,7 @@ export default function TabTwoScreen() {
                   <View
                     style={[
                       styles.bottomPaneChild,
-                      { height: 0.64 * screenHeight, overflow: "hidden" },
+                      { height: 0.64 * screenHeight },
                     ]}
                   >
                     <ScrollView
@@ -1061,7 +1061,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     width: "100%",
     height: "100%",
-    backgroundColor: "#DDDDDD",
+    overflow: "hidden"
   },
   hamburgerButton: {
     position: "absolute",
