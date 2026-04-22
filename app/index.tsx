@@ -25,9 +25,8 @@ import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
 import {
   setCurrentNode,
-  setDestination,
   useAppDispatch,
-  useAppSelector,
+  useAppSelector
 } from "@/redux/appState";
 import { Asset } from "expo-asset";
 import { BlurView } from "expo-blur";
@@ -759,52 +758,7 @@ export default function TabTwoScreen() {
           </BlurView>
         </Animated.View>
       }
-      {routeNotStarted && selectedNode && DEBUG && (
-        <View style={styles.mapOverlayCard}>
-          
-          <Text style={styles.nodeTitle}>{selectedNode.name}</Text>
-
-          
-          <View style={styles.featuresContainer}>
-            <Text style={styles.featuresLabel}>Location Features:</Text>
-            {selectedNode.tags && selectedNode.tags.length > 0 ? (
-              selectedNode.tags.map((tag: string, index: number) => {
-               
-                const capitalizedTag =
-                  tag.charAt(0).toUpperCase() + tag.slice(1);
-
-                return (
-                  <Text key={index} style={styles.tagText}>
-                    • {capitalizedTag}
-                  </Text>
-                );
-              })
-            ) : (
-              <Text style={styles.tagText}>• No features listed</Text>
-            )}
-          </View>
-
-          
-          <View style={styles.buttonRow}>
-            <Pressable
-              style={[styles.bubbleButton, styles.cancelButton]}
-              onPress={() => setSelectedNode(null)}
-            >
-              <Text style={styles.buttonLabel}>CANCEL</Text>
-            </Pressable>
-
-            <Pressable
-              style={[styles.bubbleButton, styles.goButton]}
-              onPress={() => {
-                dispatch(setDestination({text: selectedNode.name, ids: [selectedNode.id]}));
-                setSelectedNode(null);
-              }}
-            >
-              <Text style={styles.buttonLabel}>GO TO</Text>
-            </Pressable>
-          </View>
-        </View>
-      )}
+     
 
 
       {/* Toggle button */}
