@@ -457,7 +457,8 @@
         "edgeIds": [
             44,
             337
-        ]
+        ],
+        "tags":["private restrooms"]
     },
     {
         "id": 10041,
@@ -1719,7 +1720,8 @@
         ],
         "tags": [
             "computers",
-            "printers"
+            "printers",
+            "bathrooms"
         ]
     },
     {

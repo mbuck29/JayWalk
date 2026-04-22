@@ -5,6 +5,11 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-04-12
  */
+import busStopIcon from "@/assets/images/icons/Map Tags/busStop.svg";
+import computerIcon from "@/assets/images/icons/Map Tags/computer.svg";
+import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
+import printerIcon from "@/assets/images/icons/Map Tags/printer.svg";
+import bathroomIcon from "@/assets/images/icons/Map Tags/privateRestroom.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import OptionsIcon from "@/assets/images/icons/options.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
@@ -71,13 +76,14 @@ const MAX_FORWARD_JUMP = 2; // prevent huge skips unless extremely near
 const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
 
 // Tag → display config
-const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string }> =
+const TAG_CONFIG: Record<Tag, { emoji: string; color: string; label: string; icon: any, }> =
   {
-    bathrooms: { emoji: "🚻", color: "#4A90D9", label: "Restroom" },
-    printers: { emoji: "🖨️", color: "#7B68EE", label: "Printers" },
-    "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop" },
-    food: { emoji: "🍽️", color: "#E05C3A", label: "Food" },
-    computers: { emoji: "💻", color: "#3AAE6E", label: "Computers" },
+    bathrooms: { emoji: "🚻", color: "#4A90D9", label: "Restrooms", icon: bathroomIcon },
+    "private restrooms": { emoji: "🚻", color: "#4A90D9", label: "Private Restrooms", icon: bathroomIcon },
+    printers: { emoji: "🖨️", color: "#7B68EE", label: "Printers", icon: printerIcon},
+    "bus stop": { emoji: "🚌", color: "#E8A020", label: "Bus Stop", icon: busStopIcon },
+    food: { emoji: "🍽️", color: "#E05C3A", label: "Food", icon: foodIcon },
+    computers: { emoji: "💻", color: "#3AAE6E", label: "Computers", icon: computerIcon },
   };
 
 // Priority order — first matching tag wins for the marker icon
@@ -694,12 +700,46 @@ export default function TabTwoScreen() {
                 <View style = {[styles.bottomPaneChild, {height: 0.64 * screenHeight, overflow: "hidden"}]}>
                   <ScrollView scrollEnabled = {bottomPanePosition == "high" || bottomPaneContentIsScrolled} onScroll={e => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
                     {selectedNode && (
-                    <View style={[styles.headerRow]}>
-                      <Text style={{ flex: 1, fontSize: 18 }}>Location Features2</Text>
-                      <Pressable style={[styles.bubbleButton, styles.cancelButton]} onPress={() => setSelectedNode(null)}>
-              <Text style={styles.buttonLabel}>Cancel</Text>
-            </Pressable>
-                      </View>)} 
+                    <View style={styles.selectedNodeContent}>
+                      {/* Header Row with Title and Cancel */}
+                      <View style={styles.locationfeatrues_headerRow}>
+                        <Text style={styles.Locationfeatures_title}>Location Features</Text>
+                        <Pressable 
+                          style={[styles.bubbleButton, styles.cancelButton]} 
+                          onPress={() => setSelectedNode(null)}
+                        >
+                          <Text style={styles.buttonLabel}>Cancel</Text>
+                        </Pressable>
+                      </View>
+
+                    {selectedNode.tags && selectedNode.tags.length > 0 ? (
+                    selectedNode.tags.map((tag: string, index: number) => {
+                      const config = TAG_CONFIG[tag as Tag];
+                      const IconComponent = config?.icon;
+
+                        return (
+                          <View key={index} style={styles.individualTagContainer}>
+                            {IconComponent && (
+                              <View style={styles.iconWrapper}>
+                                <View style={[styles.iconSquare, { backgroundColor: '#223252' }]}>
+                                <IconComponent 
+                                    width={40} 
+                                    height={40}  
+                                />
+                                </View>
+                              </View>
+                            )}
+                            <Text style={styles.tagTextItem}>
+                              {config?.label || tag.charAt(0).toUpperCase() + tag.slice(1)}
+                            </Text>
+                          </View>
+                        );
+                      })
+                    ) : null}
+                    </View>
+                  )}
+
+                      
                     {!selectedNode && (<Text>Cole Stuff Here</Text>)}
                   </ScrollView>
                 </View>
@@ -951,7 +991,7 @@ const styles = StyleSheet.create({
     alignSelf: "center" 
   },
   buttonLabel: {
-    fontFamily: "OrelegaOne",
+    fontFamily: "42dot Sans",
     color: "#fff",
     fontSize: 14,
   },
@@ -993,7 +1033,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cancelButton: { backgroundColor: "#df010c" },
+  cancelButton: { backgroundColor: "#223252" },
   goButton: { backgroundColor: "#356EC4" },
   instructionBar: {
     position: "absolute",
@@ -1043,11 +1083,56 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: "Orelega One",
   },
-  headerRow: {
+  locationfeatrues_headerRow: {
     flexDirection: "row",
     justifyContent: "space-between", // Pushes text left, button right
     alignItems: "center",           // Aligns them vertically in the middle
     marginBottom: 10,
     width: "100%",
+  },
+  selectedNodeContent: {
+    paddingHorizontal: 5,
+    paddingBottom: 15,
+  },
+  Locationfeatures_title: {
+    flex: 1, 
+    fontSize: 18, 
+    fontWeight: '700',
+    color: '#000000',
+  },
+  stackedTagWrapper: {
+    marginTop: 12,
+    flexDirection: 'column', // Stacks them top to bottom
+  },
+  individualTagContainer: {
+    backgroundColor: '#356EC4', 
+    borderColor: 'transparent',
+    borderWidth: 1,
+    borderRadius: 25,
+    paddingHorizontal: 15,
+    paddingVertical: 25,      // More vertical padding for a "button" feel
+    marginBottom: 8,          // Space between the stacked items
+    width: '100%',            // Ensures they are uniform width rectangular containers
+    justifyContent: 'center', // Centers text vertically
+    alignItems: 'center',
+    flexDirection: 'row',
+    position: 'relative',
+  },
+  iconSquare: {
+    width: 55,                // Size of the square
+    height: 55,
+    borderRadius: 18,         // Rounded corners for the square
+    justifyContent: 'center', // Centers the SVG inside the square
+    alignItems: 'center',
+  },
+  iconWrapper: {
+  position: 'absolute',
+  left: 5,                // Distance from the left edge of the container
+  },
+  tagTextItem: {
+    color: '#ffffff', 
+    fontSize: 18,
+    fontWeight: '400',
+    fontFamily: "42dot Sans"
   },
 });

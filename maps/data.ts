@@ -7,7 +7,7 @@
  */
 
 export type RouteType = "sidewalk" | "crosswalk" | "stairs" | "stairwell" | "elevator" | "hallway" | "room" | "ramp" | "door" | "doorway" | "bridge" | "atrium" | "ignore" | "steps"
-export type Tag = "bathrooms" | "printers" |"bus stop" | "food" | "computers"
+export type Tag = "bathrooms" | "printers" |"bus stop" | "food" | "computers"|"private restrooms"
 /**
  * An edge (path) in the graph
  */
