@@ -1085,8 +1085,8 @@ const styles = StyleSheet.create({
   },
   locationfeatrues_headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between", // Pushes text left, button right
-    alignItems: "center",           // Aligns them vertically in the middle
+    justifyContent: "space-between", 
+    alignItems: "center",  
     marginBottom: 10,
     width: "100%",
   },
@@ -1102,7 +1102,7 @@ const styles = StyleSheet.create({
   },
   stackedTagWrapper: {
     marginTop: 12,
-    flexDirection: 'column', // Stacks them top to bottom
+    flexDirection: 'column', 
   },
   individualTagContainer: {
     backgroundColor: '#356EC4', 
@@ -1110,24 +1110,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 25,
     paddingHorizontal: 15,
-    paddingVertical: 25,      // More vertical padding for a "button" feel
-    marginBottom: 8,          // Space between the stacked items
-    width: '100%',            // Ensures they are uniform width rectangular containers
-    justifyContent: 'center', // Centers text vertically
+    paddingVertical: 25,    
+    marginBottom: 8, 
+    width: '100%',  
+    justifyContent: 'center',
     alignItems: 'center',
     flexDirection: 'row',
     position: 'relative',
   },
   iconSquare: {
-    width: 55,                // Size of the square
+    width: 55,  
     height: 55,
-    borderRadius: 18,         // Rounded corners for the square
-    justifyContent: 'center', // Centers the SVG inside the square
+    borderRadius: 18,        
+    justifyContent: 'center',
     alignItems: 'center',
   },
   iconWrapper: {
   position: 'absolute',
-  left: 5,                // Distance from the left edge of the container
+  left: 5, 
   },
   tagTextItem: {
     color: '#ffffff', 
