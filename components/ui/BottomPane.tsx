@@ -9,154 +9,191 @@
 import { BlurView } from "expo-blur";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { Gesture, GestureDetector, GestureHandlerRootView } from "react-native-gesture-handler";
-import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 
-interface BottomPaneParams
-{
-    position: "low" | "mid" | "high",
-    setPosition: (position: "low" | "mid" | "high") => void,
-    lowPosition: number,
-    midPosition: number,
-    highPosition: number,
-    minPosition: number,
-    maxPosition: number,
-    screenHeight: number,
+interface BottomPaneParams {
+  position: "low" | "mid" | "high";
+  setPosition: (position: "low" | "mid" | "high") => void;
+  lowPosition: number;
+  midPosition: number;
+  highPosition: number;
+  minPosition: number;
+  maxPosition: number;
+  screenHeight: number;
+  blurTint: "light" | "dark";
 }
 
-export default function BottomPane({ position, setPosition, lowPosition, midPosition, highPosition, minPosition, maxPosition, screenHeight, children }: PropsWithChildren<BottomPaneParams>)
-{
-    // BOTTOM PANE ANIMATION VARIABLES
-    const bottomPaneOffset = useSharedValue<number>(0);
-    const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] = useState(false);
-    const [forceUpdate, setForceUpdate] = useState(false);
+export default function BottomPane({
+  position,
+  setPosition,
+  lowPosition,
+  midPosition,
+  highPosition,
+  minPosition,
+  maxPosition,
+  screenHeight,
+  blurTint,
+  children,
+}: PropsWithChildren<BottomPaneParams>) {
+  // BOTTOM PANE ANIMATION VARIABLES
+  const bottomPaneOffset = useSharedValue<number>(0);
+  const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] =
+    useState(false);
+  const [forceUpdate, setForceUpdate] = useState(false);
 
-    const darkLightMode = "light";
+  const bottomPaneAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      transform: [
+        {
+          translateY: bottomPaneOffset.value,
+        },
+      ],
+    };
+  });
 
-    const bottomPaneAnimatedStyle = useAnimatedStyle(() =>
-    {
-        return {
-            transform: [
-                {
-                    translateY: bottomPaneOffset.value,
-                }
-            ]
-        };
+  useEffect(() => {
+    const target =
+      position == "mid"
+        ? midPosition
+        : position == "high"
+          ? highPosition
+          : lowPosition;
+
+    bottomPaneOffset.value = withTiming(target, {
+      duration:
+        100 + (500 * Math.abs(target - bottomPaneOffset.value)) / screenHeight,
     });
+  }, [position, forceUpdate]);
 
-    useEffect(() =>
-    {
-        const target = position == "mid" ? midPosition : position == "high" ? highPosition : lowPosition;
+  const bottomPanePan = Gesture.Pan()
+    .onChange((event) => {
+      const baseTarget =
+        position == "mid"
+          ? midPosition
+          : position == "high"
+            ? highPosition
+            : minPosition;
+      bottomPaneOffset.value = baseTarget + event.translationY;
+      if (bottomPaneOffset.value > minPosition) {
+        bottomPaneOffset.value = minPosition;
+      } else if (bottomPaneOffset.value < maxPosition) {
+        bottomPaneOffset.value = maxPosition;
+      }
+    })
+    .onFinalize((event) => {
+      let newPosition = position;
+      if (Math.abs(event.translationY) > 0.07 * screenHeight) {
+        const down = event.translationY > 0;
+        if (position == "high" && down) {
+          newPosition = event.translationY > 0.4 * screenHeight ? "low" : "mid";
+        } else if (position == "mid") {
+          newPosition = down ? "low" : "high";
+        } else if (position == "low" && !down) {
+          newPosition =
+            event.translationY < -0.7 * screenHeight ? "high" : "mid";
+        }
+      }
 
-        bottomPaneOffset.value = withTiming(target, { duration: 100 + (500 * Math.abs(target - bottomPaneOffset.value)) / screenHeight });
-    }, [position, forceUpdate]);
-
-    const bottomPanePan = Gesture.Pan()
-        .onChange((event) =>
-        {
-            const baseTarget = position == "mid" ? midPosition : position == "high" ? highPosition : minPosition;
-            bottomPaneOffset.value = baseTarget + event.translationY;
-            if(bottomPaneOffset.value > minPosition)
-            {
-                bottomPaneOffset.value = minPosition;
-            }
-            else if(bottomPaneOffset.value < maxPosition)
-            {
-                bottomPaneOffset.value = maxPosition;
-            }
-        })
-        .onFinalize((event) =>
-        {
-            let newPosition = position;
-            if(Math.abs(event.translationY) > 0.07 * screenHeight)
-            {
-                const down = event.translationY > 0;
-                if(position == "high" && down)
-                {
-                    newPosition = event.translationY > 0.4 * screenHeight ? "low" : "mid";
-                }
-                else if(position == "mid")
-                {
-                    newPosition = down ? "low" : "high";
-                }
-                else if(position == "low" && !down)
-                {
-                    newPosition = event.translationY < -0.7 * screenHeight ? "high" : "mid";
-                }
-            }
-
-            scheduleOnRN(setPosition, newPosition);
-            scheduleOnRN(setForceUpdate, !forceUpdate);
-        });
-    return (
-        <GestureHandlerRootView style={styles.bottomPaneWrapper}>
-            <GestureDetector gesture={bottomPanePan}>
-                <Animated.View style={bottomPaneAnimatedStyle}>
-                    <BlurView intensity={40} tint={darkLightMode} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
-                        <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
-                            <View style={styles.bottomPaneGrabHandle}></View>
-                            <View style={[styles.bottomPaneChild, { height: 0.64 * screenHeight }]}>
-                                <ScrollView scrollEnabled={position == "high" || bottomPaneContentIsScrolled}
-                                    onScroll={(e) => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
-                                    {children}
-                                </ScrollView>
-                            </View>
-                        </View>
-                    </BlurView>
-                </Animated.View>
-            </GestureDetector>
-        </GestureHandlerRootView>
-    );
+      scheduleOnRN(setPosition, newPosition);
+      scheduleOnRN(setForceUpdate, !forceUpdate);
+    });
+  return (
+    <GestureHandlerRootView style={styles.bottomPaneWrapper}>
+      <GestureDetector gesture={bottomPanePan}>
+        <Animated.View style={bottomPaneAnimatedStyle}>
+          <BlurView
+            intensity={40}
+            tint={blurTint}
+            style={[
+              styles.bottomPane,
+              { height: 2 * screenHeight, bottom: -1.6 * screenHeight },
+            ]}
+          >
+            <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
+              <View style={styles.bottomPaneGrabHandle}></View>
+              <View
+                style={[
+                  styles.bottomPaneChild,
+                  { height: 0.64 * screenHeight },
+                ]}
+              >
+                <ScrollView
+                  scrollEnabled={
+                    position == "high" || bottomPaneContentIsScrolled
+                  }
+                  onScroll={(e) =>
+                    setBottomPaneContentIsScrolled(
+                      e.nativeEvent.contentOffset.y != 0,
+                    )
+                  }
+                >
+                  {children}
+                </ScrollView>
+              </View>
+            </View>
+          </BlurView>
+        </Animated.View>
+      </GestureDetector>
+    </GestureHandlerRootView>
+  );
 }
-
 
 const styles = StyleSheet.create({
-    blurredInterior: {
-        borderColor: "rgba(255,255,255,0.35)",
-        borderWidth: 1,
-        borderStyle: "solid",
-    },
-    bottomPaneWrapper: {},
-    bottomPane: {
-        position: "absolute",
-        bottom: 0,
-        left: "1%",
-        right: 0,
-        width: "98%",
-        borderRadius: 60,
-        borderTopLeftRadius: 60,
-        borderTopRightRadius: 60,
-        zIndex: 100,
-        overflow: "hidden",
-    },
-    bottomPaneInterior: {
-        flexDirection: "column",
-        borderRadius: 60,
-        borderTopLeftRadius: 60,
-        borderTopRightRadius: 60,
-        paddingHorizontal: 30,
-        paddingTop: 15,
-        paddingBottom: 40,
-        overflow: "hidden",
-        height: "100%",
-        width: "100%",
-    },
-    bottomPaneGrabHandle: {
-        alignSelf: "center",
-        display: "flex",
-        width: 50,
-        height: 2,
-        borderRadius: 1,
-        paddingTop: 0,
-        backgroundColor: "#356EC4",
-    },
-    bottomPaneChild: {
-        alignSelf: "center",
-        display: "flex",
-        flexDirection: "column",
-        width: "100%",
-        height: "100%",
-        overflow: "hidden",
-    }
+  blurredInterior: {
+    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1,
+    borderStyle: "solid",
+  },
+  bottomPaneWrapper: {},
+  bottomPane: {
+    position: "absolute",
+    bottom: 0,
+    left: "1%",
+    right: 0,
+    width: "98%",
+    borderRadius: 60,
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
+    zIndex: 100,
+    overflow: "hidden",
+  },
+  bottomPaneInterior: {
+    flexDirection: "column",
+    borderRadius: 60,
+    borderTopLeftRadius: 60,
+    borderTopRightRadius: 60,
+    paddingHorizontal: 30,
+    paddingTop: 15,
+    paddingBottom: 40,
+    overflow: "hidden",
+    height: "100%",
+    width: "100%",
+  },
+  bottomPaneGrabHandle: {
+    alignSelf: "center",
+    display: "flex",
+    width: 50,
+    height: 2,
+    borderRadius: 1,
+    paddingTop: 0,
+    backgroundColor: "#356EC4",
+  },
+  bottomPaneChild: {
+    alignSelf: "center",
+    display: "flex",
+    flexDirection: "column",
+    width: "100%",
+    height: "100%",
+    overflow: "hidden",
+  },
 });
