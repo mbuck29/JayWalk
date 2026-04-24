@@ -746,8 +746,11 @@ export default function TabTwoScreen() {
               </Text>
               <Pressable
                 style={[styles.bubbleButton, styles.cancelButton]}
-                onPress={() => setSelectedNode(null)}
-              >
+                onPress={() => 
+                  {setSelectedNode(null);
+                    setDestLocationText("");
+                    setDestLocations([]);
+                  }}>
                 <Text style={styles.buttonLabel}>Cancel</Text>
               </Pressable>
             </View>
