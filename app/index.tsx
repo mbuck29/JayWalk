@@ -564,7 +564,9 @@ export default function TabTwoScreen() {
         tags: "tags" in closest ? closest.tags : [], // only default if missing
       };
 
-      setSelectedNode(selectedNodeSafe); // <-- only set state
+      setSelectedNode(selectedNodeSafe);
+      setDestLocationText(selectedNodeSafe.name || "Selected Location");
+      setDestLocations([selectedNodeSafe]);
     }
   }
 
