@@ -14,8 +14,8 @@ import Burger from "@/assets/images/icons/Misc/burger.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import BottomPane from "@/components/ui/BottomPane";
 import EndRoute from "@/components/ui/EndRoute";
-import FeatureFilter from "@/components/ui/FeatureFilter";
 import LockOnUser from "@/components/ui/lockOnUser";
+import NewIndoorNav from "@/components/ui/NewIndoorNav";
 import ReroutePrompt from "@/components/ui/ReroutePrompt";
 import RoutePolyline from "@/components/ui/RoutePolyline";
 import RouteSummary from "@/components/ui/RouteSummary";
@@ -23,7 +23,8 @@ import SearchHeader from "@/components/ui/SearchHeader";
 import TagMarker from "@/components/ui/TagMarker";
 import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
-import {
+import
+{
   clearRoute,
   setCurrentNode,
   setDestination,
@@ -37,7 +38,8 @@ import { BlurView } from "expo-blur";
 import { useFonts } from "expo-font";
 import * as Location from "expo-location";
 import { default as React, useEffect, useRef, useState } from "react";
-import {
+import
+{
   Image,
   Pressable,
   StyleSheet,
@@ -57,11 +59,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { watchLocation } from "./Utils/location";
 import { route } from "./Utils/routing";
-import {
+import
+{
   calculateRouteTime,
   haversineMeters,
   remainingRouteMeters,
-  sanitize,
+  sanitize
 } from "./Utils/routingUtils";
 import { getRoute } from "./Utils/state";
 
@@ -81,7 +84,7 @@ const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
 // Tag → display config
 const TAG_CONFIG: Record<
   Tag,
-  { emoji: string; color: string; label: string; icon: any }
+  { emoji: string; color: string; label: string; icon: any; }
 > = {
   bathrooms: {
     emoji: "🚻",
@@ -152,7 +155,8 @@ const BOTTOM_OFFSET_HIGH_HIGH = -0.35;
 const BOTTOM_OFFSET_HIGH = -0.27;
 const BOTTOM_OFFSET_LOW = 0.5;
 
-export default function TabTwoScreen() {
+export default function TabTwoScreen()
+{
   const dispatch = useAppDispatch();
 
   // Copy the users perfered mode
@@ -236,7 +240,8 @@ export default function TabTwoScreen() {
 
   // This function handles making sure that the user has entered both a current
   // location and a destination before starting routing.
-  const handleStartRoutingPress = () => {
+  const handleStartRoutingPress = () =>
+  {
     console.log("Start routing pressed.");
     // Before we start routing we need to know from and to for the algo to work
     console.log(`Routing from ${currLocation?.name} to ${destLocationText}...`);
@@ -245,7 +250,8 @@ export default function TabTwoScreen() {
     const calculatedRoute = route(state, currLocation!, destLocations);
 
     // If there is no route, log it and return
-    if (!calculatedRoute) {
+    if(!calculatedRoute)
+    {
       dispatch(clearRoute());
       console.log("No route found!");
       return;
@@ -270,10 +276,29 @@ export default function TabTwoScreen() {
     OrelegaOne: require("../assets/fonts/OrelegaOne-Regular.ttf"),
   });
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     //load custom marker
     Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
   }, []);
+
+  useEffect(() =>
+  {
+    if(currentRoute?.route.length ?? 0 > 0)
+    {
+      return;
+    }
+
+    const r = route(state, graph.nodes[100], [graph.nodes[0]]);
+
+    if(!r)
+    {
+      return;
+    }
+
+    dispatch(setRoute(sanitize(r)));
+    setRouteStatus("previewing");
+  }, [currentRoute]);
 
   // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
   const candidateRef = useRef<number | null>(null);
@@ -281,29 +306,30 @@ export default function TabTwoScreen() {
   const missRef = useRef(0);
   const lastSetAtRef = useRef(0);
 
-  useEffect(() => {
-    if (!routeStarted) return; // only track location and advance if the route has started
-    if (!location) return; // need location to do anything
-    if (!hasRoute) return; // need a route to do anything
+  useEffect(() =>
+  {
+    if(!routeStarted) return; // only track location and advance if the route has started
+    if(!location) return; // need location to do anything
+    if(!hasRoute) return; // need a route to do anything
 
     // Determine indoor/outdoor based on the stop itself, since outdoor stops have real GPS coords
     // and indoor stops use indoor-map coordinates
     const isCurrNodeInDoors =
       currentRoute?.stops?.[currentNode]?.building !== undefined;
-    if (isCurrNodeInDoors) return; // only track outdoors here
+    if(isCurrNodeInDoors) return; // only track outdoors here
 
     const now = Date.now();
-    if (now - lastSetAtRef.current < 800) return; // small cooldown between polling the locaiton
+    if(now - lastSetAtRef.current < 800) return; // small cooldown between polling the locaiton
 
     // Grab the users gps accuracy to see if its to bad to use
     const acc = location.coords.accuracy ?? 999;
-    if (acc > MAX_ACC) return;
+    if(acc > MAX_ACC) return;
 
     // Get the users cordiantes
     const { latitude: userLat, longitude: userLng } = location.coords;
 
     const n = currentRoute.stops.length;
-    if (!n) return; // Small check to make sure we are doing operations on an empty list
+    if(!n) return; // Small check to make sure we are doing operations on an empty list
 
     // -------- Transition cooldown (prevents big jumps right after indoor->outdoor flips) --------
     // If we *just* flipped to outdoors, be conservative for a few seconds.
@@ -318,7 +344,8 @@ export default function TabTwoScreen() {
     (TabTwoScreen as any)._prevIndoorsRef = prevIndoorsRef;
     (TabTwoScreen as any)._lastFlipAtRef = lastFlipAtRef;
 
-    if (prevIndoorsRef.current !== isCurrNodeInDoors) {
+    if(prevIndoorsRef.current !== isCurrNodeInDoors)
+    {
       lastFlipAtRef.current = now;
       prevIndoorsRef.current = isCurrNodeInDoors;
     }
@@ -351,13 +378,15 @@ export default function TabTwoScreen() {
     // Loop through the allowable stops that can be jumped to from the current stop based on the forward
     // and backward windows. For each one use its cordinates and get its distance from the users location.
     // IMPORTANT: only consider OUTDOOR stops while outdoors
-    for (let i = start; i <= end; i++) {
+    for(let i = start; i <= end; i++)
+    {
       const isIndoorCandidate = currentRoute.stops[i]?.building !== undefined;
-      if (isIndoorCandidate) continue;
+      if(isIndoorCandidate) continue;
 
       const s = currentRoute.stops[i];
       const d = haversineMeters(userLat, userLng, s.y, s.x);
-      if (d < bestDist) {
+      if(d < bestDist)
+      {
         bestDist = d;
         bestIdx = i;
       }
@@ -370,7 +399,8 @@ export default function TabTwoScreen() {
     // current node
     const isClearlyBetter = bestDist + SWITCH_HYST < curDist;
 
-    if (!isNearBest && !isClearlyBetter) {
+    if(!isNearBest && !isClearlyBetter)
+    {
       // no strong evidence, reset candidate/hits
       candidateRef.current = null;
       hitsRef.current = 0;
@@ -380,12 +410,14 @@ export default function TabTwoScreen() {
     // This prevents big forward skips unless we are really sure and really close to that node
     const delta = bestIdx - currentNode;
     const maxJumpNow = inCooldown ? 1 : MAX_FORWARD_JUMP;
-    if (delta > maxJumpNow && bestDist > SUPER_NEAR) {
+    if(delta > maxJumpNow && bestDist > SUPER_NEAR)
+    {
       missRef.current += 1; // if we are not close to any nodes then we want to count that as a miss
 
       // If we miss enough times that means that we are no longer on the path
       // So we will show the message to the user that need to reroute so we can give them acurate info
-      if (missRef.current > 3) {
+      if(missRef.current > 3)
+      {
         setIsManualReroute(false);
         setShowReroutePrompt(true);
         missRef.current = 0;
@@ -394,9 +426,11 @@ export default function TabTwoScreen() {
     }
 
     // Increment the hits ref if we got the same index twice
-    if (candidateRef.current === bestIdx) {
+    if(candidateRef.current === bestIdx)
+    {
       hitsRef.current += 1;
-    } else {
+    } else
+    {
       // If we got a new best then start the count for that
       candidateRef.current = bestIdx;
       hitsRef.current = 1;
@@ -405,26 +439,31 @@ export default function TabTwoScreen() {
     // If the amount of hits for a node has passed the threshold needed and its not the current node
     // then we want to set that as the current node, even if its backwards or forwards more than one
     // As well as reset all the refs
-    if (hitsRef.current >= CONFIRM_HITS && bestIdx !== currentNode) {
+    if(hitsRef.current >= CONFIRM_HITS && bestIdx !== currentNode)
+    {
       // -------- Doorway snap logic (outdoors -> indoors) --------
       // Find the next indoor stop after our chosen outdoor bestIdx.
       // Only snap inside if we are *actually near the outdoor doorway stop*.
       let nextIndoorIdx = -1;
-      for (let j = bestIdx + 1; j < n; j++) {
-        if (currentRoute.stops[j]?.building !== undefined) {
+      for(let j = bestIdx + 1; j < n; j++)
+      {
+        if(currentRoute.stops[j]?.building !== undefined)
+        {
           nextIndoorIdx = j;
           break;
         }
         // stop scanning once we find the first indoor stop after this outdoor run
       }
 
-      if (nextIndoorIdx !== -1) {
+      if(nextIndoorIdx !== -1)
+      {
         const doorwayIdx = nextIndoorIdx - 1; // last outdoor stop before going indoors
         const doorwayIsOutdoor =
           doorwayIdx >= 0 &&
           currentRoute.stops[doorwayIdx]?.building === undefined;
 
-        if (doorwayIsOutdoor) {
+        if(doorwayIsOutdoor)
+        {
           const doorStop = currentRoute.stops[doorwayIdx];
           const distToDoor = haversineMeters(
             userLat,
@@ -434,7 +473,8 @@ export default function TabTwoScreen() {
           );
 
           // Only snap indoors when we're actually at the doorway outdoor stop
-          if (distToDoor <= NEAR_METERS) {
+          if(distToDoor <= NEAR_METERS)
+          {
             dispatch(setCurrentNode(nextIndoorIdx));
             lastSetAtRef.current = now;
             candidateRef.current = null;
@@ -455,7 +495,8 @@ export default function TabTwoScreen() {
   }, [location, routeStatus, currentRoute, currentNode]);
 
   // Update whether we're indoors or outdoors whenever we change nodes or routes
-  useEffect(() => {
+  useEffect(() =>
+  {
     setIsCurrNodeInDoors(
       currentRoute?.stops?.[currentNode]?.building !== undefined,
     );
@@ -464,18 +505,22 @@ export default function TabTwoScreen() {
   }, [currentNode, currentRoute]);
 
   // Function to check current location permissions
-  function hasLocationPermissions(): boolean {
+  function hasLocationPermissions(): boolean
+  {
     return locationPermissionStatus?.granted ?? false;
   }
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     // Request location permissions on mount and set up location tracking if granted
-    if (!hasLocationPermissions()) {
+    if(!hasLocationPermissions())
+    {
       requestLocationPermissions();
     }
 
     // If we have location permissions, add a watcher for when they move
-    if (hasLocationPermissions() && !DEBUG_SPOOF) {
+    if(hasLocationPermissions() && !DEBUG_SPOOF)
+    {
       watchLocation(setLocation, (errorReason) =>
         console.log("Location error: " + errorReason),
       );
@@ -485,20 +530,24 @@ export default function TabTwoScreen() {
   const clamp = (v: number, min: number, max: number) =>
     Math.min(max, Math.max(min, v));
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     // Optional “cool” zoom-in animation on mount
     mapRef.current?.animateToRegion(routeOverview, 900);
   }, []);
 
   // Render tag markers for every node that has at least one active tag.
   // Uses the highest-priority matching tag for the icon.
-  function makeTagMarkers() {
+  function makeTagMarkers()
+  {
     return graph.nodes
-      .filter((node) => {
-        if (node.name?.startsWith("~")) return false;
+      .filter((node) =>
+      {
+        if(node.name?.startsWith("~")) return false;
         return node.tags?.some((t) => activeTags.has(t));
       })
-      .map((node) => {
+      .map((node) =>
+      {
         const primaryTag =
           TAG_PRIORITY.find(
             (t) => node.tags.includes(t) && activeTags.has(t),
@@ -511,7 +560,8 @@ export default function TabTwoScreen() {
             key={`tag-${node.id}`}
             node={node}
             config={config}
-            onPress={() => {
+            onPress={() =>
+            {
               const safe = { ...node, tags: node.tags ?? [] };
               setSelectedNode(safe);
             }}
@@ -521,11 +571,13 @@ export default function TabTwoScreen() {
   }
 
   // Debug helpers (unchanged)
-  function makeDataLines(graph: Graph) {
+  function makeDataLines(graph: Graph)
+  {
     let i = 0;
     const out = [];
-    for (const edge of graph.edges) {
-      if (edge.indoors) continue;
+    for(const edge of graph.edges)
+    {
+      if(edge.indoors) continue;
       out.push(
         <Polyline
           coordinates={[
@@ -544,15 +596,18 @@ export default function TabTwoScreen() {
   }
 
   // REMOVE THIS FOR TESTING ONLY
-  useEffect(() => {
+  useEffect(() =>
+  {
     console.log("routeStatus", routeStatus);
   }, [routeStatus]);
 
   // Map press -> select closest named node
-  function handleMapPress(e: any) {
+  function handleMapPress(e: any)
+  {
     const { latitude, longitude } = e.nativeEvent.coordinate;
     const closest = getClosestNode(latitude, longitude, graph);
-    if (closest != null) {
+    if(closest != null)
+    {
       console.log("Closest node:", {
         id: closest.id,
         name: closest.name,
@@ -568,15 +623,18 @@ export default function TabTwoScreen() {
     }
   }
 
-  function getClosestNode(lat: number, lng: number, graph: Graph) {
+  function getClosestNode(lat: number, lng: number, graph: Graph)
+  {
     let bestNode = null;
     let bestDist = Infinity;
-    for (const node of graph.nodes) {
-      if (node.name?.startsWith("~")) continue;
+    for(const node of graph.nodes)
+    {
+      if(node.name?.startsWith("~")) continue;
       const dLat = lat - node.y;
       const dLng = lng - node.x;
       const dist = dLat * dLat + dLng * dLng;
-      if (dist < bestDist) {
+      if(dist < bestDist)
+      {
         bestDist = dist;
         bestNode = node;
       }
@@ -584,22 +642,25 @@ export default function TabTwoScreen() {
     return bestNode;
   }
 
-  function handleFeatureToggle() {
+  function handleFeatureToggle()
+  {
     panelOpen.value = !panelOpen.value;
     setIsPanelOpen(!isPanelOpen);
   }
 
-  useEffect(() => {
+  useEffect(() =>
+  {
     mapRef.current?.animateToRegion(KU, 900);
   }, []);
 
   // If we're locked on the user and the route has started and we have a location fix, keep the map centered on them
-  useEffect(() => {
-    if (!mapReady) return; //
-    if (!isLockedOnUser) return; // only auto-center if we're locked on the user
-    if (!routeStarted) return; // only auto-center if the route has started
-    if (!hasFix) return; // only auto-center if we have a location fix
-    if (!location) return;
+  useEffect(() =>
+  {
+    if(!mapReady) return; //
+    if(!isLockedOnUser) return; // only auto-center if we're locked on the user
+    if(!routeStarted) return; // only auto-center if the route has started
+    if(!hasFix) return; // only auto-center if we have a location fix
+    if(!location) return;
 
     // Animate the map to the user's current location with a nice zoom level for walking
     mapRef.current?.animateToRegion(
@@ -615,7 +676,8 @@ export default function TabTwoScreen() {
 
   // We have automatic reroute if the user leaves the path, but we also allow the user to
   // manually reroute in the case that we didnt catch that they left the route or other reasons
-  function handleManualReroute() {
+  function handleManualReroute()
+  {
     setIsManualReroute(true);
     setShowReroutePrompt(true);
   }
@@ -632,7 +694,8 @@ export default function TabTwoScreen() {
         : `${Math.ceil(etaMinutes)} min`
       : null;
 
-  if (!fontsLoaded) {
+  if(!fontsLoaded)
+  {
     return null;
   }
 
@@ -645,9 +708,9 @@ export default function TabTwoScreen() {
           StyleSheet.absoluteFillObject,
           { display: isCurrNodeInDoors ? "none" : "flex" },
         ]}
-        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}
-      ></View>
-      {routeStarted && (
+        pointerEvents={isCurrNodeInDoors ? "none" : "auto"}>
+      </View>
+      {routeStarted && !isCurrNodeInDoors && (
         <View style={styles.instructionBar}>
           {currentRoute?.directions[currentNode] ? (
             <Text style={styles.instructionText}>
@@ -673,15 +736,18 @@ export default function TabTwoScreen() {
         zoomEnabled={!isPreviewingRoute} // Lock zooming if not started
         showsUserLocation
         onMapReady={() => setMapReady(true)}
-        onPanDrag={() => {
+        onPanDrag={() =>
+        {
           // If the user manually moves the map, we unlock the "lock on user" mode so they can explore the map freely. They can always re-enable lock on user with the button.
-          if (routeStarted && isLockedOnUser) setIsLockedOnUser(false);
+          if(routeStarted && isLockedOnUser) setIsLockedOnUser(false);
         }}
         onPress={handleMapPress}
-        onRegionChangeComplete={(r) => {
+        onRegionChangeComplete={(r) =>
+        {
           const lat = clamp(r.latitude, BOUNDS.south, BOUNDS.north);
           const lng = clamp(r.longitude, BOUNDS.west, BOUNDS.east);
-          if (lat !== r.latitude || lng !== r.longitude) {
+          if(lat !== r.latitude || lng !== r.longitude)
+          {
             mapRef.current?.animateToRegion(
               { ...r, latitude: lat, longitude: lng },
               120,
@@ -723,8 +789,8 @@ export default function TabTwoScreen() {
         {DEBUG && makeDataLines(graph)}
       </MapView>
 
-      {/* Bottom info card */}
-      <BottomPane
+      {/* Bottom info card */};
+      {routeNotStarted && <BottomPane
         position={bottomPanePosition}
         setPosition={setBottomPanePosition}
         lowPosition={BOTTOM_OFFSET_LOW * screenHeight}
@@ -735,6 +801,7 @@ export default function TabTwoScreen() {
         screenHeight={screenHeight}
         blurTint={blurTint}
       >
+
         {selectedNode && (
           <View style={styles.selectedNodeContent}>
             {/* Header Row with Title and Cancel */}
@@ -751,73 +818,48 @@ export default function TabTwoScreen() {
             </View>
 
             {selectedNode.tags && selectedNode.tags.length > 0
-              ? selectedNode.tags.map((tag: string, index: number) => {
-                  const config = TAG_CONFIG[tag as Tag];
-                  const IconComponent = config?.icon;
+              ? selectedNode.tags.map((tag: string, index: number) =>
+              {
+                const config = TAG_CONFIG[tag as Tag];
+                const IconComponent = config?.icon;
 
-                  return (
-                    <View key={index} style={styles.individualTagContainer}>
-                      {IconComponent && (
-                        <View style={styles.iconWrapper}>
-                          <View
-                            style={[
-                              styles.iconSquare,
-                              { backgroundColor: "#223252" },
-                            ]}
-                          >
-                            <IconComponent width={40} height={40} />
-                          </View>
+                return (
+                  <View key={index} style={styles.individualTagContainer}>
+                    {IconComponent && (
+                      <View style={styles.iconWrapper}>
+                        <View
+                          style={[
+                            styles.iconSquare,
+                            { backgroundColor: "#223252" },
+                          ]}
+                        >
+                          <IconComponent width={40} height={40} />
                         </View>
-                      )}
-                      <Text style={styles.tagTextItem}>
-                        {config?.label ||
-                          tag.charAt(0).toUpperCase() + tag.slice(1)}
-                      </Text>
-                    </View>
-                  );
-                })
+                      </View>
+                    )}
+                    <Text style={styles.tagTextItem}>
+                      {config?.label ||
+                        tag.charAt(0).toUpperCase() + tag.slice(1)}
+                    </Text>
+                  </View>
+                );
+              })
               : null}
           </View>
-        )}
+        )};
 
-        {!selectedNode && <Text>Cole Stuff Here</Text>}
-      </BottomPane>
-      {bottomPanePosition == "low" && (
-        <Animated.View
-          entering={FadeInDown}
-          exiting={FadeOutDown}
-          style={[
-            styles.hamburgerButton,
-            {
-              borderRadius: Math.round(0.07 * screenWidth),
-              height: Math.round(0.14 * screenWidth),
-              width: Math.round(0.22 * screenWidth),
-            },
-          ]}
-        >
-          <BlurView
-            intensity={40}
-            tint={blurTint}
-            style={[styles.hamburgerBlur]}
-          >
-            <Pressable
-              style={[
-                styles.blurredInterior,
-                styles.hamburgerBlur,
-                { borderRadius: Math.round(0.07 * screenWidth) },
-              ]}
-              onPress={() => setBottomPanePosition("mid")}
-            >
-              <Burger
-                fill="#3C67A8"
-                stroke="#3C67A8"
-                strokeWidth={0.5}
+        {!selectedNode && (<Text>Cole Stuff Here</Text>)}
+      </BottomPane>}
+      {routeNotStarted && bottomPanePosition == "low" &&
+        <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={[styles.hamburgerButton, { borderRadius: Math.round(0.07 * screenWidth), height: Math.round(0.14 * screenWidth), width: Math.round(0.22 * screenWidth) }]}>
+          <BlurView intensity={40} tint={blurTint} style={[styles.hamburgerBlur]}>
+            <Pressable style={[styles.blurredInterior, styles.hamburgerBlur, { borderRadius: Math.round(0.07 * screenWidth) }]} onPress={() => setBottomPanePosition("mid")}>
+              <Burger fill="#3C67A8" stroke="#3C67A8" strokeWidth={0.5}
                 style={[styles.hamburger]}
               />
             </Pressable>
           </BlurView>
-        </Animated.View>
-      )}
+        </Animated.View>}
 
       {/* Search Header */}
       <SearchHeader
@@ -834,78 +876,77 @@ export default function TabTwoScreen() {
         currentNode={currentNode}
       />
 
-      {/* ── Sliding filter panel ── */}
-      <Animated.View
-        style={[styles.sidePanel, { width: PANEL_WIDTH }, animatedPanelStyle]}
-        pointerEvents="auto"
-      >
-        <FeatureFilter
-          onClose={() => {
-            panelOpen.value = false;
-            setIsPanelOpen(false);
-          }}
-        />
-      </Animated.View>
-
       {/* INDOOR LAYER */}
-      {routeStarted && isCurrNodeInDoors && (
-        <View
-          style={[
-            StyleSheet.absoluteFillObject,
-            { display: isCurrNodeInDoors ? "flex" : "none" },
-          ]}
-          pointerEvents={isCurrNodeInDoors ? "auto" : "none"}
-        ></View>
-      )}
+      {routeStarted && isCurrNodeInDoors && <View
+        style={[
+          StyleSheet.absoluteFillObject,
+          { display: isCurrNodeInDoors ? "flex" : "none" },
+        ]}
+        pointerEvents={isCurrNodeInDoors ? "auto" : "none"}
+      >
+        <NewIndoorNav />
+      </View>}
       {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
-      {isPreviewingRoute && (
-        <RouteSummary
-          setIsRouteStarted={(isStarted) =>
-            setRouteStatus(isStarted ? "started" : "not started")
-          }
-          routeLength={currentRoute?.length ?? 0}
-          startingLocation={currentRoute?.stops[0]?.name}
-          endingLocation={
-            currentRoute?.stops[currentRoute.stops.length - 1]?.name
-          }
-        />
-      )}
+      {
+        isPreviewingRoute && (
+          <RouteSummary
+            setIsRouteStarted={(isStarted) =>
+              setRouteStatus(isStarted ? "started" : "not started")
+            }
+            routeLength={currentRoute?.length ?? 0}
+            startingLocation={currentRoute?.stops[0]?.name}
+            endingLocation={
+              currentRoute?.stops[currentRoute.stops.length - 1]?.name
+            }
+          />
+        )
+      }
       {/* only show end route button if we're outdoors, since indoors we have the end route button in the indoor nav screen */}
-      {routeStarted && !isCurrNodeInDoors && (
-        <EndRoute
-          setIsRouteStarted={(isStarted) =>
-            setRouteStatus(isStarted ? "started" : "not started")
-          }
-        />
-      )}
+      {
+        routeStarted && !isCurrNodeInDoors && (
+          <EndRoute
+            setIsRouteStarted={(isStarted) =>
+              setRouteStatus(isStarted ? "started" : "not started")
+            }
+          />
+        )
+      }
       {/* only show lock on user button if we're outdoors and the route has started */}
-      {!isLockedOnUser && !isCurrNodeInDoors && routeStarted && (
-        <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
-      )}
+      {
+        !isLockedOnUser && !isCurrNodeInDoors && routeStarted && (
+          <LockOnUser setIsLockedOnUser={setIsLockedOnUser} />
+        )
+      }
       {/* ETA pill — shown between recenter and reroute buttons */}
-      {routeStarted && !isCurrNodeInDoors && etaText && (
-        <View style={styles.etaPill}>
-          <Text style={styles.etaText}>ETA {etaText}</Text>
-        </View>
-      )}
+      {
+        routeStarted && !isCurrNodeInDoors && etaText && (
+          <View style={styles.etaPill}>
+            <Text style={styles.etaText}>ETA {etaText}</Text>
+          </View>
+        )
+      }
       {/* A button that will allow the user to reroute manually */}
-      {!isCurrNodeInDoors && routeStarted && !showReroutePrompt && (
-        <TouchableOpacity
-          style={styles.rerouteButton}
-          onPress={handleManualReroute}
-        >
-          <Reroute width={30} height={30} style={styles.rerouteIcon} />
-        </TouchableOpacity>
-      )}
-      {showReroutePrompt && (
-        <ReroutePrompt
-          isManualReroute={isManualReroute}
-          setShowReroutePrompt={setShowReroutePrompt}
-          setIsRouteStarted={() => {}}
-          isIndoors={isCurrNodeInDoors}
-        />
-      )}
-    </View>
+      {
+        !isCurrNodeInDoors && routeStarted && !showReroutePrompt && (
+          <TouchableOpacity
+            style={styles.rerouteButton}
+            onPress={handleManualReroute}
+          >
+            <Reroute width={30} height={30} style={styles.rerouteIcon} />
+          </TouchableOpacity>
+        )
+      }
+      {
+        showReroutePrompt && (
+          <ReroutePrompt
+            isManualReroute={isManualReroute}
+            setShowReroutePrompt={setShowReroutePrompt}
+            setIsRouteStarted={() => {}}
+            isIndoors={isCurrNodeInDoors}
+          />
+        )
+      }
+    </View >
   );
 }
 
