@@ -1,6 +1,6 @@
 import { graph, Node } from "@/maps/graph";
-import { useAppSelector } from "@/redux/appState";
 import { BlurView } from "expo-blur";
+import * as Location from "expo-location";
 import React, {
   Dispatch,
   SetStateAction,
@@ -24,7 +24,16 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 
-import { Route } from "@/app/Utils/routing";
+import { route, Route } from "@/app/Utils/routing";
+import { haversineMeters, sanitize } from "@/app/Utils/routingUtils";
+import {
+  clearRoute,
+  setDestination,
+  setRoute,
+  setStart,
+  useAppDispatch,
+  useAppSelector,
+} from "@/redux/appState";
 import AccessibleSelected from "../../assets/images/icons/Search Icons/accessible_selected.svg";
 import AccessibleUnselected from "../../assets/images/icons/Search Icons/accessible_unselected.svg";
 import AllRoutesSelected from "../../assets/images/icons/Search Icons/allRoutes_selected.svg";
@@ -34,12 +43,15 @@ import IndoorOnlyUnselected from "../../assets/images/icons/Search Icons/indoor_
 import OutdoorOnlySelected from "../../assets/images/icons/Search Icons/outdoor_selected.svg";
 import OutdoorOnlyUnselected from "../../assets/images/icons/Search Icons/outdoor_unselected.svg";
 import SearchIcon from "../../assets/images/icons/Search Icons/search.svg";
+import Target from "../../assets/images/icons/target.svg";
 import LocationMenu from "./LocationMenu";
 
 type HeaderMode = "editing-collapsed" | "editing-expanded" | "summary";
 
 interface SearchHeaderProps {
-  setDestination: Dispatch<SetStateAction<Node[]>>;
+  destLocations: Node[];
+  setDestinations: Dispatch<SetStateAction<Node[]>>;
+  currLocation: Node | null;
   setCurrLocation: Dispatch<SetStateAction<Node | null>>;
   destLocationText: string;
   setDestLocationText: Dispatch<SetStateAction<string>>;
@@ -52,11 +64,15 @@ interface SearchHeaderProps {
   >;
   currentRoute: Route | null;
   currentNode: number;
+  locationPermissionStatus: Location.PermissionResponse | null;
+  location: Location.LocationObject | null;
 }
 
 export default function SearchHeader(props: SearchHeaderProps) {
   const {
-    setDestination,
+    destLocations,
+    setDestinations,
+    currLocation,
     setCurrLocation,
     destLocationText,
     setDestLocationText,
@@ -67,9 +83,11 @@ export default function SearchHeader(props: SearchHeaderProps) {
     routeStatus,
     currentRoute,
     currentNode,
+    locationPermissionStatus,
+    location,
   } = props;
-
-  const destination = useAppSelector((state) => state.jayWalk.destination);
+  const dispatch = useAppDispatch();
+  const state = useAppSelector((state) => state.jayWalk);
 
   const [headerMode, setHeaderMode] = useState<HeaderMode>("editing-collapsed");
   const [summaryText, setSummaryText] = useState("JayWalk");
@@ -80,6 +98,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
   const [selectedPreference, setSelectedPreference] = useState(["All Routes"]);
 
   const searchButtonShake = useSharedValue(0);
+  const currButtonShake = useSharedValue(0);
 
   const summaryProgress = useSharedValue(0);
 
@@ -88,9 +107,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
 
   const progress = useSharedValue(0);
 
-  const hasDestination = destination !== "" && destination !== undefined;
   const isExpanded = headerMode === "editing-expanded";
-  const isSummary = headerMode === "summary";
 
   function expandHeader() {
     setHeaderMode("editing-expanded");
@@ -132,6 +149,12 @@ export default function SearchHeader(props: SearchHeaderProps) {
       setSummaryText(currentDirection?.direction ?? "JayWalk");
     }
   }, [routeStatus, currentRoute, currentNode]);
+
+  useEffect(() => {
+    if (routeStatus === "not started") {
+      resetToEditingCollapsed();
+    }
+  }, [routeStatus]);
 
   function handleSearchPress() {
     const hasDestinationText = destLocationText.trim().length > 0;
@@ -218,6 +241,81 @@ export default function SearchHeader(props: SearchHeaderProps) {
     });
   }
 
+  function hasLocationPermissions(): boolean {
+    return locationPermissionStatus?.granted ?? false;
+  }
+
+  const handleCurrentAreaPress = () => {
+    if (!hasLocationPermissions()) {
+      // If we dont have permission for distance we cant use this feature, so we tell the user that.
+      triggerCurrButtonShake();
+      return;
+    }
+    // If they havent given us a location we cant do anything so we just return.
+    // This also helps with typing the the const lines below as we know that location is not null.
+    if (!location) return;
+
+    // Get the accuracy and coordinates of the location. We will use these to determine whether we can snap to a node and which node to snap to.
+    const gpsAcc = location.coords.accuracy ?? 9999;
+    const userLat = location.coords.latitude;
+    const userLon = location.coords.longitude;
+
+    console.log(`Location accuracy: ${gpsAcc.toFixed(2)} m`);
+    console.log(`Current location: ${userLat}, ${userLon}`);
+
+    // Initalize closestNode to null, we will use it to keep track of the closesnt node to the user as we loop through the nodes.
+    let closestNode: { node: any; distanceM: number } | null = null;
+
+    for (const node of graph.nodes) {
+      // Calculate distance from user to node in meters using the haversine formula
+      const dM = haversineMeters(userLat, userLon, node.y, node.x);
+
+      // If there isnt a closest node or its closer than the current closest node, then set it as the closest node
+      if (!closestNode || dM < closestNode.distanceM) {
+        closestNode = { node, distanceM: dM };
+      }
+    }
+
+    // This covers the case where for some reason our graph has no nodes, it also helps with typing below.
+    if (!closestNode) return;
+
+    console.log(
+      `Closest node: ${closestNode.node.name} (id: ${
+        closestNode.node.id
+      }), distance: ${closestNode.distanceM.toFixed(1)} m`,
+    );
+
+    const MAX_ACCEPTABLE_ACC = 25; // don’t trust worse than this
+    const snapThresholdM = Math.max(10, gpsAcc * 1.5); // dynamic threshold
+
+    // In the case that the GPS accuracy is really bad, we dont want to use that as the starting location as it is most likely not
+    // correct so we tell the user that and return/
+    if (gpsAcc > MAX_ACCEPTABLE_ACC) {
+      console.log(`GPS too noisy to snap (acc=${gpsAcc.toFixed(1)}m).`);
+      return;
+    }
+
+    // If the user is close enough to a node we will assume that that is there starting location and set that for them.
+    if (closestNode.distanceM <= snapThresholdM) {
+      console.log(
+        `Snapping to node (threshold=${snapThresholdM.toFixed(1)}m).`,
+      );
+      // For now just setting it as the name, but I think we have nodes that the user shouldnt see the name so I
+      // we will need to come up for what the UI looks like for that.
+      setCurrLocationText(closestNode.node.name); // update text field to show assumed location
+      setCurrLocation(closestNode.node);
+    } else {
+      // If the user isnt close enough to a node we dont want to use that node as there Location as this wouldnt be accurate.
+      // So we tell the user that with a toast message.
+      console.log(
+        `Not near any node (closest=${closestNode.distanceM.toFixed(
+          1,
+        )}m, threshold=${snapThresholdM.toFixed(1)}m).`,
+      );
+      triggerCurrButtonShake();
+    }
+  };
+
   const renderRoutePrefrenceButtons = () => {
     const preferences = [
       "All Routes",
@@ -288,6 +386,31 @@ export default function SearchHeader(props: SearchHeaderProps) {
     // Start animation
     summaryProgress.value = withTiming(1, { duration: 250 });
 
+    // Before we start routing we need to know from and to for the algo to work
+    console.log(`Routing from ${currLocation?.name} to ${destLocationText}...`);
+
+    // Call the routing algorithm from the current to the destination nodes
+    const calculatedRoute = route(state, currLocation!, destLocations);
+
+    // If there is no route, log it and return
+    if (!calculatedRoute) {
+      dispatch(clearRoute());
+      console.log("No route found!");
+      return;
+    }
+
+    // Sanitize the route and then push it to the global state
+    dispatch(setRoute(sanitize(calculatedRoute)));
+
+    // Set the destination so it can be refernced later
+    dispatch(
+      setDestination({
+        text: destLocationText,
+        ids: destLocations.map((l) => l.id),
+      }),
+    );
+    dispatch(setStart(currLocation!.name));
+
     // Delay switching layout so animation can play
     setTimeout(() => {
       setHeaderMode("summary");
@@ -320,8 +443,6 @@ export default function SearchHeader(props: SearchHeaderProps) {
       ],
     };
   });
-
-  // ADD THESE ANIMATED STYLES
 
   const animatedEditingContainer = useAnimatedStyle(() => {
     return {
@@ -373,6 +494,12 @@ export default function SearchHeader(props: SearchHeaderProps) {
     };
   });
 
+  const animatedCurrButtonStyle = useAnimatedStyle(() => {
+    return {
+      transform: [{ translateX: currButtonShake.value }],
+    };
+  });
+
   function triggerSearchButtonShake() {
     searchButtonShake.value = 0;
 
@@ -387,7 +514,19 @@ export default function SearchHeader(props: SearchHeaderProps) {
     });
   }
 
-  // REPLACE YOUR RETURN BLOCK WITH THIS STRUCTURE
+  function triggerCurrButtonShake() {
+    currButtonShake.value = 0;
+
+    currButtonShake.value = withTiming(-8, { duration: 40 }, () => {
+      currButtonShake.value = withTiming(8, { duration: 40 }, () => {
+        currButtonShake.value = withTiming(-6, { duration: 40 }, () => {
+          currButtonShake.value = withTiming(6, { duration: 40 }, () => {
+            currButtonShake.value = withTiming(0, { duration: 40 });
+          });
+        });
+      });
+    });
+  }
 
   return (
     <BlurView
@@ -449,6 +588,14 @@ export default function SearchHeader(props: SearchHeaderProps) {
                     onSelect={() => currLocInputRef.current?.blur()}
                   />
                 </View>
+                <Animated.View style={animatedCurrButtonStyle}>
+                  <TouchableOpacity
+                    onPress={handleCurrentAreaPress}
+                    style={styles.currAreaButton}
+                  >
+                    <Target width={20} height={20} />
+                  </TouchableOpacity>
+                </Animated.View>
               </Animated.View>
 
               {/* Destination + preferences */}
@@ -502,7 +649,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
                       }
                       options={graph.nodes}
                       locationText={destLocationText}
-                      setLocation={(node) => setDestination([node])}
+                      setLocation={(node) => setDestinations([node])}
                       setLocationText={setDestLocationText}
                       onSelect={() => destLocInputRef.current?.blur()}
                     />
@@ -619,6 +766,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginTop: 6,
+  },
+  currAreaButton: {
+    backgroundColor: "#356EC4",
+    borderRadius: 20,
+    height: 36,
+    width: 36,
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 4,
   },
   bottomRowContainer: {
     borderTopWidth: 2,

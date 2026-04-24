@@ -647,7 +647,7 @@ export default function TabTwoScreen() {
         ]}
         pointerEvents={isCurrNodeInDoors ? "none" : "auto"}
       ></View>
-      {routeStarted && (
+      {/* {routeStarted && (
         <View style={styles.instructionBar}>
           {currentRoute?.directions[currentNode] ? (
             <Text style={styles.instructionText}>
@@ -657,7 +657,7 @@ export default function TabTwoScreen() {
             <></>
           )}
         </View>
-      )}
+      )} */}
       <MapView
         ref={mapRef}
         mapType={mapReady ? "satellite" : "standard"}
@@ -821,7 +821,9 @@ export default function TabTwoScreen() {
 
       {/* Search Header */}
       <SearchHeader
-        setDestination={setDestLocations}
+        destLocations={destLocations}
+        setDestinations={setDestLocations}
+        currLocation={currLocation}
         setCurrLocation={setCurrLocation}
         destLocationText={destLocationText}
         currLocationText={currLocationText}
@@ -832,6 +834,8 @@ export default function TabTwoScreen() {
         setRouteStatus={setRouteStatus}
         currentRoute={currentRoute}
         currentNode={currentNode}
+        locationPermissionStatus={locationPermissionStatus}
+        location={location}
       />
 
       {/* ── Sliding filter panel ── */}
