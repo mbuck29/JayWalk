@@ -619,7 +619,9 @@ export default function TabTwoScreen()
         tags: "tags" in closest ? closest.tags : [], // only default if missing
       };
 
-      setSelectedNode(selectedNodeSafe); // <-- only set state
+      setSelectedNode(selectedNodeSafe);
+      setDestLocationText(selectedNodeSafe.name || "Selected Location");
+      setDestLocations([selectedNodeSafe]);
     }
   }
 
@@ -811,8 +813,12 @@ export default function TabTwoScreen()
               </Text>
               <Pressable
                 style={[styles.bubbleButton, styles.cancelButton]}
-                onPress={() => setSelectedNode(null)}
-              >
+                onPress={() => 
+                {
+                  setSelectedNode(null);
+                  setDestLocationText("");
+                  setDestLocations([]);
+                }}>
                 <Text style={styles.buttonLabel}>Cancel</Text>
               </Pressable>
             </View>
@@ -863,7 +869,9 @@ export default function TabTwoScreen()
 
       {/* Search Header */}
       <SearchHeader
-        setDestination={setDestLocations}
+        destLocations={destLocations}
+        setDestinations={setDestLocations}
+        currLocation={currLocation}
         setCurrLocation={setCurrLocation}
         destLocationText={destLocationText}
         currLocationText={currLocationText}
@@ -874,6 +882,8 @@ export default function TabTwoScreen()
         setRouteStatus={setRouteStatus}
         currentRoute={currentRoute}
         currentNode={currentNode}
+        locationPermissionStatus={locationPermissionStatus}
+        location={location}
       />
 
       {/* INDOOR LAYER */}
