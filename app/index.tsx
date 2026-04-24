@@ -219,9 +219,7 @@ export default function TabTwoScreen()
   const [currLocationText, setCurrLocationText] = useState("");
 
   // UI STATE VARIABLES
-  const [bottomPanePosition, setBottomPanePosition] = useState<
-    "low" | "mid" | "high"
-  >("mid");
+  const [bottomPanePosition, setBottomPanePosition] = useState<"low" | "mid" | "high">("mid");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
 
   // FILTER PANEL ANIMATION VARIABLES
@@ -802,7 +800,6 @@ export default function TabTwoScreen()
         maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
         minPosition={BOTTOM_OFFSET_LOW * screenHeight}
         screenHeight={screenHeight}
-        blurTint={blurTint}
       >
 
         {selectedNode && (
