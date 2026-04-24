@@ -282,6 +282,7 @@ export default function TabTwoScreen()
     Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
   }, []);
 
+  /* // Debug for auto-starting an indoor route
   useEffect(() =>
   {
     if(currentRoute?.route.length ?? 0 > 0)
@@ -298,7 +299,7 @@ export default function TabTwoScreen()
 
     dispatch(setRoute(sanitize(r)));
     setRouteStatus("previewing");
-  }, [currentRoute]);
+  }, [currentRoute]);*/
 
   // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
   const candidateRef = useRef<number | null>(null);
