@@ -882,7 +882,7 @@ export default function TabTwoScreen()
 
 
           </View>
-        )};
+        )}
 
         {!selectedNode && (<Text>Cole Stuff Here</Text>)}
       </BottomPane>}
