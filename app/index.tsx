@@ -118,7 +118,7 @@ const TAG_CONFIG: Record<
     "study areas": {
     emoji: "",
     color: "#3AAE6E",
-    label: "Study areas",
+    label: "Study Areas",
     icon: bookIcon,
   },
   
