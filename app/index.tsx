@@ -808,7 +808,7 @@ export default function TabTwoScreen()
         {DEBUG && makeDataLines(graph)}
       </MapView>
 
-      {/* Bottom info card */};
+      {/* Bottom info card */}
       {routeNotStarted && <BottomPane
         position={bottomPanePosition}
         setPosition={setBottomPanePosition}
