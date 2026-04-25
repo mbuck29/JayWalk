@@ -115,10 +115,10 @@ const TAG_CONFIG: Record<
     label: "Computers",
     icon: computerIcon,
   },
-    "study rooms": {
+    "study areas": {
     emoji: "",
     color: "#3AAE6E",
-    label: "Study Rooms",
+    label: "Study areas",
     icon: bookIcon,
   },
   
@@ -128,6 +128,8 @@ const TAG_CONFIG: Record<
 const TAG_PRIORITY: Tag[] = [
   "food",
   "bus stop",
+  "study areas",
+  "private restrooms",
   "bathrooms",
   "printers",
   "computers",
@@ -136,11 +138,13 @@ const TAG_PRIORITY: Tag[] = [
 // Map FeatureFilter display strings -> Tag values used in node data.
 // "Study Area" has no matching Tag yet, so it is intentionally omitted.
 const FEATURE_TO_TAG: Record<string, Tag> = {
-  "Private Restrooms": "bathrooms",
+  "Private Restrooms": "private restrooms",
   Printers: "printers",
   Food: "food",
   Computers: "computers",
   "Bus Stop": "bus stop",
+  Bathrooms: "bathrooms",
+  "Study Areas": "study areas",
 };
 
 // The bounds of where the map will go. These are a rough measurement. If the user
