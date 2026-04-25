@@ -9,10 +9,11 @@
 import { getState } from "@/app/Utils/state";
 import { buildingData } from "@/maps/data";
 import { mapImages } from "@/maps/maps";
-import ReactNativeZoomableView from '@openspacelabs/react-native-zoomable-view/src/ReactNativeZoomableView';
 import { useState } from "react";
-import { Dimensions, Image, LayoutChangeEvent, StyleSheet, View } from "react-native";
+import { Image, LayoutChangeEvent, StyleSheet, useWindowDimensions, View } from "react-native";
+import { BaseButton } from "react-native-gesture-handler";
 import Svg, { Polyline } from 'react-native-svg';
+import PanView from "./PanView";
 
 
 export default function IndoorMap()
@@ -21,6 +22,10 @@ export default function IndoorMap()
 
     const [imageWidth, setImageWidth] = useState(0);
     const [imageHeight, setImageHeight] = useState(0);
+
+    const dims = useWindowDimensions();
+    const screenWidth = dims.width;
+    const screenHeight = dims.height;
 
     function handleLayout(event: LayoutChangeEvent)
     {
@@ -90,7 +95,7 @@ export default function IndoorMap()
     }
 
     // Make the lines we should draw on the map
-    function genMapLines()
+    function MapLines()
     {
         let start = state.currentNode;
 
@@ -134,60 +139,78 @@ export default function IndoorMap()
             }
         }
 
-        return <Polyline 
-                    points={points.map(p => `${p[0]},${p[1]}`).join(" ")}
-                    fill="none"
-                    stroke="red"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
+        return <Polyline
+            points={points.map(p => `${p[0]},${p[1]}`).join(" ")}
+            fill="none"
+            stroke="red"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+        />;
     }
-
-    const windowWidth = Dimensions.get('window').width;
-    const windowHeight = Dimensions.get('window').height;
 
     const currentPos = translatePoint(currentNode.x, currentNode.y);
 
-    const lines = genMapLines();
-
     return (
-    <View
-            style={{
-                width: windowWidth,
-                height: windowHeight / 3.5
-            }}>
-        <ReactNativeZoomableView
-            maxZoom={3}
-            minZoom={0.25}
-            initialZoom={0.5}
-            movementSensibility={1.9}
-            panBoundaryPadding={10000}
-        >
-        <View>
-        <Image 
-        source={mapPath}
-        style={{
-                alignSelf: "center"
-            }}
-        onLayout={handleLayout}
-        />
-        <Svg style={StyleSheet.absoluteFill}>
-                {lines}
-        </Svg>
-        {/*<Image 
-        source={require("../../assets/images/JayWalk-Logo1.png")}
-        style={{
-                alignSelf: "center",
-                position: "absolute",
-                width: 32
-            }}
-        resizeMode="contain" // Ensures the whole image is visible within the container
-        onLayout={handleLayout}
-        />*/}
+        <View
+            style={[styles.background]} >
+            <BaseButton>
+                <PanView>
+                    <Image
+                        source={require("../../assets/images/JayWalk-Logo1.png")}
+                        style={{
+                            position: "absolute",
+                            width: 32,
+                            height: 32,
+                            left: currentPos[0] - 16,
+                            top: currentPos[1] - 16,
+                            zIndex: 10000
+                        }}
+                        resizeMode="contain" // Ensures the whole image is visible within the container
+                    />
+                    <Image
+                        source={mapPath}
+                        style={{
+                            alignSelf: "flex-start"
+                        }}
+                        onLayout={handleLayout}
+                    />
+                    <Svg style={[styles.lines]}>
+                        <MapLines></MapLines>
+                    </Svg>
+                </PanView>
+            </BaseButton>
         </View>
-        
-      </ReactNativeZoomableView>
-    </View>
     );
 }
+
+const styles = StyleSheet.create({
+    background: {
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "flex-end",
+        maxHeight: "100%",
+        maxWidth: "100%",
+        height: "100%",
+        width: "100%",
+        paddingTop: "30%"
+    },
+    symbolImage: {
+        opacity: 1,
+        maxHeight: "80%",
+        aspectRatio: "1/1",
+        height: "80%"
+    },
+    symbolHolder: {
+        position: "absolute",
+        maxHeight: 32,
+        height: 32,
+        aspectRatio: "1/1",
+    },
+    lines: {
+        position: "absolute",
+        width: "100%",
+        height: "100%"
+    }
+});

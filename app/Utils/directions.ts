@@ -12,7 +12,7 @@ import { getDistanceMeters, Route } from "./routing";
 import { edgeHas, edgeOther } from "./routingUtils";
 
 type TurnType = "sharp left" | "left" | "slight left" | "straight" | "slight right" | "right" | "sharp right";
-type IntersectionType = "intersection" | "T" | "fork" | "branch" | ""
+type IntersectionType = "intersection" | "T" | "fork" | "branch" | "";
 
 // Degrees in radians
 const FIVE_DEGREES = 5 / 180 * Math.PI;
@@ -34,6 +34,7 @@ export interface Direction
     direction: string;
     show: boolean;
     prompt: boolean;
+    directionType: TurnType | "elevator" | "entering" | "leaving" | "arrived";
 }
 
 /**
@@ -75,7 +76,8 @@ export function populateDirections(route: Route)
             node: 0,
             direction: getRouteAction("straight", continueType, stops[0].id == paths[0].startNode.id, getTensOfFeetOutdoors(paths[0].startNode, paths[0].endNode)),
             show: true,
-            prompt: false
+            prompt: false,
+            directionType: "straight"
         });
     }
 
@@ -154,7 +156,8 @@ export function populateDirections(route: Route)
                 node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: "straight"
             });
 
             continueFrom = null;
@@ -170,7 +173,8 @@ export function populateDirections(route: Route)
                     node: i,
                     direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: optionTurn
                 });
             }
 
@@ -180,7 +184,8 @@ export function populateDirections(route: Route)
                     node: i,
                     direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: "straight"
                 });
             }
 
@@ -207,7 +212,8 @@ export function populateDirections(route: Route)
                         node: i,
                         direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
                         show: true,
-                        prompt: false
+                        prompt: false,
+                        directionType: optionTurn
                     });
                 }
 
@@ -217,7 +223,8 @@ export function populateDirections(route: Route)
                         node: i,
                         direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                         show: true,
-                        prompt: false
+                        prompt: false,
+                        directionType: "straight"
                     });
                 }
 
@@ -237,7 +244,8 @@ export function populateDirections(route: Route)
                         node: i,
                         direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
                         show: true,
-                        prompt: false
+                        prompt: false,
+                        directionType: optionTurn
                     });
                 }
 
@@ -247,7 +255,8 @@ export function populateDirections(route: Route)
                         node: i,
                         direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                         show: true,
-                        prompt: false
+                        prompt: false,
+                        directionType: "straight"
                     });
                 }
 
@@ -262,19 +271,21 @@ export function populateDirections(route: Route)
 
             // If they could be confused and have the same type, specify to choose the left or right one
             directions.push({
-                    node: i,
-                    direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id, -1, intersection, leftIsCorrect ? "left" : "right"),
-                    show: true,
-                    prompt: false
-                });
-            
+                node: i,
+                direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id, -1, intersection, leftIsCorrect ? "left" : "right"),
+                show: true,
+                prompt: false,
+                directionType: optionTurn
+            });
+
             if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
             {
                 directions.push({
                     node: i,
                     direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: "straight"
                 });
             }
 
@@ -319,7 +330,8 @@ export function populateDirections(route: Route)
                     node: i,
                     direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: optionTurn
                 });
             }
 
@@ -329,7 +341,8 @@ export function populateDirections(route: Route)
                     node: i,
                     direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: "straight"
                 });
             }
 
@@ -361,7 +374,8 @@ export function populateDirections(route: Route)
             node: i - 1,
             direction: getRouteAction(optionTurn, edgeOut.type, edgeOut.startNode.id == thisStop.id, distance, intersection, left ? "right" : "left"),
             show: true,
-            prompt: false
+            prompt: false,
+            directionType: optionTurn
         });
 
         if(!canBeMerged(edgeOut.type) && optionTurn != "straight")
@@ -370,7 +384,8 @@ export function populateDirections(route: Route)
                 node: i,
                 direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: "straight"
             });
         }
 
@@ -388,7 +403,8 @@ export function populateDirections(route: Route)
             node: stops.length - 1,
             direction: getRouteAction("straight", continueType, paths[paths.length - 1].endNode.id == stops[stops.length - 1].id, distance),
             show: true,
-            prompt: false
+            prompt: false,
+            directionType: "straight"
         });
 
         continueFrom = null;
@@ -399,7 +415,8 @@ export function populateDirections(route: Route)
         node: stops.length - 1,
         direction: "You have arrived at your destination!",
         show: true,
-        prompt: false
+        prompt: false,
+        directionType: "arrived"
     });
 }
 
@@ -424,7 +441,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             direction: getRouteAction("straight", paths[startIndex].type, paths[startIndex].startNode.id == stops[startIndex].id) + ` to enter ${stops[startIndex + 1].building?.name}`,
             show: true,
             prompt: false,
-            node: startIndex - 1
+            node: startIndex - 1,
+            directionType: "straight"
         });
 
         startIndex++;
@@ -474,7 +492,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             node: 0,
             direction: getRouteAction("straight", continueType, stops[0].id == paths[0].startNode.id, getTensOfFeetOutdoors(paths[0].startNode, paths[0].endNode)),
             show: true,
-            prompt: false
+            prompt: false,
+            directionType: "straight"
         });
 
         startIndex++;
@@ -551,7 +570,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                         rightCount++;
                     }
                 }
-                
+
                 if(!optionsAtThisStop[j].node.name.startsWith("~"))
                 {
                     if(j < optionIndex)
@@ -575,11 +594,13 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
         // Add directions for the continueFrom
         if(continueFrom && isBigRoom(continueType))
         {
+            const { direction, turnType } = getBigRoomAction(continueFrom, stops[continueFromIndex + 1], thisStop, continueType, edgeOut);
             directions.push({
                 node: continueFromIndex,
-                direction: getBigRoomAction(continueFrom, stops[continueFromIndex + 1], thisStop, continueType, edgeOut),
+                direction: direction,
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: turnType
             });
         }
         else if(continueFrom && continueFrom != lastStop)
@@ -590,7 +611,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                 node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: "straight"
             });
         }
         else if(continueFrom)
@@ -601,7 +623,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                 node: continueFromIndex,
                 direction: getRouteAction("straight", continueType, edgeIn.endNode.id == thisStop.id, continueDistance),
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: "straight"
             });
         }
 
@@ -613,7 +636,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                     node: i,
                     direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: "straight"
                 });
             }
 
@@ -623,17 +647,19 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                     node: i,
                     direction: `Leaving ${thisStop.building?.name ?? "the building"}`,
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: "leaving"
                 });
 
                 return i + 1;
             }
 
             directions.push({
-                node: i+1,
+                node: i + 1,
                 direction: `Entering ${nextStop.building.name}`,
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: "entering"
             });
 
             i++;
@@ -681,7 +707,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                     node: i,
                     direction: getRouteAction(turnType, edgeOut.type, edgeOut.startNode.id == thisStop.id, getTensOfFeetIndoors(thisStop, nextStop)),
                     show: true,
-                    prompt: false
+                    prompt: false,
+                    directionType: turnType
                 });
 
                 if(turnType != "straight")
@@ -690,7 +717,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                         node: i,
                         direction: getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id),
                         show: true,
-                        prompt: false
+                        prompt: false,
+                        directionType: "straight"
                     });
                 }
             }
@@ -701,7 +729,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
             const left = correctOption.relativeAngle < 0;
 
             let instruction = "";
-            
+
             const waypoint = left ? lastLeft : lastRight;
             const count = left ? leftCount : rightCount;
 
@@ -709,7 +737,7 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
 
             if(waypoint && getTensOfFeetIndoors(thisStop, waypoint) <= 20)
             {
-                instruction += `(after passing ${waypoint.name} on your ${left ? "left" : "right"}) `
+                instruction += `(after passing ${waypoint.name} on your ${left ? "left" : "right"}) `;
             }
 
             instruction += getRouteAction("straight", edgeOut.type, edgeOut.startNode.id == thisStop.id).toLowerCase();
@@ -718,7 +746,8 @@ function populateDirectionsIndoors(route: Route, startIndex: number, wasOutdoors
                 node: i,
                 direction: instruction,
                 show: true,
-                prompt: false
+                prompt: false,
+                directionType: left ? "left" : "right"
             });
         }
 
@@ -763,7 +792,8 @@ function takeElevatorDirections(route: Route, startIndex: number, type: "elevato
         node: endIndex - 1,
         direction: directions,
         show: true,
-        prompt: false
+        prompt: false,
+        directionType: type == "elevator" ? "elevator" : "straight"
     });
 
     return endIndex;
@@ -858,7 +888,7 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
     // Add the intersection
     if(intersectionLocation != "")
     {
-        output += "At the " + intersectionLocation + ", "
+        output += "At the " + intersectionLocation + ", ";
     }
 
     // Add the turn
@@ -900,7 +930,7 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
 
     if(distance > 0 && turnType == "straight" && shouldShowDistance(routeType))
     {
-        output += ` for ${distance} feet`
+        output += ` for ${distance} feet`;
     }
 
     return output;
@@ -908,7 +938,7 @@ function getRouteAction(turnType: TurnType, routeType: RouteType, forwards: bool
 
 function getBaseRouteAction(routeType: RouteType, forwards: boolean, specifier: string = "", specLit: string = ""): string
 {
-    let action = ""
+    let action = "";
 
     switch(routeType)
     {
@@ -952,12 +982,12 @@ function getBaseRouteAction(routeType: RouteType, forwards: boolean, specifier: 
     return action;
 }
 
-function getBigRoomAction(firstNode: Node, secondNode: Node, endNode: Node, edgeType: RouteType, outEdge: Edge | null): string
+function getBigRoomAction(firstNode: Node, secondNode: Node, endNode: Node, edgeType: RouteType, outEdge: Edge | null): { direction: string, turnType: TurnType; }
 {
     // Should never happen
     if(!isBigRoom(edgeType))
     {
-        return getRouteAction("straight", edgeType, true);
+        return { direction: getRouteAction("straight", edgeType, true), turnType: "straight" };
     }
 
     const angle = -getTurnAngle(firstNode, secondNode, endNode);
@@ -999,7 +1029,7 @@ function getBigRoomAction(firstNode: Node, secondNode: Node, endNode: Node, edge
         text += " to " + getBaseRouteAction(outEdge.type, outEdge.startNode.id == endNode.id).toLowerCase();
     }
 
-    return text;
+    return { direction: text, turnType: turnType };
 }
 
 /**
