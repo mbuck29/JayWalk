@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
 import BottomPane from "./BottomPane";
 import IndoorDirection from "./IndoorDirection";
+import IndoorMap from "./IndoorMap";
 
 export default function NewIndoorNav()
 {
@@ -125,8 +126,9 @@ export default function NewIndoorNav()
                 highPosition={BOTTOM_OFFSET_HIGH * screenHeight}
                 maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
                 minPosition={BOTTOM_OFFSET_LOW * screenHeight}
-                screenHeight={screenHeight}
+                allowScroll={false}
             >
+                <IndoorMap />
             </BottomPane>
 
         </View>

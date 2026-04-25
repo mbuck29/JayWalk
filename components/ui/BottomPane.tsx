@@ -9,7 +9,7 @@
 import { isDarkMode } from "@/app/Utils/ui";
 import { BlurView } from "expo-blur";
 import { PropsWithChildren, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import
 {
   Gesture,
@@ -32,7 +32,7 @@ interface BottomPaneParams
   highPosition: number;
   minPosition: number;
   maxPosition: number;
-  screenHeight: number;
+  allowScroll: boolean;
 }
 
 export default function BottomPane({
@@ -43,17 +43,19 @@ export default function BottomPane({
   highPosition,
   minPosition,
   maxPosition,
-  screenHeight,
+  allowScroll,
   children,
 }: PropsWithChildren<BottomPaneParams>)
 {
   // BOTTOM PANE ANIMATION VARIABLES
-  const bottomPaneOffset = useSharedValue<number>(0);
+  const bottomPaneOffset = useSharedValue<number>(position == "low" ? lowPosition : position == "mid" ? midPosition : highPosition);
   const [bottomPaneContentIsScrolled, setBottomPaneContentIsScrolled] =
     useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
 
   const darkMode = isDarkMode();
+
+  const screenHeight = useWindowDimensions().height;
 
   const bottomPaneAnimatedStyle = useAnimatedStyle(() =>
   {
@@ -127,7 +129,7 @@ export default function BottomPane({
             <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
               <View style={styles.bottomPaneGrabHandle}></View>
               <View style={[styles.bottomPaneChild, { height: 0.64 * screenHeight }]}>
-                <ScrollView scrollEnabled={position == "high" || bottomPaneContentIsScrolled}
+                <ScrollView scrollEnabled={allowScroll && (position == "high" || bottomPaneContentIsScrolled)}
                   onScroll={(e) => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
                   {children}
                 </ScrollView>
@@ -146,7 +148,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderStyle: "solid",
   },
-  bottomPaneWrapper: {},
+  bottomPaneWrapper: {
+    pointerEvents: "auto"
+  },
   bottomPane: {
     position: "absolute",
     bottom: 0,

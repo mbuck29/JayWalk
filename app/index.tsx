@@ -799,7 +799,7 @@ export default function TabTwoScreen()
         highPosition={BOTTOM_OFFSET_HIGH * screenHeight}
         maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
         minPosition={BOTTOM_OFFSET_LOW * screenHeight}
-        screenHeight={screenHeight}
+        allowScroll={true}
       >
 
         {selectedNode && (
@@ -856,7 +856,7 @@ export default function TabTwoScreen()
       </BottomPane>}
       {routeNotStarted && bottomPanePosition == "low" &&
         <Animated.View entering={FadeInDown} exiting={FadeOutDown} style={[styles.hamburgerButton, { borderRadius: Math.round(0.07 * screenWidth), height: Math.round(0.14 * screenWidth), width: Math.round(0.22 * screenWidth) }]}>
-          <BlurView intensity={40} tint={blurTint} style={[styles.hamburgerBlur]}>
+          <BlurView intensity={80} tint={blurTint} style={[styles.hamburgerBlur]}>
             <Pressable style={[styles.blurredInterior, styles.hamburgerBlur, { borderRadius: Math.round(0.07 * screenWidth) }]} onPress={() => setBottomPanePosition("mid")}>
               <Burger fill="#3C67A8" stroke="#3C67A8" strokeWidth={0.5}
                 style={[styles.hamburger]}
