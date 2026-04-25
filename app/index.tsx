@@ -822,13 +822,15 @@ export default function TabTwoScreen()
         maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
         minPosition={BOTTOM_OFFSET_LOW * screenHeight}
         allowScroll={true}
+        blurTint ={blurTint}
       >
 
-        {selectedNode && (
+        {selectedNode &&  (
           <View style={styles.selectedNodeContent}>
             {/* Header Row with Title and Cancel */}
             <View style={styles.locationfeatrues_headerRow}>
-              <Text style={styles.Locationfeatures_title}>
+              <Text style={[styles.Locationfeatures_title, 
+            { color: blurTint === "dark" ? "#fff" : "#000" } ]}>
                 {selectedNode.name}
               </Text>
               <Pressable

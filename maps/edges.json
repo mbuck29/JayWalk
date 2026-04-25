@@ -3652,5 +3652,41 @@
         "type": "sidewalk",
         "accessible": true,
         "indoors": false
+    },
+    {
+        "id": 415,
+        "startNodeId": 10141,
+        "endNodeId": 10371,
+        "length": 0.00015964475514698088,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
+    },
+    {
+        "id": 416,
+        "startNodeId": 10371,
+        "endNodeId": 10372,
+        "length": 0.00024765334796987847,
+        "type": "stairs",
+        "accessible": false,
+        "indoors": false
+    },
+    {
+        "id": 417,
+        "startNodeId": 10372,
+        "endNodeId": 10373,
+        "length": 0.00016060309079442506,
+        "type": "stairs",
+        "accessible": false,
+        "indoors": false
+    },
+    {
+        "id": 418,
+        "startNodeId": 10373,
+        "endNodeId": 10374,
+        "length": 0.00014515004211870583,
+        "type": "sidewalk",
+        "accessible": true,
+        "indoors": false
     }
 ]

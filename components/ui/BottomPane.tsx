@@ -10,8 +10,7 @@ import { isDarkMode } from "@/app/Utils/ui";
 import { BlurView } from "expo-blur";
 import { PropsWithChildren, useEffect, useState } from "react";
 import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
-import
-{
+import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
@@ -33,6 +32,7 @@ interface BottomPaneParams
   minPosition: number;
   maxPosition: number;
   allowScroll: boolean;
+  blurTint: "light" | "dark";
 }
 
 export default function BottomPane({
@@ -45,6 +45,7 @@ export default function BottomPane({
   maxPosition,
   allowScroll,
   children,
+  blurTint,
 }: PropsWithChildren<BottomPaneParams>)
 {
   // BOTTOM PANE ANIMATION VARIABLES
@@ -125,7 +126,7 @@ export default function BottomPane({
     <GestureHandlerRootView style={styles.bottomPaneWrapper}>
       <GestureDetector gesture={bottomPanePan}>
         <Animated.View style={bottomPaneAnimatedStyle}>
-          <BlurView intensity={80} tint={darkMode ? "dark" : "light"} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
+          <BlurView intensity={80} tint={blurTint} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
             <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
               <View style={styles.bottomPaneGrabHandle}></View>
               <View style={[styles.bottomPaneChild, { height: 0.64 * screenHeight }]}>
