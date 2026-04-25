@@ -531,9 +531,14 @@ export default function TabTwoScreen()
 
   useEffect(() =>
   {
+    if(!isPreviewingRoute)
+    {
+      return;
+    }
+
     // Optional “cool” zoom-in animation on mount
     mapRef.current?.animateToRegion(routeOverview, 900);
-  }, []);
+  }, [routeStatus]);
 
   // Render tag markers for every node that has at least one active tag.
   // Uses the highest-priority matching tag for the icon.
