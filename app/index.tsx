@@ -5,6 +5,7 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-04-12
  */
+import bookIcon from "@/assets/images/icons/Map Tags/book.svg";
 import busStopIcon from "@/assets/images/icons/Map Tags/busStop.svg";
 import computerIcon from "@/assets/images/icons/Map Tags/computer.svg";
 import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
@@ -114,6 +115,13 @@ const TAG_CONFIG: Record<
     label: "Computers",
     icon: computerIcon,
   },
+    "study rooms": {
+    emoji: "",
+    color: "#3AAE6E",
+    label: "Study Rooms",
+    icon: bookIcon,
+  },
+  
 };
 
 // Priority order — first matching tag wins for the marker icon
@@ -565,8 +573,16 @@ export default function TabTwoScreen() {
       };
 
       setSelectedNode(selectedNodeSafe);
-      setDestLocationText(selectedNodeSafe.name || "Selected Location");
-      setDestLocations([selectedNodeSafe]);
+
+      mapRef.current?.animateToRegion({
+      latitude: closest.y,
+      longitude: closest.x,
+       latitudeDelta: 0.0008,
+        longitudeDelta: 0.0016,
+    }, 500);
+
+      //setDestLocationText(selectedNodeSafe.name || "Selected Location");
+      //setDestLocations([selectedNodeSafe]);
     }
   }
 
@@ -662,7 +678,7 @@ export default function TabTwoScreen() {
       )} */}
       <MapView
         ref={mapRef}
-        mapType={mapReady ? "satellite" : "standard"}
+        mapType={mapReady ? "hybrid" : "standard"}
         style={{ flex: 1 }}
         cameraZoomRange={{
           minCenterCoordinateDistance: 12,
@@ -742,7 +758,7 @@ export default function TabTwoScreen() {
             {/* Header Row with Title and Cancel */}
             <View style={styles.locationfeatrues_headerRow}>
               <Text style={styles.Locationfeatures_title}>
-                Location Features
+                {selectedNode.name}
               </Text>
               <Pressable
                 style={[styles.bubbleButton, styles.cancelButton]}
@@ -754,7 +770,6 @@ export default function TabTwoScreen() {
                 <Text style={styles.buttonLabel}>Cancel</Text>
               </Pressable>
             </View>
-
             {selectedNode.tags && selectedNode.tags.length > 0
               ? selectedNode.tags.map((tag: string, index: number) => {
                   const config = TAG_CONFIG[tag as Tag];
@@ -779,9 +794,25 @@ export default function TabTwoScreen() {
                           tag.charAt(0).toUpperCase() + tag.slice(1)}
                       </Text>
                     </View>
+                    
                   );
                 })
               : null}
+              <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
+                 <Pressable
+                style={[styles.go_to_button]}
+                onPress={() => 
+                  {setSelectedNode(null);
+                    setDestLocationText(selectedNode.name || "Selected Location");
+                    setDestLocations([selectedNode]);
+                  }}>
+                <Text style={styles.buttonLabel}>Go To</Text>
+              </Pressable>
+                
+              </View>
+
+
+
           </View>
         )}
 
@@ -974,7 +1005,7 @@ const styles = StyleSheet.create({
     alignSelf: "center",
   },
   buttonLabel: {
-    fontFamily: "42dot Sans",
+    fontFamily: "SF Pro Display",
     color: "#fff",
     fontSize: 14,
   },
@@ -1016,7 +1047,18 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  cancelButton: { backgroundColor: "#223252" },
+  go_to_button:{
+    flex: 0,
+    height: 30,
+    width: 80,
+    borderRadius: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#356EC4"
+
+
+  },
+  cancelButton: { backgroundColor: "#7e071d" },
   goButton: { backgroundColor: "#356EC4" },
   instructionBar: {
     position: "absolute",
@@ -1080,8 +1122,9 @@ const styles = StyleSheet.create({
   Locationfeatures_title: {
     flex: 1,
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "500",
     color: "#000000",
+    fontFamily: "SF Pro Display",
   },
   stackedTagWrapper: {
     marginTop: 12,
@@ -1092,8 +1135,8 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
     borderWidth: 1,
     borderRadius: 25,
-    paddingHorizontal: 15,
-    paddingVertical: 25,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
     marginBottom: 8,
     width: "100%",
     justifyContent: "center",
@@ -1116,6 +1159,6 @@ const styles = StyleSheet.create({
     color: "#ffffff",
     fontSize: 18,
     fontWeight: "400",
-    fontFamily: "42dot Sans",
+    fontFamily: "SF Pro Display"
   },
 });
