@@ -34,6 +34,7 @@ import {
   useAppDispatch,
   useAppSelector,
 } from "@/redux/appState";
+import Arrow from "../../assets/images/icons/arrow.svg";
 import AccessibleSelected from "../../assets/images/icons/Search Icons/accessible_selected.svg";
 import AccessibleUnselected from "../../assets/images/icons/Search Icons/accessible_unselected.svg";
 import AllRoutesSelected from "../../assets/images/icons/Search Icons/allRoutes_selected.svg";
@@ -500,6 +501,22 @@ export default function SearchHeader(props: SearchHeaderProps) {
     };
   });
 
+  const searchIconProgress = useSharedValue(0);
+
+  const animatedSearchIconStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(searchIconProgress.value ? 0 : 1, { duration: 260 }),
+      position: "absolute",
+    };
+  });
+
+  const animatedArrowIconStyle = useAnimatedStyle(() => {
+    return {
+      opacity: withTiming(searchIconProgress.value ? 1 : 0, { duration: 260 }),
+      position: "absolute",
+    };
+  });
+
   function triggerSearchButtonShake() {
     searchButtonShake.value = 0;
 
@@ -527,6 +544,10 @@ export default function SearchHeader(props: SearchHeaderProps) {
       });
     });
   }
+
+  useEffect(() => {
+    searchIconProgress.value = isExpanded ? 1 : 0;
+  }, [isExpanded]);
 
   return (
     <BlurView
@@ -660,7 +681,16 @@ export default function SearchHeader(props: SearchHeaderProps) {
                       onPress={handleSearchPress}
                       style={styles.searchButton}
                     >
-                      <SearchIcon width={20} height={20} />
+                      <View style={{ width: 20, height: 20 }}>
+                        <Animated.View style={animatedSearchIconStyle}>
+                          <SearchIcon width={20} height={20} />
+                        </Animated.View>
+                        <Animated.View style={animatedArrowIconStyle}>
+                          <View style={{ transform: [{ rotate: "180deg" }] }}>
+                            <Arrow width={20} height={20} />
+                          </View>
+                        </Animated.View>
+                      </View>
                     </TouchableOpacity>
                   </Animated.View>
                 </View>
