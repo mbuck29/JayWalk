@@ -12,12 +12,12 @@ import { Polyline } from "react-native-maps";
 interface RoutePolylineProps
 {
     route: Route,
-    currentNodeIndex: number
+    currentNodeIndex: number;
 }
 
 function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number,) 
 {
-    if (!stops || stops.length < 2) return null; // return if route too short
+    if(!stops || stops.length < 2) return null; // return if route too short
 
     const splitAt = Math.max(
         0,
@@ -29,44 +29,50 @@ function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number
     const toCoords = (nodes: Node[]) =>
         nodes.map((node) => ({ latitude: node.y, longitude: node.x }));
 
+    const out = [];
+
+    if(traveled.length >= 2)
+    {
+        out.push(
+            <Polyline
+                coordinates={toCoords(traveled)}
+                strokeColor="#9ca3af"
+                strokeWidth={5}
+                lineCap="round"
+                lineJoin="round"
+                key={stops[0].name + "-traveled"}
+            />
+        );
+    }
+    if(remaining.length >= 2)
+    {
+        out.push(
+            <Polyline
+                coordinates={toCoords(remaining)}
+                strokeColor="#0066ff"
+                strokeWidth={5}
+                lineCap="round"
+                lineJoin="round"
+                key={stops[0].name + "-remaining"}
+            />
+        );
+    }
+
     //displays route
-    return (
-        <>
-        {traveled.length >= 2 && (
-            <Polyline
-            coordinates={toCoords(traveled)}
-            strokeColor="#9ca3af"
-            strokeWidth={5}
-            lineCap="round"
-            lineJoin="round"
-            key={stops[0].name + "-traveled"}
-            />
-        )}
-        {remaining.length >= 2 && (
-            <Polyline
-            coordinates={toCoords(remaining)}
-            strokeColor="#0066ff"
-            strokeWidth={5}
-            lineCap="round"
-            lineJoin="round"
-            key={stops[0].name + "-remaining"}
-            />
-        )}
-        </>
-    );
+    return out;
 }
 
-export default function RoutePolyline({route, currentNodeIndex}: RoutePolylineProps) 
+export default function RoutePolyline({ route, currentNodeIndex }: RoutePolylineProps) 
 {
     const polylines = [];
 
     let base = 0;
 
-    for (let i = 1; i < route.stops.length; i++) 
+    for(let i = 1; i < route.stops.length; i++) 
     {
-        if (!route.route[i - 1].indoors) 
+        if(!route.route[i - 1].indoors) 
         {
-            if (base < 0) 
+            if(base < 0) 
             {
                 base = i - 1;
             }
@@ -74,17 +80,17 @@ export default function RoutePolyline({route, currentNodeIndex}: RoutePolylinePr
             continue;
         }
 
-        if (base != i - 1) 
+        if(base != i - 1) 
         {
-            polylines.push(makeRoutePolyline(route.stops.slice(base, i), currentNodeIndex, base));
+            polylines.push((route.stops.slice(base, i), currentNodeIndex, base));
         }
 
         base = -1;
     }
 
-    if (base >= 0 && base != route.stops.length - 2) 
+    if(base >= 0 && base != route.stops.length - 2) 
     {
-        polylines.push(makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNodeIndex, base));
+        polylines.concat(makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNodeIndex, base));
     }
 
     return polylines.length > 0 ? polylines : null;
