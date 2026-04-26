@@ -1,10 +1,9 @@
 import { Direction } from "@/app/Utils/directions";
 import { isDarkMode } from "@/app/Utils/ui";
-import Pin from "@/assets/images/icons/Misc/arrived.svg";
-import Arrow from "@/assets/images/icons/Misc/arrow.svg";
 import { useEffect, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
+import DirectionSymbol from "./DirectionSymbol";
 
 interface IndoorDirectionProps
 {
@@ -64,70 +63,13 @@ export default function IndoorDirection({ direction, displayIndex, offset }: Ind
     }, [displayIndex]);
 
 
-    let symbol;
 
-    switch(direction.directionType)
-    {
-        case "arrived":
-            symbol = "pin";
-            break;
-        case "entering":
-            symbol = "enter";
-            break;
-        case "leaving":
-            symbol = "leave";
-            break;
-        case "elevator":
-            symbol = "elevator";
-            break;
-        case "straight":
-            symbol = "forward";
-            break;
-        case "left":
-        case "sharp left":
-            symbol = "left";
-            break;
-        case "slight left":
-            symbol = "slight left";
-            break;
-        case "right":
-        case "sharp right":
-            symbol = "right";
-            break;
-        case "slight right":
-            symbol = "slight right";
-            break;
-    }
-
-    function SymbolImage({ symbol }: { symbol: string; })
-    {
-        switch(symbol)
-        {
-            case "pin":
-                return <Pin style={[styles.symbolImage]}></Pin>;
-            case "enter":
-            case "leave":
-            case "forward":
-            case "elevator":
-                return <Arrow style={[styles.symbolImage]}></Arrow>;
-            case "left":
-                return <Arrow style={[styles.symbolImage, { transform: [{ rotate: "-90deg" }] }]}></Arrow>;
-            case "slight left":
-                return <Arrow style={[styles.symbolImage, { transform: [{ rotate: "-35deg" }] }]}></Arrow>;
-            case "right":
-                return <Arrow style={[styles.symbolImage, { transform: [{ rotate: "90deg" }] }]}></Arrow>;
-            case "slight right":
-                return <Arrow style={[styles.symbolImage, { transform: [{ rotate: "35deg" }] }]}></Arrow>;
-            default:
-                return <Arrow style={[styles.symbolImage]}></Arrow>;
-        }
-    }
 
 
     return (
         <Animated.View style={[styles.background, { borderRadius: 0.35 * height }, animatedStyle]} onLayout={handleLayout}>
             <View style={[styles.symbolHolder]}>
-                <SymbolImage symbol={symbol} />
+                <DirectionSymbol direction={direction} />
             </View>
             <Text style={[styles.text, { color: darkMode ? "#FFF" : "#000" }]}>{direction.direction}</Text>
         </Animated.View>

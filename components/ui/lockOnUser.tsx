@@ -1,44 +1,59 @@
 /**
  * File: LockOnUser.tsx
  * Purpose: A button to make the screen "follow" the user
- * Author: Michael B
+ * Author: Michael B, C. Cooper
  * Date Created: 2026-03-01
  */
 
+import { BlurView } from "expo-blur";
 import React from "react";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
 import Cursor from "../../assets/images/icons/cursor.svg";
 
-interface LockOnUserProps {
+interface LockOnUserProps
+{
   setIsLockedOnUser: (isLocked: boolean) => void;
 }
 
-export default function LockOnUser(props: LockOnUserProps) {
+export default function LockOnUser(props: LockOnUserProps)
+{
+  const darkMode = useColorScheme() == "dark";
+
   const { setIsLockedOnUser } = props;
   return (
-    <TouchableOpacity
-      style={styles.lockOnUserContainer}
-      onPress={() => setIsLockedOnUser(true)}
-    >
-      <Cursor width={30} height={30} style={styles.cursorStyle} />
-    </TouchableOpacity>
+    <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={styles.lockOnUserContainer}>
+      <TouchableOpacity style={[styles.blurredInterior]}
+        onPress={() => setIsLockedOnUser(true)}
+      >
+        <Cursor width={30} height={30} style={styles.cursorStyle} />
+      </TouchableOpacity>
+    </BlurView>
   );
 }
 
 const styles = StyleSheet.create({
   lockOnUserContainer: {
     position: "absolute",
-    alignContent: "center",
+    alignItems: "center",
+    justifyContent: "center",
     bottom: 20,
-    left: 20,
-    backgroundColor: "#356EC4",
-    padding: 10,
-    borderRadius: 40,
+    right: 20,
+    borderRadius: "50%",
     height: "8%",
-    width: "16%",
+    maxHeight: "8%",
+    aspectRatio: "1/1",
+    overflow: "hidden"
   },
   cursorStyle: {
-    alignSelf: "center",
-    marginTop: 5,
   },
+  blurredInterior: {
+    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1,
+    borderStyle: "solid",
+    width: "100%",
+    height: "100%",
+    borderRadius: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+  }
 });

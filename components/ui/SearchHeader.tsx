@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import {
   Image,
+  LayoutChangeEvent,
   TextInput as RNTextInput,
   ScrollView,
   StyleSheet,
@@ -67,6 +68,7 @@ interface SearchHeaderProps {
   currentNode: number;
   locationPermissionStatus: Location.PermissionResponse | null;
   location: Location.LocationObject | null;
+  reportHeight: Dispatch<SetStateAction<number>>;
 }
 
 export default function SearchHeader(props: SearchHeaderProps) {
@@ -86,6 +88,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
     currentNode,
     locationPermissionStatus,
     location,
+    reportHeight
   } = props;
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.jayWalk);
@@ -144,10 +147,14 @@ export default function SearchHeader(props: SearchHeaderProps) {
     destLocInputRef.current?.blur();
   }
 
+  const handleLayout = (event: LayoutChangeEvent) =>
+  {
+    reportHeight(event.nativeEvent.layout.height);
+  };
+
   useEffect(() => {
     if (routeStatus === "started" && currentRoute) {
-      const currentDirection = currentRoute.directions[currentNode];
-      setSummaryText(currentDirection?.direction ?? "JayWalk");
+      setSummaryText(currentRoute.stops[currentRoute.stops.length - 1].name ?? "JayWalk");
     }
   }, [routeStatus, currentRoute, currentNode]);
 
@@ -554,6 +561,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
       style={styles.searchHeaderContainer}
       intensity={80}
       tint={blurTint}
+      onLayout={handleLayout}
     >
       <View style={styles.insideBlurContainer}>
         <>

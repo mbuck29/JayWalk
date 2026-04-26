@@ -14,6 +14,7 @@ import bathroomIcon from "@/assets/images/icons/Map Tags/privateRestroom.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import BottomPane from "@/components/ui/BottomPane";
+import DirectionSymbol from "@/components/ui/DirectionSymbol";
 import EndRoute from "@/components/ui/EndRoute";
 import LockOnUser from "@/components/ui/lockOnUser";
 import NewIndoorNav from "@/components/ui/NewIndoorNav";
@@ -24,7 +25,8 @@ import SearchHeader from "@/components/ui/SearchHeader";
 import TagMarker from "@/components/ui/TagMarker";
 import { Tag } from "@/maps/data";
 import { graph, Graph, Node } from "@/maps/graph";
-import {
+import
+{
   clearRoute,
   setCurrentNode,
   setDestination,
@@ -38,7 +40,8 @@ import { BlurView } from "expo-blur";
 import { useFonts } from "expo-font";
 import * as Location from "expo-location";
 import { default as React, useEffect, useRef, useState } from "react";
-import {
+import
+{
   Image,
   Pressable,
   StyleSheet,
@@ -58,7 +61,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { watchLocation } from "./Utils/location";
 import { route } from "./Utils/routing";
-import {
+import
+{
   calculateRouteTime,
   haversineMeters,
   remainingRouteMeters,
@@ -115,13 +119,13 @@ const TAG_CONFIG: Record<
     label: "Computers",
     icon: computerIcon,
   },
-    "study areas": {
+  "study areas": {
     emoji: "",
     color: "#3AAE6E",
     label: "Study Areas",
     icon: bookIcon,
   },
-  
+
 };
 
 // Priority order — first matching tag wins for the marker icon
@@ -171,6 +175,7 @@ export default function TabTwoScreen()
   // Copy the users perfered mode
   const colorScheme = useColorScheme();
   const blurTint = colorScheme === "dark" ? "dark" : "light";
+  const darkMode = blurTint == "dark";
 
   // STATE VARIABLES
   const state = useAppSelector((state) => state.jayWalk);
@@ -230,6 +235,7 @@ export default function TabTwoScreen()
   // UI STATE VARIABLES
   const [bottomPanePosition, setBottomPanePosition] = useState<"low" | "mid" | "high">("mid");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [searchHeaderHeight, setSearchHeaderHeight] = useState(0);
 
   // FILTER PANEL ANIMATION VARIABLES
   const panelOpen = useSharedValue(false);
@@ -633,13 +639,17 @@ export default function TabTwoScreen()
       };
 
       setSelectedNode(selectedNodeSafe);
+      if(bottomPanePosition == "low")
+      {
+        setBottomPanePosition("mid");
+      }
 
       mapRef.current?.animateToRegion({
-      latitude: closest.y,
-      longitude: closest.x,
-       latitudeDelta: 0.0008,
+        latitude: closest.y,
+        longitude: closest.x,
+        latitudeDelta: 0.0008,
         longitudeDelta: 0.0016,
-    }, 500);
+      }, 500);
 
       //setDestLocationText(selectedNodeSafe.name || "Selected Location");
       //setDestLocations([selectedNodeSafe]);
@@ -734,11 +744,16 @@ export default function TabTwoScreen()
         pointerEvents={isCurrNodeInDoors ? "none" : "auto"}>
       </View>
       {routeStarted && !isCurrNodeInDoors && (
-        <View style={styles.instructionBar}>
+        <View style={[styles.instructionBar, { top: 0.08 * screenHeight + searchHeaderHeight, backgroundColor: darkMode ? "#356EC4" : "#5F88C9" }]}>
           {currentRoute?.directions[currentNode] ? (
-            <Text style={styles.instructionText}>
-              {currentRoute.directions[currentNode].direction}
-            </Text>
+            <View style={styles.outdoorDirectionsInterior}>
+              <View style={[styles.symbolHolder]}>
+                <DirectionSymbol direction={currentRoute.directions[currentNode]} />
+              </View>
+              <Text style={styles.instructionText}>
+                {currentRoute.directions[currentNode].direction}
+              </Text>
+            </View>
           ) : (
             <></>
           )}
@@ -746,6 +761,7 @@ export default function TabTwoScreen()
       )}
       <MapView
         ref={mapRef}
+        mapPadding={{ bottom: (routeStarted ? 0.03 : 0.05) * screenHeight, top: 0, left: 0, right: 0 }}
         mapType={mapReady ? "hybrid" : "standard"}
         style={{ flex: 1 }}
         cameraZoomRange={{
@@ -822,15 +838,15 @@ export default function TabTwoScreen()
         maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
         minPosition={BOTTOM_OFFSET_LOW * screenHeight}
         allowScroll={true}
-        blurTint ={blurTint}
+        blurTint={blurTint}
       >
 
-        {selectedNode &&  (
+        {selectedNode && (
           <View style={styles.selectedNodeContent}>
             {/* Header Row with Title and Cancel */}
             <View style={styles.locationfeatrues_headerRow}>
-              <Text style={[styles.Locationfeatures_title, 
-            { color: blurTint === "dark" ? "#fff" : "#000" } ]}>
+              <Text style={[styles.Locationfeatures_title,
+              { color: blurTint === "dark" ? "#fff" : "#000" }]}>
                 {selectedNode.name}
               </Text>
               <Pressable
@@ -872,18 +888,19 @@ export default function TabTwoScreen()
                 );
               })
               : null}
-              <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
-                 <Pressable
+            <View style={{ alignItems: 'flex-end', marginTop: 10 }}>
+              <Pressable
                 style={[styles.go_to_button]}
                 onPress={() => 
-                  {setSelectedNode(null);
-                    setDestLocationText(selectedNode.name || "Selected Location");
-                    setDestLocations([selectedNode]);
-                  }}>
+                {
+                  setSelectedNode(null);
+                  setDestLocationText(selectedNode.name || "Selected Location");
+                  setDestLocations([selectedNode]);
+                }}>
                 <Text style={styles.buttonLabel}>Go To</Text>
               </Pressable>
-                
-              </View>
+
+            </View>
 
 
 
@@ -920,6 +937,7 @@ export default function TabTwoScreen()
         currentNode={currentNode}
         locationPermissionStatus={locationPermissionStatus}
         location={location}
+        reportHeight={setSearchHeaderHeight}
       />
 
       {/* INDOOR LAYER */}
@@ -983,7 +1001,7 @@ export default function TabTwoScreen()
         )
       }
       {
-        showReroutePrompt && (
+        routeStarted && showReroutePrompt && (
           <ReroutePrompt
             isManualReroute={isManualReroute}
             setShowReroutePrompt={setShowReroutePrompt}
@@ -1094,7 +1112,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  go_to_button:{
+  go_to_button: {
     flex: 0,
     height: 30,
     width: 80,
@@ -1109,9 +1127,7 @@ const styles = StyleSheet.create({
   goButton: { backgroundColor: "#356EC4" },
   instructionBar: {
     position: "absolute",
-    top: 50,
     alignSelf: "center",
-    backgroundColor: "#356EC4",
     padding: 10,
     borderRadius: 40,
     marginTop: 10,
@@ -1123,10 +1139,10 @@ const styles = StyleSheet.create({
   },
   instructionText: {
     fontSize: 18,
-    fontFamily: "Orelega One",
     color: "#ffffff",
     justifyContent: "center",
     alignItems: "center",
+    flexShrink: 1
   },
   rerouteButton: {
     position: "absolute",
@@ -1208,4 +1224,24 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontFamily: "SF Pro Display"
   },
+  symbolHolder: {
+    maxHeight: "95%",
+    height: "95%",
+    aspectRatio: "1/1",
+    borderRadius: "50%",
+    backgroundColor: "#1E2E4580",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  outdoorDirectionsInterior: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "flex-start",
+    alignItems: "center",
+    width: "100%",
+    height: "100%",
+    gap: "2%"
+  }
 });
