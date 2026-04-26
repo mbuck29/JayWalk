@@ -1,7 +1,6 @@
 import { Direction } from "@/app/Utils/directions";
-import { isDarkMode } from "@/app/Utils/ui";
 import { useEffect, useState } from "react";
-import { LayoutChangeEvent, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { LayoutChangeEvent, StyleSheet, Text, useColorScheme, useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 import DirectionSymbol from "./DirectionSymbol";
 
@@ -17,7 +16,7 @@ export default function IndoorDirection({ direction, displayIndex, offset }: Ind
     const screenHeight = useWindowDimensions().height;
     const [height, setHeight] = useState(screenHeight * 0.1 * 0.75);
 
-    const darkMode = isDarkMode();
+    const darkMode = useColorScheme() == "dark";
 
     const handleLayout = (event: LayoutChangeEvent) =>
     {

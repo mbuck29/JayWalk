@@ -13,7 +13,8 @@ import { Route } from "./routing";
  * This must be called from within a function component that is a subcomponent of one of the tabs.
  * @returns The global app state
  */
-export function getState(): JayWalkState {
+export function useAppState(): JayWalkState
+{
   return useAppSelector((state) => state.jayWalk);
 }
 
@@ -22,9 +23,11 @@ export function getState(): JayWalkState {
  * @param state The app's global state. Does not need to be passed if called from a function component that is a subcomponent of one of the tabs.
  * @returns The Route object, or null if the user is not currently navigating.
  */
-export function getRoute(state: JayWalkState | undefined): Route | null {
-  state = state ?? getState();
-  if (!state.route) {
+export function getRoute(state: JayWalkState | undefined): Route | null
+{
+  state = state ?? useAppState();
+  if(!state.route)
+  {
     return null;
   }
   return state.route;
@@ -37,8 +40,9 @@ export function getRoute(state: JayWalkState | undefined): Route | null {
  */
 export function getAccessiblePreference(
   state: JayWalkState | undefined,
-): boolean {
-  state = state ?? getState();
+): boolean
+{
+  state = state ?? useAppState();
   return state.accessible;
 }
 
@@ -49,7 +53,8 @@ export function getAccessiblePreference(
  */
 export function getIndoorOutdoorPreference(
   state: JayWalkState | undefined,
-): "indoors" | "outdoors" | "" {
-  state = state ?? getState();
+): "indoors" | "outdoors" | ""
+{
+  state = state ?? useAppState();
   return state.indoors;
 }

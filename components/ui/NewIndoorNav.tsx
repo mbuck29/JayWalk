@@ -1,9 +1,8 @@
-import { getState } from "@/app/Utils/state";
-import { isDarkMode } from "@/app/Utils/ui";
+import { useAppState } from "@/app/Utils/state";
 import Arrow from "@/assets/images/icons/Misc/arrow.svg";
 import { setCurrentNode, useAppDispatch } from "@/redux/appState";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, useColorScheme, useWindowDimensions, View } from "react-native";
 import BottomPane from "./BottomPane";
 import IndoorDirection from "./IndoorDirection";
 import IndoorMap from "./IndoorMap";
@@ -14,11 +13,11 @@ export default function NewIndoorNav()
     const BOTTOM_OFFSET_HIGH = -0.27;
     const BOTTOM_OFFSET_LOW = 0.5;
 
-    const state = getState();
+    const state = useAppState();
     const currentNodeIndex = state.currentNode;
     const dispatch = useAppDispatch();
 
-    const darkMode = isDarkMode();
+    const darkMode = useColorScheme() == "dark";
 
     const [currentDirectionIndex, setCurrentDirectionIndex] = useState(0);
 
@@ -80,13 +79,11 @@ export default function NewIndoorNav()
                     </View>
 
                 </View>
-                <View style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
-                    <TouchableOpacity onPress={() => setBottomPanePosition(bottomPanePosition == "low" ? "mid" : "low")}>
-                        <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>
-                            FLOOR PLAN
-                        </Text>
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={() => setBottomPanePosition(bottomPanePosition == "low" ? "mid" : "low")} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
+                    <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>
+                        FLOOR PLAN
+                    </Text>
+                </TouchableOpacity>
             </View>
             <View style={[styles.directionsBlock]}>
                 {directions.map((dir, i) =>
@@ -95,7 +92,7 @@ export default function NewIndoorNav()
                     </View>
                 )}
             </View>
-            <View style={[styles.footer,]}>
+            {/*<View style={[styles.footer]}>
                 <View style={[styles.prevNextHolder, { borderRadius: 0.35 * 0.8 * 0.08 * screenHeight, backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
                     <TouchableOpacity style={[styles.prev, currentDirectionIndex == 0 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)}>
                         <View style={[styles.symbolHolder]}>
@@ -117,7 +114,9 @@ export default function NewIndoorNav()
                         </View>
                     </TouchableOpacity>
                 </View>
-            </View>
+            </View>*/}
+            {<Footer leftPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)} rightPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)} currentDirectionIndex={currentDirectionIndex} />/**/}
+
             <BottomPane
                 position={bottomPanePosition}
                 setPosition={setBottomPanePosition}
@@ -127,10 +126,51 @@ export default function NewIndoorNav()
                 maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
                 minPosition={BOTTOM_OFFSET_LOW * screenHeight}
                 allowScroll={false}
+                hat={<Footer leftPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)} rightPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)} currentDirectionIndex={currentDirectionIndex} />/**/}
             >
+                <View style={{ height: "2%" }} />
+                <Text style={{ color: darkMode ? "#FFF" : "#000", fontSize: 20 }}>
+                    {route?.stops[currentNodeIndex].building?.name + " Floor " + route?.stops[currentNodeIndex].floor}
+                </Text>
+                <View style={{ height: "2%" }} />
                 <IndoorMap />
             </BottomPane>
 
+        </View>
+    );
+}
+
+function Footer({ leftPress, rightPress, currentDirectionIndex }: { leftPress: () => void, rightPress: () => void, currentDirectionIndex: number; })
+{
+    const state = useAppState();
+    const directions = state.route?.directions;
+    const darkMode = useColorScheme() == "dark";
+
+    const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
+    return (
+        <View style={[styles.footer, { height: 0.08 * screenHeight }]}>
+            <View style={[styles.prevNextHolder, { borderRadius: 0.35 * 0.8 * 0.08 * screenHeight, backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
+                <TouchableOpacity style={[styles.prev, currentDirectionIndex == 0 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={leftPress}>
+                    <View style={[styles.symbolHolder]}>
+                        <Arrow style={[styles.symbolImage, { transform: [{ rotate: "-90deg" }] }]}></Arrow>
+                    </View>
+
+                    <Text style={{ color: "#FFF" }}>
+                        Previous
+                    </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.next, currentDirectionIndex == (directions?.length ?? 1) - 1 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={rightPress}>
+                    <Text style={{ color: "#FFF" }}>
+                        Next
+                    </Text>
+
+                    <View style={[styles.symbolHolder]}>
+                        <Arrow style={[styles.symbolImage, { transform: [{ rotate: "90deg" }] }]}></Arrow>
+                    </View>
+                </TouchableOpacity>
+            </View>
         </View>
     );
 }
@@ -198,6 +238,7 @@ const styles = StyleSheet.create({
         height: "12%",
     },
     footer: {
+        alignSelf: "center",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",

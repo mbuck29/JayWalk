@@ -6,19 +6,20 @@
  * Date Modified: 2026-03-29
  */
 
-import { getState } from "@/app/Utils/state";
+import { useAppState } from "@/app/Utils/state";
 import { buildingData } from "@/maps/data";
 import { mapImages } from "@/maps/maps";
 import { useState } from "react";
 import { Image, LayoutChangeEvent, StyleSheet, useWindowDimensions, View } from "react-native";
-import { BaseButton } from "react-native-gesture-handler";
+import { BaseButton, Gesture } from "react-native-gesture-handler";
+import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import Svg, { Polyline } from 'react-native-svg';
 import PanView from "./PanView";
 
 
 export default function IndoorMap()
 {
-    const state = getState();
+    const state = useAppState();
 
     const [imageWidth, setImageWidth] = useState(0);
     const [imageHeight, setImageHeight] = useState(0);
@@ -27,11 +28,35 @@ export default function IndoorMap()
     const screenWidth = dims.width;
     const screenHeight = dims.height;
 
+    const scale = useSharedValue(1);
+    const pinchScale = useSharedValue(1);
+
     function handleLayout(event: LayoutChangeEvent)
     {
         setImageWidth(event.nativeEvent.layout.width);
         setImageHeight(event.nativeEvent.layout.height);
     }
+
+    const animatedStyle = useAnimatedStyle(() =>
+    {
+        return {
+            transform: [
+                {
+                    scale: pinchScale.value
+                }
+            ],
+        };
+    });
+
+    const pinch = Gesture.Pinch()
+        .onUpdate((e) =>
+        {
+            pinchScale.value = scale.value * e.scale;
+        })
+        .onEnd(() =>
+        {
+            scale.value = pinchScale.value;
+        });
 
     /*
      * Check that we are indoors and have a route
@@ -119,30 +144,21 @@ export default function IndoorMap()
         {
             const stop = route.stops[i];
 
-            console.log(stop.name);
-
             if(stop.building?.id != buildingId || stop.floor != floor)
             {
                 break;
             }
 
+            console.log(stop.name);
+
             points.push(translatePoint(stop.x, stop.y));
         }
-
-        //console.log(points.map(p => `${p[0]},${p[1]}`).join(" "));
-
-        for(let i = 0; i < 10; i++)
-        {
-            for(let j = 0; j < 10; j++)
-            {
-                //points.push([i * 100, j * 100])
-            }
-        }
+        console.log(points.map(p => `${p[0]},${p[1]}`).join(" "));
 
         return <Polyline
             points={points.map(p => `${p[0]},${p[1]}`).join(" ")}
             fill="none"
-            stroke="red"
+            stroke="#5F88C9"
             strokeWidth="3"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -155,7 +171,7 @@ export default function IndoorMap()
         <View
             style={[styles.background]} >
             <BaseButton>
-                <PanView>
+                <PanView childWidth={imageWidth} childHeight={imageHeight}>
                     <Image
                         source={require("../../assets/images/JayWalk-Logo1.png")}
                         style={{
@@ -175,7 +191,7 @@ export default function IndoorMap()
                         }}
                         onLayout={handleLayout}
                     />
-                    <Svg style={[styles.lines]}>
+                    <Svg style={[styles.lines, { width: imageWidth, height: imageHeight }]}>
                         <MapLines></MapLines>
                     </Svg>
                 </PanView>
@@ -194,7 +210,8 @@ const styles = StyleSheet.create({
         maxWidth: "100%",
         height: "100%",
         width: "100%",
-        paddingTop: "30%"
+        borderRadius: 18,
+        overflow: "hidden"
     },
     symbolImage: {
         opacity: 1,
@@ -211,6 +228,7 @@ const styles = StyleSheet.create({
     lines: {
         position: "absolute",
         width: "100%",
-        height: "100%"
+        height: "100%",
+        zIndex: 1000,
     }
 });

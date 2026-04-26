@@ -6,11 +6,11 @@
  * Date Modified: 2026-04-21
  */
 
-import { isDarkMode } from "@/app/Utils/ui";
 import { BlurView } from "expo-blur";
-import { PropsWithChildren, useEffect, useState } from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
-import {
+import { PropsWithChildren, ReactNode, useEffect, useState } from "react";
+import { ScrollView, StyleSheet, useColorScheme, useWindowDimensions, View } from "react-native";
+import
+{
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
@@ -32,7 +32,7 @@ interface BottomPaneParams
   minPosition: number;
   maxPosition: number;
   allowScroll: boolean;
-  blurTint: "light" | "dark";
+  hat: ReactNode;
 }
 
 export default function BottomPane({
@@ -44,8 +44,8 @@ export default function BottomPane({
   minPosition,
   maxPosition,
   allowScroll,
+  hat,
   children,
-  blurTint,
 }: PropsWithChildren<BottomPaneParams>)
 {
   // BOTTOM PANE ANIMATION VARIABLES
@@ -54,7 +54,7 @@ export default function BottomPane({
     useState(false);
   const [forceUpdate, setForceUpdate] = useState(false);
 
-  const darkMode = isDarkMode();
+  const darkMode = useColorScheme() == "dark";
 
   const screenHeight = useWindowDimensions().height;
 
@@ -126,7 +126,10 @@ export default function BottomPane({
     <GestureHandlerRootView style={styles.bottomPaneWrapper}>
       <GestureDetector gesture={bottomPanePan}>
         <Animated.View style={bottomPaneAnimatedStyle}>
-          <BlurView intensity={80} tint={blurTint} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
+          <View style={{ bottom: (-1.6 * screenHeight + 2.01 * screenHeight) }}>
+            {hat}
+          </View>
+          <BlurView intensity={80} tint={darkMode ? "dark" : "light"} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
             <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
               <View style={styles.bottomPaneGrabHandle}></View>
               <View style={[styles.bottomPaneChild, { height: 0.64 * screenHeight }]}>

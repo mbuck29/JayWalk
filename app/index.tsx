@@ -32,8 +32,7 @@ import
   setDestination,
   setRoute,
   setStart,
-  useAppDispatch,
-  useAppSelector,
+  useAppDispatch
 } from "@/redux/appState";
 import { Asset } from "expo-asset";
 import { BlurView } from "expo-blur";
@@ -68,7 +67,7 @@ import
   remainingRouteMeters,
   sanitize
 } from "./Utils/routingUtils";
-import { getRoute } from "./Utils/state";
+import { getRoute, useAppState } from "./Utils/state";
 
 const DEBUG = false;
 
@@ -178,7 +177,7 @@ export default function TabTwoScreen()
   const darkMode = blurTint == "dark";
 
   // STATE VARIABLES
-  const state = useAppSelector((state) => state.jayWalk);
+  const state = useAppState();
   const currentNode = state.currentNode;
   const currentRoute = getRoute(state); //get current route
   const hasRoute = currentRoute != null;
@@ -295,7 +294,7 @@ export default function TabTwoScreen()
     Asset.fromModule(require("../assets/images/icons/pin.png")).downloadAsync();
   }, []);
 
-  /* // Debug for auto-starting an indoor route
+  /*/ Debug for auto-starting an indoor route
   useEffect(() =>
   {
     if(currentRoute?.route.length ?? 0 > 0)
@@ -312,7 +311,7 @@ export default function TabTwoScreen()
 
     dispatch(setRoute(sanitize(r)));
     setRouteStatus("previewing");
-  }, [currentRoute]);*/
+  }, [currentRoute]);//*/
 
   // These are coutners that will be manipulated to correctly handle updating the users location as they progress outside
   const candidateRef = useRef<number | null>(null);
@@ -838,7 +837,7 @@ export default function TabTwoScreen()
         maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
         minPosition={BOTTOM_OFFSET_LOW * screenHeight}
         allowScroll={true}
-        blurTint={blurTint}
+        hat
       >
 
         {selectedNode && (
