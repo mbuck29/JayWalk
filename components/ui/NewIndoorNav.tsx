@@ -7,7 +7,7 @@ import BottomPane from "./BottomPane";
 import IndoorDirection from "./IndoorDirection";
 import IndoorMap from "./IndoorMap";
 
-export default function NewIndoorNav()
+export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted: (started: boolean) => void; })
 {
     const BOTTOM_OFFSET_HIGH_HIGH = -0.35;
     const BOTTOM_OFFSET_HIGH = -0.27;
@@ -79,6 +79,11 @@ export default function NewIndoorNav()
                     </View>
 
                 </View>
+            </View>
+            <View style={[styles.header2]}>
+                <TouchableOpacity onPress={() => setIsRouteStarted(false)} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
+                    <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>END ROUTE</Text>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={() => setBottomPanePosition(bottomPanePosition == "low" ? "mid" : "low")} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
                     <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>
                         FLOOR PLAN
@@ -126,7 +131,7 @@ export default function NewIndoorNav()
                 maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
                 minPosition={BOTTOM_OFFSET_LOW * screenHeight}
                 allowScroll={false}
-                hat={<Footer leftPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)} rightPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)} currentDirectionIndex={currentDirectionIndex} />/**/}
+                hat={<Footer hat leftPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)} rightPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)} currentDirectionIndex={currentDirectionIndex} />/**/}
             >
                 <View style={{ height: "2%" }} />
                 <Text style={{ color: darkMode ? "#FFF" : "#000", fontSize: 20 }}>
@@ -140,7 +145,7 @@ export default function NewIndoorNav()
     );
 }
 
-function Footer({ leftPress, rightPress, currentDirectionIndex }: { leftPress: () => void, rightPress: () => void, currentDirectionIndex: number; })
+function Footer({ leftPress, rightPress, currentDirectionIndex, hat }: { leftPress: () => void, rightPress: () => void, currentDirectionIndex: number, hat?: boolean; })
 {
     const state = useAppState();
     const directions = state.route?.directions;
@@ -149,7 +154,7 @@ function Footer({ leftPress, rightPress, currentDirectionIndex }: { leftPress: (
     const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
     return (
-        <View style={[styles.footer, { height: 0.08 * screenHeight }]}>
+        <View style={[styles.footer, { height: 0.08 * screenHeight }, hat ? null : { position: "absolute", bottom: "2%" }]}>
             <View style={[styles.prevNextHolder, { borderRadius: 0.35 * 0.8 * 0.08 * screenHeight, backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
                 <TouchableOpacity style={[styles.prev, currentDirectionIndex == 0 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={leftPress}>
                     <View style={[styles.symbolHolder]}>
@@ -222,6 +227,21 @@ const styles = StyleSheet.create({
         borderRadius: 999999,
         paddingHorizontal: "5%"
     },
+    header2: {
+        display: "flex",
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        width: "100%",
+        height: "6%",
+        maxHeight: "10%",
+        paddingBottom: "0%",
+        paddingHorizontal: "4%"
+    },
+    endButtonText: {
+        color: "#fff",
+        fontSize: 20,
+    },
     directionsBlock: {
         display: "flex",
         flexDirection: "column",
@@ -229,13 +249,15 @@ const styles = StyleSheet.create({
         justifyContent: "flex-start",
         height: "75%",
         width: "100%",
-        gap: "3%"
+        gap: "3%",
+        pointerEvents: "none"
     },
     directionHolder: {
         maxWidth: "85%",
         maxHeight: "12%",
         width: "85%",
         height: "12%",
+        pointerEvents: "none"
     },
     footer: {
         alignSelf: "center",

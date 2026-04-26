@@ -743,7 +743,7 @@ export default function TabTwoScreen()
         pointerEvents={isCurrNodeInDoors ? "none" : "auto"}>
       </View>
       {routeStarted && !isCurrNodeInDoors && (
-        <View style={[styles.instructionBar, { top: 0.08 * screenHeight + searchHeaderHeight, backgroundColor: darkMode ? "#356EC4" : "#5F88C9" }]}>
+        <View style={[styles.instructionBar, { top: 0.08 * screenHeight + searchHeaderHeight, backgroundColor: darkMode ? "#223252" : "#5F88C9" }]}>
           {currentRoute?.directions[currentNode] ? (
             <View style={styles.outdoorDirectionsInterior}>
               <View style={[styles.symbolHolder]}>
@@ -947,7 +947,7 @@ export default function TabTwoScreen()
         ]}
         pointerEvents={isCurrNodeInDoors ? "auto" : "none"}
       >
-        <NewIndoorNav />
+        <NewIndoorNav setIsRouteStarted={(isStarted) => setRouteStatus(isStarted ? "started" : "not started")} />
       </View>}
       {/* Want to show a summary of the route before they choose to start it, this can show on both outside and inside */}
       {

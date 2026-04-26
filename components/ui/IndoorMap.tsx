@@ -149,11 +149,8 @@ export default function IndoorMap()
                 break;
             }
 
-            console.log(stop.name);
-
             points.push(translatePoint(stop.x, stop.y));
         }
-        console.log(points.map(p => `${p[0]},${p[1]}`).join(" "));
 
         return <Polyline
             points={points.map(p => `${p[0]},${p[1]}`).join(" ")}
