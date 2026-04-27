@@ -1006,6 +1006,7 @@ export default function TabTwoScreen()
           setIsRouteStarted={(isStarted) =>
             setRouteStatus(isStarted ? "started" : "not started")
           }
+          onCancel={() => setRouteStatus("not started")}
           routeLength={currentRoute?.length ?? 0}
           startingLocation={currentRoute?.stops[0]?.name}
           endingLocation={
