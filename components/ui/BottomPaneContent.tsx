@@ -7,21 +7,33 @@
  */
 
 import InfoIcon from "@/assets/images/icons/info.svg";
+import TagBookIcon from "@/assets/images/icons/Map Tags/book.svg";
+import TagBookWhiteIcon from "@/assets/images/icons/Map Tags/bookWhite.svg";
+
+import TagBusIcon from "@/assets/images/icons/Map Tags/busStop.svg";
+import TagBusWhiteIcon from "@/assets/images/icons/Map Tags/busStopWhite.svg";
+
+import TagComputerIcon from "@/assets/images/icons/Map Tags/computer.svg";
+import TagComputerWhiteIcon from "@/assets/images/icons/Map Tags/computerWhite.svg";
+
+import TagFoodIcon from "@/assets/images/icons/Map Tags/food.svg";
+import TagFoodWhiteIcon from "@/assets/images/icons/Map Tags/foodWhite.svg";
+
+import TagPrinterIcon from "@/assets/images/icons/Map Tags/printer.svg";
+import TagPrinterWhiteIcon from "@/assets/images/icons/Map Tags/printerWhite.svg";
+
+import TagRestroomIcon from "@/assets/images/icons/Map Tags/privateRestroom.svg";
+import TagRestroomWhiteIcon from "@/assets/images/icons/Map Tags/privateRestroomWhite.svg";
+
+import TagShowAllIcon from "@/assets/images/icons/Map Tags/showAll.svg";
+import TagShowAllWhiteIcon from "@/assets/images/icons/Map Tags/showAllWhite.svg";
+import FoodIcon from "@/assets/images/icons/Quick Links/food_quickLinks.svg";
 import LectureHallIcon from "@/assets/images/icons/Quick Links/lectureHall.svg";
 import UnionIcon from "@/assets/images/icons/Quick Links/union.svg";
-import FoodIcon from "@/assets/images/icons/Quick Links/food_quickLinks.svg";
-import ShowAllIcon from "@/assets/images/icons/Map Tags/showAll.svg";
-import TagBookIcon from "@/assets/images/icons/Map Tags/book.svg";
-import TagBusIcon from "@/assets/images/icons/Map Tags/busStop.svg";
-import TagComputerIcon from "@/assets/images/icons/Map Tags/computer.svg";
-import TagFoodIcon from "@/assets/images/icons/Map Tags/food.svg";
-import TagPrinterIcon from "@/assets/images/icons/Map Tags/printer.svg";
-import TagRestroomIcon from "@/assets/images/icons/Map Tags/privateRestroom.svg";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { graph, Node } from "@/maps/graph";
 import {
   addToSelectedFeatures,
-  removeFromSelectedFeatures,
   clearSelectedFeatures,
   useAppDispatch,
   useAppSelector,
@@ -35,7 +47,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { Button, Dialog, Portal, Text as PaperText } from "react-native-paper";
+import { Button, Dialog, Text as PaperText, Portal } from "react-native-paper";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -51,25 +63,61 @@ interface TagFilter {
   label: string;
   featureKey: string;
   Icon: React.ComponentType<{ width?: number; height?: number }>;
+  SelectedIcon: React.ComponentType<{ width?: number; height?: number }>;
 }
 
 const QUICK_LINKS: QuickLink[] = [
-  { label: "Eaton",       nodeId: 10145, Icon: LectureHallIcon },
-  { label: "LEEP2",       nodeId: 10040, Icon: LectureHallIcon },
-  { label: "Wescoe",      nodeId: 10347, Icon: LectureHallIcon },
-  { label: "Union",       nodeId: 10370, Icon: UnionIcon },
+  { label: "Eaton", nodeId: 10145, Icon: LectureHallIcon },
+  { label: "LEEP2", nodeId: 10040, Icon: LectureHallIcon },
+  { label: "Wescoe", nodeId: 10347, Icon: LectureHallIcon },
+  { label: "Union", nodeId: 10370, Icon: UnionIcon },
   { label: "Underground", nodeId: 10374, Icon: FoodIcon },
 ];
 
 // featureKey strings must match the keys in FEATURE_TO_TAG in index.tsx
 const TAG_FILTERS: TagFilter[] = [
-  { label: "Show All",  featureKey: "Show All",          Icon: ShowAllIcon },
-  { label: "Food",      featureKey: "Food",              Icon: TagFoodIcon },
-  { label: "Restrooms", featureKey: "Private Restrooms", Icon: TagRestroomIcon },
-  { label: "Printers",  featureKey: "Printers",          Icon: TagPrinterIcon },
-  { label: "Computers", featureKey: "Computers",         Icon: TagComputerIcon },
-  { label: "Bus Stop",  featureKey: "Bus Stop",          Icon: TagBusIcon },
-  { label: "Study",     featureKey: "Study Area",        Icon: TagBookIcon },
+  {
+    label: "Show All",
+    featureKey: "Show All",
+    Icon: TagShowAllIcon,
+    SelectedIcon: TagShowAllWhiteIcon,
+  },
+  {
+    label: "Food",
+    featureKey: "Food",
+    Icon: TagFoodIcon,
+    SelectedIcon: TagFoodWhiteIcon,
+  },
+  {
+    label: "Restrooms",
+    featureKey: "Private Restrooms",
+    Icon: TagRestroomIcon,
+    SelectedIcon: TagRestroomWhiteIcon,
+  },
+  {
+    label: "Printers",
+    featureKey: "Printers",
+    Icon: TagPrinterIcon,
+    SelectedIcon: TagPrinterWhiteIcon,
+  },
+  {
+    label: "Computers",
+    featureKey: "Computers",
+    Icon: TagComputerIcon,
+    SelectedIcon: TagComputerWhiteIcon,
+  },
+  {
+    label: "Bus Stop",
+    featureKey: "Bus Stop",
+    Icon: TagBusIcon,
+    SelectedIcon: TagBusWhiteIcon,
+  },
+  {
+    label: "Study",
+    featureKey: "Study Area",
+    Icon: TagBookIcon,
+    SelectedIcon: TagBookWhiteIcon,
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -84,49 +132,61 @@ interface BottomPaneContentProps {
 // Component
 // ---------------------------------------------------------------------------
 
-export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneContentProps) {
+export default function BottomPaneContent({
+  onQuickLinkPress,
+}: BottomPaneContentProps) {
   const colorScheme = useColorScheme();
   const darkMode = colorScheme === "dark";
 
   const [showInfo, setShowInfo] = useState(false);
 
-  const dispatch = useAppDispatch();
-  const selectedFeatures: string[] = useAppSelector((s) => s.jayWalk.selectedFeatures);
+  const [activeFilterButton, setActiveFilterButton] = useState<string | null>(
+    null,
+  );
 
-  const showAllActive =
-    TAG_FILTERS.filter((f) => f.featureKey !== "Show All").every((f) =>
-      selectedFeatures.includes(f.featureKey)
-    );
+  const dispatch = useAppDispatch();
+  const selectedFeatures: string[] = useAppSelector(
+    (s) => s.jayWalk.selectedFeatures,
+  );
+
+  const showAllActive = TAG_FILTERS.filter(
+    (f) => f.featureKey !== "Show All",
+  ).every((f) => selectedFeatures.includes(f.featureKey));
 
   function handleFilterPress(featureKey: string) {
-    if (featureKey === "Show All") {
-      if (showAllActive) {
-        dispatch(clearSelectedFeatures());
-      } else {
-        TAG_FILTERS.filter((f) => f.featureKey !== "Show All").forEach((f) => {
-          if (!selectedFeatures.includes(f.featureKey)) {
-            dispatch(addToSelectedFeatures(f.featureKey));
-          }
-        });
-      }
+    // If clicking the already-selected button → deselect everything
+    if (activeFilterButton === featureKey) {
+      setActiveFilterButton(null);
+      dispatch(clearSelectedFeatures());
       return;
     }
 
-    if (selectedFeatures.includes(featureKey)) {
-      dispatch(removeFromSelectedFeatures(featureKey));
-    } else {
-      dispatch(addToSelectedFeatures(featureKey));
+    // SHOW ALL
+    if (featureKey === "Show All") {
+      setActiveFilterButton("Show All");
+
+      dispatch(clearSelectedFeatures());
+
+      TAG_FILTERS.filter((f) => f.featureKey !== "Show All").forEach((f) => {
+        dispatch(addToSelectedFeatures(f.featureKey));
+      });
+
+      return;
     }
+
+    // SINGLE FILTER
+    setActiveFilterButton(featureKey);
+
+    dispatch(clearSelectedFeatures());
+    dispatch(addToSelectedFeatures(featureKey));
   }
 
   function isFilterActive(featureKey: string): boolean {
-    if (featureKey === "Show All") return showAllActive;
-    return selectedFeatures.includes(featureKey);
+    return activeFilterButton === featureKey;
   }
 
   return (
     <View style={styles.container}>
-
       {/* ── Info Button ──────────────────────────────────────── */}
       <Pressable style={styles.infoButton} onPress={() => setShowInfo(true)}>
         <View style={styles.infoButtonCircle}>
@@ -135,7 +195,11 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
       </Pressable>
 
       {/* ── Quick Links ──────────────────────────────────────── */}
-      <Text style={[styles.sectionLabel, { color: darkMode ? "#fff" : "#000" }]}>Quick Links</Text>
+      <Text
+        style={[styles.sectionLabel, { color: darkMode ? "#fff" : "#000" }]}
+      >
+        Quick Links
+      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -148,7 +212,9 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
             <Pressable
               key={link.label}
               style={styles.quickChip}
-              onPress={() => { if (node) onQuickLinkPress(node, link.label); }}
+              onPress={() => {
+                if (node) onQuickLinkPress(node, link.label);
+              }}
             >
               <View style={styles.quickIconWrapper}>
                 <link.Icon width={34} height={34} fill="#FFFFFF" />
@@ -160,7 +226,15 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
       </ScrollView>
 
       {/* ── Map Filters ──────────────────────────────────────── */}
-      <Text style={[styles.sectionLabel, { marginTop: 16 }, { color: darkMode ? "#fff" : "#000" }]}>Filter Map Tags</Text>
+      <Text
+        style={[
+          styles.sectionLabel,
+          { marginTop: 16 },
+          { color: darkMode ? "#fff" : "#000" },
+        ]}
+      >
+        Filter Map Tags
+      </Text>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -168,6 +242,7 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
       >
         {TAG_FILTERS.map((filter) => {
           const active = isFilterActive(filter.featureKey);
+          const IconToShow = active ? filter.SelectedIcon : filter.Icon;
 
           return (
             <Pressable
@@ -175,12 +250,23 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
               style={styles.filterChip}
               onPress={() => handleFilterPress(filter.featureKey)}
             >
-              <View style={[
-                styles.filterIconWrapper,
-                { borderColor: active ? "#0A2145" : "transparent" },
-              ]}>
-                <filter.Icon width={32} height={32} />
-                <Text style={styles.filterLabel}>
+              <View
+                style={[
+                  styles.filterIconWrapper,
+                  {
+                    backgroundColor: active ? "#356EC4" : "#EDF3FB",
+                    borderColor: active ? "#356EC4" : "transparent",
+                  },
+                ]}
+              >
+                <IconToShow width={32} height={32} />
+
+                <Text
+                  style={[
+                    styles.filterLabel,
+                    { color: active ? "#FFFFFF" : "#356EC4" },
+                  ]}
+                >
                   {filter.label}
                 </Text>
               </View>
@@ -207,7 +293,9 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
           style={{ borderRadius: 28, backgroundColor: "#ffffff" }}
         >
           <View style={styles.dialogHeader}>
-            <Dialog.Title style={styles.dialogTitle}>How to use JayWalk</Dialog.Title>
+            <Dialog.Title style={styles.dialogTitle}>
+              How to use JayWalk
+            </Dialog.Title>
             <Image
               source={require("../../assets/images/JayWalk-Logo1.png")}
               style={{ width: 36, height: 36 }}
@@ -216,53 +304,91 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
           </View>
 
           <Dialog.Content style={{ paddingHorizontal: 0 }}>
-            <ScrollView style={styles.dialogScroll} showsVerticalScrollIndicator={false}>
+            <ScrollView
+              style={styles.dialogScroll}
+              showsVerticalScrollIndicator={false}
+            >
               <View style={styles.dialogScrollInner}>
-
                 <PaperText style={styles.infoBodyText}>
-                  JayWalk helps you navigate around campus with both indoor and outdoor directions.
+                  JayWalk helps you navigate around campus with both indoor and
+                  outdoor directions.
                 </PaperText>
 
-                <PaperText style={styles.infoSectionTitle}>Getting a Route</PaperText>
-                <PaperText style={styles.infoBodyText}>
-                  Type your destination into the search bar. It will then expand so you can enter your current location. Press the arrow to generate your route preview, then tap <PaperText style={styles.infoEmphasis}>The Arrow</PaperText> to begin navigating.
+                <PaperText style={styles.infoSectionTitle}>
+                  Getting a Route
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  JayWalk will guide you with step-by-step directions both indoors and outdoors along the way.
+                  Type your destination into the search bar. It will then expand
+                  so you can enter your current location. Press the arrow to
+                  generate your route preview, then tap{" "}
+                  <PaperText style={styles.infoEmphasis}>The Arrow</PaperText>{" "}
+                  to begin navigating.
+                </PaperText>
+                <PaperText style={styles.infoBodyText}>
+                  JayWalk will guide you with step-by-step directions both
+                  indoors and outdoors along the way.
                 </PaperText>
 
-                <PaperText style={styles.infoSectionTitle}>During Navigation</PaperText>
+                <PaperText style={styles.infoSectionTitle}>
+                  During Navigation
+                </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  You can <PaperText style={styles.infoEmphasis}>End Route</PaperText> at any time to stop early, or <PaperText style={styles.infoEmphasis}>Reroute</PaperText> if you've gone off course.
+                  You can{" "}
+                  <PaperText style={styles.infoEmphasis}>End Route</PaperText>{" "}
+                  at any time to stop early, or{" "}
+                  <PaperText style={styles.infoEmphasis}>Reroute</PaperText> if
+                  you've gone off course.
                 </PaperText>
 
-                <PaperText style={styles.infoSectionTitle}>Route Filters</PaperText>
+                <PaperText style={styles.infoSectionTitle}>
+                  Route Filters
+                </PaperText>
                 <PaperText style={styles.infoBodyText}>
                   Before starting a route you can set preferences:
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  • <PaperText style={styles.infoEmphasis}>Accessible</PaperText> — limits the route to wheelchair-accessible paths.
+                  •{" "}
+                  <PaperText style={styles.infoEmphasis}>Accessible</PaperText>{" "}
+                  — limits the route to wheelchair-accessible paths.
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  • <PaperText style={styles.infoEmphasis}>Indoor Only</PaperText> or <PaperText style={styles.infoEmphasis}>Outdoor Only</PaperText> — restricts the route to your preferred environment.
+                  •{" "}
+                  <PaperText style={styles.infoEmphasis}>Indoor Only</PaperText>{" "}
+                  or{" "}
+                  <PaperText style={styles.infoEmphasis}>
+                    Outdoor Only
+                  </PaperText>{" "}
+                  — restricts the route to your preferred environment.
                 </PaperText>
 
-                <PaperText style={styles.infoSectionTitle}>Bottom Pane</PaperText>
+                <PaperText style={styles.infoSectionTitle}>
+                  Bottom Pane
+                </PaperText>
                 <PaperText style={styles.infoBodyText}>
                   Swipe up the pane at the bottom of the screen to access:
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  • <PaperText style={styles.infoEmphasis}>Quick Links</PaperText> — tap a popular destination to set it as your destination instantly.
+                  •{" "}
+                  <PaperText style={styles.infoEmphasis}>Quick Links</PaperText>{" "}
+                  — tap a popular destination to set it as your destination
+                  instantly.
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  • <PaperText style={styles.infoEmphasis}>Map Filters</PaperText> — highlight locations on the map by tag, such as food, restrooms, printers, and more.
+                  •{" "}
+                  <PaperText style={styles.infoEmphasis}>Map Filters</PaperText>{" "}
+                  — highlight locations on the map by tag, such as food,
+                  restrooms, printers, and more.
                 </PaperText>
 
-                <PaperText style={styles.infoSectionTitle}>Location Info</PaperText>
+                <PaperText style={styles.infoSectionTitle}>
+                  Location Info
+                </PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  Tap anywhere on the map to see information about that location. From there you can tap <PaperText style={styles.infoEmphasis}>Go To</PaperText> to set it as your destination.
+                  Tap anywhere on the map to see information about that
+                  location. From there you can tap{" "}
+                  <PaperText style={styles.infoEmphasis}>Go To</PaperText> to
+                  set it as your destination.
                 </PaperText>
-
               </View>
             </ScrollView>
           </Dialog.Content>
@@ -271,7 +397,14 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
             <Button
               mode="contained"
               onPress={() => setShowInfo(false)}
-              style={{ backgroundColor: "#356EC4", borderRadius: 44, paddingHorizontal: 12, paddingVertical: 0, minWidth: 0, marginVertical: -12 }}
+              style={{
+                backgroundColor: "#356EC4",
+                borderRadius: 44,
+                paddingHorizontal: 12,
+                paddingVertical: 0,
+                minWidth: 0,
+                marginVertical: -12,
+              }}
               labelStyle={{ fontFamily: "SF Pro Display", color: "#fff" }}
             >
               Got it
@@ -279,7 +412,6 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
           </Dialog.Actions>
         </Dialog>
       </Portal>
-
     </View>
   );
 }
@@ -347,7 +479,7 @@ const styles = StyleSheet.create({
 
   quickLabel: {
     fontFamily: "SF Pro Display",
-    fontSize: 11,
+    fontSize: 12,
     color: "#FFFFFF",
     textAlign: "center",
   },
@@ -372,10 +504,30 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
 
+  filterSelected: {
+    backgroundColor: "#356EC4",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  filterUnselected: {
+    backgroundColor: "#EDF3FB",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+
+  filterInner: {
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+  },
+
   filterLabel: {
     fontFamily: "SF Pro Display",
-    fontSize: 9,
-    color: "#356EC4",
+    fontSize: 12,
     textAlign: "center",
     marginTop: 2,
   },
