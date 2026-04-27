@@ -14,7 +14,8 @@ import { Route } from "./routing";
  * @param route The route to calculate the time for
  * @returns The estimated time in minuets that it will take to walk the route
  */
-export function calculateRouteTime(routeLength: number): number {
+export function calculateRouteTime(routeLength: number): number
+{
   return routeLength / 1.4 / 60; // Convert meters to minutes at 1.4 m/s
 }
 
@@ -24,17 +25,21 @@ export function calculateRouteTime(routeLength: number): number {
  * @param route The route to stringify.
  * @returns A string represention of the route.
  */
-export function stringifyRoute(route: Route): string {
-  if (route.stops.length == 1) {
+export function stringifyRoute(route: Route): string
+{
+  if(route.stops.length == 1)
+  {
     return route.stops[0].name;
   }
 
   let out = "";
 
-  for (let i = 0; i < route.stops.length; i++) {
+  for(let i = 0; i < route.stops.length; i++)
+  {
     out += route.stops[i].name;
 
-    if (i != route.stops.length - 1) {
+    if(i != route.stops.length - 1)
+    {
       out += " -> ";
     }
   }
@@ -48,7 +53,8 @@ export function stringifyRoute(route: Route): string {
  * @param node The node to check for
  * @returns True if the given node is one of the given ends of the edge.
  */
-export function edgeHas(edge: Edge, node: Node): boolean {
+export function edgeHas(edge: Edge, node: Node): boolean
+{
   return edge.startNode.id == node.id || edge.endNode.id == node.id;
 }
 
@@ -58,7 +64,8 @@ export function edgeHas(edge: Edge, node: Node): boolean {
  * @param known The node that is known to be on the edge
  * @returns The other node on the edge
  */
-export function edgeOther(edge: Edge, known: Node): Node {
+export function edgeOther(edge: Edge, known: Node): Node
+{
   return edge.startNode.id === known.id ? edge.endNode : edge.startNode;
 }
 
@@ -70,10 +77,10 @@ export function isBuilding(node: Node): boolean
 function sanitizeNode(node: Node): Node
 {
   return {
-      ...node,
-      building: node.building ? {...node.building, building: undefined} : undefined,
-      edges: [],
-    };
+    ...node,
+    building: node.building ? { ...node.building, building: undefined } : undefined,
+    edges: [],
+  };
 }
 
 /**
@@ -81,10 +88,12 @@ function sanitizeNode(node: Node): Node
  * @param route The route to sanitize
  * @returns A sanitized copy of the given Route without recursive references
  */
-export function sanitize(route: Route): Route {
+export function sanitize(route: Route): Route
+{
   // Sanitize the edges
   const sanitizedEdges = [];
-  for (const edge of route.route) {
+  for(const edge of route.route)
+  {
     // Create a copy of the edge except that the nodes don't point to their edges so that there isn't any recursion
     const newEdge: Edge = {
       ...edge,
@@ -97,7 +106,8 @@ export function sanitize(route: Route): Route {
 
   // Sanitize the nodes
   const sanitizedStops = [];
-  for (const stop of route.stops) {
+  for(const stop of route.stops)
+  {
     const newStop: Node = sanitizeNode(stop);
 
     sanitizedStops.push(newStop);
@@ -145,7 +155,8 @@ export function haversineMeters(
   lon1: number,
   lat2: number,
   lon2: number,
-) {
+)
+{
   const R = 6371000; // Earth’s radius in meters
   const toRad = (d: number) => (d * Math.PI) / 180; // Convert degrees to radians
 
@@ -176,11 +187,20 @@ export function haversineMeters(
  * @param fromStopIndex The index of the stop the user is currently at
  * @returns The remaining distance in meters
  */
-export function remainingRouteMeters(route: Route, fromStopIndex: number): number {
+export function remainingRouteMeters(route: Route, fromStopIndex: number): number
+{
   let total = 0;
-  for (let i = fromStopIndex; i < route.stops.length - 1; i++) {
-    const a = route.stops[i];
-    const b = route.stops[i + 1];
+  for(let i = fromStopIndex; i < route.route.length; i++) 
+  {
+    const edge = route.route[i];
+    if(edge.indoors)
+    {
+      total += edge.length;
+      continue;
+    }
+
+    const a = edge.startNode;
+    const b = edge.endNode;
     total += haversineMeters(a.y, a.x, b.y, b.x);
   }
   return total;
