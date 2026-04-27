@@ -15,6 +15,7 @@ import Burger from "@/assets/images/icons/Misc/burger.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import BottomPane from "@/components/ui/BottomPane";
 import DirectionSymbol from "@/components/ui/DirectionSymbol";
+import BottomPaneContent from "@/components/ui/BottomPaneContent";
 import EndRoute from "@/components/ui/EndRoute";
 import LockOnUser from "@/components/ui/lockOnUser";
 import NewIndoorNav from "@/components/ui/NewIndoorNav";
@@ -923,7 +924,14 @@ export default function TabTwoScreen()
             </View>
           )}
 
-          {!selectedNode && <Text>Cole Stuff Here</Text>}
+          {!selectedNode && (
+            <BottomPaneContent
+              onQuickLinkPress={(node, label) => {
+                setDestLocations([node]);
+                setDestLocationText(label);
+              }}
+            />
+          )}
         </BottomPane>
       )}
       {routeNotStarted && bottomPanePosition == "low" && (
