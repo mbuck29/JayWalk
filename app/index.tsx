@@ -10,6 +10,7 @@ import busStopIconLocation from "@/assets/images/icons/Location Summary/busStop.
 import computerIconLocation from "@/assets/images/icons/Location Summary/computer.svg";
 import printerIconLocation from "@/assets/images/icons/Location Summary/printer.svg";
 import bathroomIconLocation from "@/assets/images/icons/Location Summary/PrivateRestroom.svg";
+import foodIconLocation from "@/assets/images/icons/Location Summary/food.svg";
 import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import BottomPane from "@/components/ui/BottomPane";
@@ -84,42 +85,40 @@ const SUPER_NEAR = 6; // allow bigger jump if you're REALLY close
 // Tag → display config
 const TAG_CONFIG: Record<
   Tag,
-  { emoji: string; color: string; label: string; icon: any; }
+  { color: string; label: string; icon: any; }
 > = {
   bathrooms: {
-    emoji: "🚻",
-    color: "#4A90D9",
+    color: "#356EC4",
     label: "Restrooms",
     icon: bathroomIconLocation,
   },
   "private restrooms": {
-    emoji: "🚻",
-    color: "#4A90D9",
+    color: "#356EC4",
     label: "Private Restrooms",
     icon: bathroomIconLocation,
   },
   printers: {
-    emoji: "🖨️",
-    color: "#7B68EE",
+    color: "#356EC4",
     label: "Printers",
     icon: printerIconLocation,
   },
   "bus stop": {
-    emoji: "🚌",
-    color: "#E8A020",
+    color: "#356EC4",
     label: "Bus Stop",
     icon: busStopIconLocation,
   },
-  food: { emoji: "🍽️", color: "#E05C3A", label: "Food", icon: foodIcon },
+  food: {
+    color: "#356EC4",
+    label: "Food", 
+    icon: foodIconLocation
+  },
   computers: {
-    emoji: "💻",
-    color: "#3AAE6E",
+    color: "#356EC4",
     label: "Computers",
     icon: computerIconLocation,
   },
   "study areas": {
-    emoji: "",
-    color: "#3AAE6E",
+    color: "#356EC4",
     label: "Study Areas",
     icon: bookIconLocation,
   },
@@ -145,7 +144,7 @@ const FEATURE_TO_TAG: Record<string, Tag> = {
   Computers: "computers",
   "Bus Stop": "bus stop",
   Bathrooms: "bathrooms",
-  "Study Areas": "study areas",
+  "Study Area": "study areas",
 };
 
 // The bounds of where the map will go. These are a rough measurement. If the user
