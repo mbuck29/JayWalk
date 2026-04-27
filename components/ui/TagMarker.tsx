@@ -1,19 +1,18 @@
 // ---------------------------------------------------------------------------
 // TagMarker is a self-contained component so React can manage its own
-// tracksViewChanges lifecycle. Starts true so the native view has time to
+// tracksViewChanges lifecycle. Starts true so the native view has time to measure, then flips to false after the first render to stop thrashing.
 
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Marker } from "react-native-maps";
 
-// measure, then flips to false after the first render to stop thrashing.
 export default function TagMarker({
   node,
   config,
   onPress,
 }: {
   node: any;
-  config: { emoji: string; color: string; label: string };
+  config: { color: string; label: string; icon: any };
   onPress: () => void;
 }) {
   const [tracked, setTracked] = useState(true);
@@ -23,6 +22,8 @@ export default function TagMarker({
     const id = setTimeout(() => setTracked(false), 500);
     return () => clearTimeout(id);
   }, []);
+
+  const IconComponent = config.icon;
 
   return (
     <Marker
@@ -37,7 +38,7 @@ export default function TagMarker({
         <View
           style={[styles.tagMarkerBubble, { backgroundColor: config.color }]}
         >
-          <Text style={styles.tagMarkerEmoji}>{config.emoji}</Text>
+          {IconComponent && <IconComponent width={22} height={22} />}
         </View>
         {/* Tail / caret pointing down */}
         <View
@@ -70,12 +71,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#fff",
     overflow: "visible",
-  },
-  tagMarkerEmoji: {
-    fontSize: 22,
-    // Prevent the emoji from being clipped on Android
-    includeFontPadding: false,
-    textAlignVertical: "center",
   },
   tagMarkerTail: {
     width: 0,
