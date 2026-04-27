@@ -131,7 +131,7 @@ export default function BottomPane({
           </View>
           <BlurView intensity={80} tint={darkMode ? "dark" : "light"} style={[styles.bottomPane, { height: 2 * screenHeight, bottom: -1.6 * screenHeight }]}>
             <View style={[styles.blurredInterior, styles.bottomPaneInterior]}>
-              <View style={styles.bottomPaneGrabHandle}></View>
+              <View style={[styles.bottomPaneGrabHandle, { backgroundColor: darkMode ? "#888" : "#666" }]}></View>
               <View style={[styles.bottomPaneChild, { height: 0.64 * screenHeight }]}>
                 <ScrollView scrollEnabled={allowScroll && (position == "high" || bottomPaneContentIsScrolled)}
                   onScroll={(e) => setBottomPaneContentIsScrolled(e.nativeEvent.contentOffset.y != 0)}>
@@ -186,7 +186,7 @@ const styles = StyleSheet.create({
     height: 2,
     borderRadius: 1,
     paddingTop: 0,
-    backgroundColor: "#356EC4",
+    backgroundColor: "#888888",
   },
   bottomPaneChild: {
     alignSelf: "center",

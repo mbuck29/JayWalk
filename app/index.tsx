@@ -13,8 +13,8 @@ import bathroomIconLocation from "@/assets/images/icons/Location Summary/Private
 import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import BottomPane from "@/components/ui/BottomPane";
-import DirectionSymbol from "@/components/ui/DirectionSymbol";
 import BottomPaneContent from "@/components/ui/BottomPaneContent";
+import DirectionSymbol from "@/components/ui/DirectionSymbol";
 import EndRoute from "@/components/ui/EndRoute";
 import LockOnUser from "@/components/ui/lockOnUser";
 import NewIndoorNav from "@/components/ui/NewIndoorNav";
@@ -59,7 +59,8 @@ import Animated, {
 } from "react-native-reanimated";
 import { watchLocation } from "./Utils/location";
 import { route } from "./Utils/routing";
-import {
+import
+{
   calculateRouteTime,
   haversineMeters,
   remainingRouteMeters,
@@ -862,11 +863,12 @@ export default function TabTwoScreen()
           highPosition={BOTTOM_OFFSET_HIGH * screenHeight}
           maxPosition={BOTTOM_OFFSET_HIGH_HIGH * screenHeight}
           minPosition={BOTTOM_OFFSET_LOW * screenHeight}
-          allowScroll={true}
+          allowScroll={false}
           hat
         >
           {selectedNode && (
             <View style={styles.selectedNodeContent}>
+              <View style={{ height: "5%" }} />
               {/* Header Row with Title and Cancel */}
               <View style={styles.locationfeatrues_headerRow}>
                 <Text
@@ -896,7 +898,7 @@ export default function TabTwoScreen()
                   const IconComponent = config?.icon;
 
                   return (
-                    <View key={index} style={styles.individualTagContainer}>
+                    <View key={index} style={[styles.individualTagContainer, { backgroundColor: darkMode ? "#356EC4" : "#5F88C9" }]}>
                       {IconComponent && (
                         <View style={styles.iconWrapper}>
                           <View
@@ -937,7 +939,8 @@ export default function TabTwoScreen()
 
           {!selectedNode && (
             <BottomPaneContent
-              onQuickLinkPress={(node, label) => {
+              onQuickLinkPress={(node, label) =>
+              {
                 setDestLocations([node]);
                 setDestLocationText(label);
               }}
@@ -1025,7 +1028,7 @@ export default function TabTwoScreen()
           setIsRouteStarted={(isStarted) =>
             setRouteStatus(isStarted ? "started" : "not started")
           }
-          onCancel={() => setRouteStatus("not started")}
+          onCancel={() => { setRouteStatus("not started"); dispatch(clearRoute()); }}
           routeLength={currentRoute?.length ?? 0}
           startingLocation={currentRoute?.stops[0]?.name}
           endingLocation={
@@ -1189,7 +1192,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     backgroundColor: "#356EC4",
   },
-  cancelButton: { backgroundColor: "#7e071d" },
+  cancelButton: { backgroundColor: "#223252" },
   goButton: { backgroundColor: "#356EC4" },
   instructionBar: {
     position: "absolute",
@@ -1304,7 +1307,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 25,
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 25,
     marginBottom: 8,
     width: "100%",
     justifyContent: "center",
@@ -1313,8 +1316,7 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   iconSquare: {
-    width: 55,
-    height: 55,
+    padding: 7,
     borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",

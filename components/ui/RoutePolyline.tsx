@@ -7,6 +7,7 @@
  */
 import { Route } from "@/app/Utils/routing";
 import { Node } from "@/maps/graph";
+import { ReactNode } from "react";
 import { Polyline } from "react-native-maps";
 
 interface RoutePolylineProps
@@ -15,7 +16,7 @@ interface RoutePolylineProps
     currentNodeIndex: number;
 }
 
-function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number,) 
+function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number) 
 {
     if(!stops || stops.length < 2) return null; // return if route too short
 
@@ -64,7 +65,7 @@ function makeRoutePolyline(stops: Node[], currentNode: number, baseIndex: number
 
 export default function RoutePolyline({ route, currentNodeIndex }: RoutePolylineProps) 
 {
-    const polylines = [];
+    let polylines: ReactNode[] = [];
 
     let base = 0;
 
@@ -82,7 +83,11 @@ export default function RoutePolyline({ route, currentNodeIndex }: RoutePolyline
 
         if(base != i - 1) 
         {
-            polylines.push((route.stops.slice(base, i), currentNodeIndex, base));
+            const p = makeRoutePolyline(route.stops.slice(base, i), currentNodeIndex, base);
+            if(p)
+            {
+                polylines = polylines.concat(p);
+            }
         }
 
         base = -1;
@@ -90,7 +95,11 @@ export default function RoutePolyline({ route, currentNodeIndex }: RoutePolyline
 
     if(base >= 0 && base != route.stops.length - 2) 
     {
-        polylines.concat(makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNodeIndex, base));
+        const p = makeRoutePolyline(route.stops.slice(base, route.stops.length), currentNodeIndex, base);
+        if(p)
+        {
+            polylines = polylines.concat(p);
+        }
     }
 
     return polylines.length > 0 ? polylines : null;
