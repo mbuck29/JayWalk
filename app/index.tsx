@@ -5,12 +5,12 @@
  * Date Created: 2026-02-07
  * Date Modified: 2026-04-12
  */
-import bookIcon from "@/assets/images/icons/Map Tags/book.svg";
-import busStopIcon from "@/assets/images/icons/Map Tags/busStop.svg";
-import computerIcon from "@/assets/images/icons/Map Tags/computer.svg";
+import bookIconLocation from "@/assets/images/icons/Location Summary/book.svg";
+import busStopIconLocation from "@/assets/images/icons/Location Summary/busStop.svg";
+import computerIconLocation from "@/assets/images/icons/Location Summary/computer.svg";
+import printerIconLocation from "@/assets/images/icons/Location Summary/printer.svg";
+import bathroomIconLocation from "@/assets/images/icons/Location Summary/PrivateRestroom.svg";
 import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
-import printerIcon from "@/assets/images/icons/Map Tags/printer.svg";
-import bathroomIcon from "@/assets/images/icons/Map Tags/privateRestroom.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import Reroute from "@/assets/images/icons/reroute.svg";
 import BottomPane from "@/components/ui/BottomPane";
@@ -60,8 +60,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { watchLocation } from "./Utils/location";
 import { route } from "./Utils/routing";
-import
-{
+import {
   calculateRouteTime,
   haversineMeters,
   remainingRouteMeters,
@@ -91,38 +90,38 @@ const TAG_CONFIG: Record<
     emoji: "🚻",
     color: "#4A90D9",
     label: "Restrooms",
-    icon: bathroomIcon,
+    icon: bathroomIconLocation,
   },
   "private restrooms": {
     emoji: "🚻",
     color: "#4A90D9",
     label: "Private Restrooms",
-    icon: bathroomIcon,
+    icon: bathroomIconLocation,
   },
   printers: {
     emoji: "🖨️",
     color: "#7B68EE",
     label: "Printers",
-    icon: printerIcon,
+    icon: printerIconLocation,
   },
   "bus stop": {
     emoji: "🚌",
     color: "#E8A020",
     label: "Bus Stop",
-    icon: busStopIcon,
+    icon: busStopIconLocation,
   },
   food: { emoji: "🍽️", color: "#E05C3A", label: "Food", icon: foodIcon },
   computers: {
     emoji: "💻",
     color: "#3AAE6E",
     label: "Computers",
-    icon: computerIcon,
+    icon: computerIconLocation,
   },
   "study areas": {
     emoji: "",
     color: "#3AAE6E",
     label: "Study Areas",
-    icon: bookIcon,
+    icon: bookIconLocation,
   },
 };
 
