@@ -43,7 +43,7 @@ export default function DirectionSymbol({ direction }: { direction: Direction; }
     switch(symbol)
     {
         case "pin":
-            return <Pin style={[styles.symbolImage]}></Pin>;
+            return <Pin style={[styles.symbolImage, { maxHeight: "60%", height: "60%" }]}></Pin>;
         case "enter":
         case "leave":
         case "forward":
