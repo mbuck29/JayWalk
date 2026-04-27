@@ -32,14 +32,16 @@ import LectureHallIcon from "@/assets/images/icons/Quick Links/lectureHall.svg";
 import UnionIcon from "@/assets/images/icons/Quick Links/union.svg";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { graph, Node } from "@/maps/graph";
-import {
+import
+{
   addToSelectedFeatures,
   clearSelectedFeatures,
   useAppDispatch,
   useAppSelector,
 } from "@/redux/appState";
 import React, { useState } from "react";
-import {
+import
+{
   Image,
   Pressable,
   ScrollView,
@@ -53,17 +55,19 @@ import { Button, Dialog, Text as PaperText, Portal } from "react-native-paper";
 // Config
 // ---------------------------------------------------------------------------
 
-interface QuickLink {
+interface QuickLink
+{
   label: string;
   nodeId: number;
-  Icon: React.ComponentType<{ width?: number; height?: number; fill?: string }>;
+  Icon: React.ComponentType<{ width?: number; height?: number; fill?: string; }>;
 }
 
-interface TagFilter {
+interface TagFilter
+{
   label: string;
   featureKey: string;
-  Icon: React.ComponentType<{ width?: number; height?: number }>;
-  SelectedIcon: React.ComponentType<{ width?: number; height?: number }>;
+  Icon: React.ComponentType<{ width?: number; height?: number; }>;
+  SelectedIcon: React.ComponentType<{ width?: number; height?: number; }>;
 }
 
 const QUICK_LINKS: QuickLink[] = [
@@ -124,7 +128,8 @@ const TAG_FILTERS: TagFilter[] = [
 // Props
 // ---------------------------------------------------------------------------
 
-interface BottomPaneContentProps {
+interface BottomPaneContentProps
+{
   onQuickLinkPress: (node: Node, label: string) => void;
 }
 
@@ -134,7 +139,8 @@ interface BottomPaneContentProps {
 
 export default function BottomPaneContent({
   onQuickLinkPress,
-}: BottomPaneContentProps) {
+}: BottomPaneContentProps)
+{
   const colorScheme = useColorScheme();
   const darkMode = colorScheme === "dark";
 
@@ -153,21 +159,25 @@ export default function BottomPaneContent({
     (f) => f.featureKey !== "Show All",
   ).every((f) => selectedFeatures.includes(f.featureKey));
 
-  function handleFilterPress(featureKey: string) {
+  function handleFilterPress(featureKey: string)
+  {
     // If clicking the already-selected button → deselect everything
-    if (activeFilterButton === featureKey) {
+    if(activeFilterButton === featureKey)
+    {
       setActiveFilterButton(null);
       dispatch(clearSelectedFeatures());
       return;
     }
 
     // SHOW ALL
-    if (featureKey === "Show All") {
+    if(featureKey === "Show All")
+    {
       setActiveFilterButton("Show All");
 
       dispatch(clearSelectedFeatures());
 
-      TAG_FILTERS.filter((f) => f.featureKey !== "Show All").forEach((f) => {
+      TAG_FILTERS.filter((f) => f.featureKey !== "Show All").forEach((f) =>
+      {
         dispatch(addToSelectedFeatures(f.featureKey));
       });
 
@@ -181,7 +191,8 @@ export default function BottomPaneContent({
     dispatch(addToSelectedFeatures(featureKey));
   }
 
-  function isFilterActive(featureKey: string): boolean {
+  function isFilterActive(featureKey: string): boolean
+  {
     return activeFilterButton === featureKey;
   }
 
@@ -205,15 +216,17 @@ export default function BottomPaneContent({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipRow}
       >
-        {QUICK_LINKS.map((link) => {
+        {QUICK_LINKS.map((link) =>
+        {
           const node = graph.nodes.find((n) => n.id === link.nodeId) ?? null;
 
           return (
             <Pressable
               key={link.label}
               style={styles.quickChip}
-              onPress={() => {
-                if (node) onQuickLinkPress(node, link.label);
+              onPress={() =>
+              {
+                if(node) onQuickLinkPress(node, link.label);
               }}
             >
               <View style={styles.quickIconWrapper}>
@@ -240,7 +253,8 @@ export default function BottomPaneContent({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.chipRow}
       >
-        {TAG_FILTERS.map((filter) => {
+        {TAG_FILTERS.map((filter) =>
+        {
           const active = isFilterActive(filter.featureKey);
           const IconToShow = active ? filter.SelectedIcon : filter.Icon;
 
@@ -282,7 +296,7 @@ export default function BottomPaneContent({
           style={styles.logo}
           resizeMode="contain"
         />
-        <Text style={styles.logoWordmark}>JayWalk</Text>
+        <Text style={[styles.logoWordmark, { color: darkMode ? "#C2DCF0" : "#0A2145" }]}>JayWalk</Text>
       </View>
 
       {/* ── Info Modal ───────────────────────────────────────── */}
@@ -443,7 +457,6 @@ const styles = StyleSheet.create({
     fontFamily: "SF Pro Display",
     fontWeight: "700",
     fontSize: 32,
-    color: "#0A2145",
     letterSpacing: 1,
   },
 
