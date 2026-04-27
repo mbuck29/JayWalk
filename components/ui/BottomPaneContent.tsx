@@ -225,7 +225,7 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
 
                 <PaperText style={styles.infoSectionTitle}>Getting a Route</PaperText>
                 <PaperText style={styles.infoBodyText}>
-                  Type your destination into the search bar. It will then expand so you can enter your current location. Press the arrow to generate your route preview, then tap <PaperText style={styles.infoEmphasis}>Start Route</PaperText> to begin navigating.
+                  Type your destination into the search bar. It will then expand so you can enter your current location. Press the arrow to generate your route preview, then tap <PaperText style={styles.infoEmphasis}>The Arrow</PaperText> to begin navigating.
                 </PaperText>
                 <PaperText style={styles.infoBodyText}>
                   JayWalk will guide you with step-by-step directions both indoors and outdoors along the way.
@@ -267,11 +267,11 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
             </ScrollView>
           </Dialog.Content>
 
-          <Dialog.Actions style={{ padding: 16 }}>
+          <Dialog.Actions style={{ paddingHorizontal: 16, paddingVertical: 0 }}>
             <Button
               mode="contained"
               onPress={() => setShowInfo(false)}
-              style={{ backgroundColor: "#356EC4", borderRadius: 44, paddingHorizontal: 16 }}
+              style={{ backgroundColor: "#356EC4", borderRadius: 44, paddingHorizontal: 12, paddingVertical: 0, minWidth: 0, marginVertical: -12 }}
               labelStyle={{ fontFamily: "SF Pro Display", color: "#fff" }}
             >
               Got it
@@ -290,6 +290,7 @@ export default function BottomPaneContent({ onQuickLinkPress }: BottomPaneConten
 
 const styles = StyleSheet.create({
   container: {
+    paddingTop: 16,
     paddingBottom: 8,
   },
 
@@ -342,11 +343,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 4,
-    shadowColor: "#356EC4",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 4,
   },
 
   quickLabel: {
@@ -372,7 +368,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     justifyContent: "center",
     alignItems: "center",
-    borderWidth: 2,
+    borderWidth: 4,
     borderColor: "transparent",
   },
 
@@ -406,7 +402,7 @@ const styles = StyleSheet.create({
   // ── Info modal ────────────────────────────────────────────
 
   dialogScroll: {
-    maxHeight: 340,
+    maxHeight: 420,
   },
 
   dialogScrollInner: {
