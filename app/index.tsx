@@ -1033,12 +1033,15 @@ export default function TabTwoScreen()
       )}
       {/* A button that will allow the user to reroute manually */}
       {!isCurrNodeInDoors && routeStarted && !showReroutePrompt && (
-        <TouchableOpacity
-          style={styles.rerouteButton}
-          onPress={handleManualReroute}
-        >
-          <Reroute width={30} height={30} style={styles.rerouteIcon} />
-        </TouchableOpacity>
+
+        <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.rerouteButtonContainer, { bottom: 20 + 25 + 0.05 * screenHeight }]}>
+          <TouchableOpacity style={[styles.rerouteButton]}
+            onPress={handleManualReroute}
+          >
+            <Reroute width={30} height={30} style={styles.rerouteIcon} />
+          </TouchableOpacity>
+        </BlurView>
+
       )}
       {routeStarted && showReroutePrompt && (
         <ReroutePrompt
@@ -1180,18 +1183,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     flexShrink: 1,
   },
-  rerouteButton: {
+  rerouteButtonContainer: {
     position: "absolute",
-    alignContent: "center",
-    bottom: 100,
+    alignItems: "center",
+    justifyContent: "center",
     left: 20,
-    backgroundColor: "#356EC4",
-    padding: 10,
-    borderRadius: 40,
+    borderRadius: "50%",
     height: "8%",
-    width: "16%",
+    maxHeight: "8%",
+    aspectRatio: "1/1",
+    overflow: "hidden"
   },
-  rerouteIcon: { alignSelf: "center", marginTop: 5 },
+  rerouteButton: {
+    borderColor: "rgba(255,255,255,0.35)",
+    borderWidth: 1,
+    borderStyle: "solid",
+    width: "100%",
+    height: "100%",
+    borderRadius: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  rerouteIcon: { alignSelf: "center" },
   etaPill: {
     position: "absolute",
     bottom: 20,
