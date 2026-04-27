@@ -7,7 +7,7 @@
 
 import { BlurView } from "expo-blur";
 import React from "react";
-import { StyleSheet, TouchableOpacity, useColorScheme } from "react-native";
+import { StyleSheet, TouchableOpacity, useColorScheme, useWindowDimensions } from "react-native";
 import Cursor from "../../assets/images/icons/cursor.svg";
 
 interface LockOnUserProps
@@ -18,10 +18,11 @@ interface LockOnUserProps
 export default function LockOnUser(props: LockOnUserProps)
 {
   const darkMode = useColorScheme() == "dark";
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   const { setIsLockedOnUser } = props;
   return (
-    <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={styles.lockOnUserContainer}>
+    <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.lockOnUserContainer, { bottom: 20 + 10 + 0.05 * screenHeight }]}>
       <TouchableOpacity style={[styles.blurredInterior]}
         onPress={() => setIsLockedOnUser(true)}
       >

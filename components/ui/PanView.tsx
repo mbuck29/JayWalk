@@ -1,9 +1,9 @@
 /**
- * File: BottomPane.tsx
- * Purpose: A bottom pane that can be swiped up and down.
+ * File: PanView.tsx
+ * Purpose: A view that allows zooming and panning of its contents
  * Author: C. Cooper
- * Date Created: 2026-04-21
- * Date Modified: 2026-04-21
+ * Date Created: 2026-04-25
+ * Date Modified: 2026-04-25
  */
 
 import { PropsWithChildren, useState } from "react";
@@ -43,6 +43,7 @@ export default function PanView({ childHeight, childWidth, children, }: PropsWit
         setViewWidth(event.nativeEvent.layout.width);
     };
 
+    // The anumation to make the contents zoom/pan
     const animatedStyle = useAnimatedStyle(() =>
     {
         return {
@@ -60,6 +61,7 @@ export default function PanView({ childHeight, childWidth, children, }: PropsWit
         };
     });
 
+    // What to do when the user pinches the view
     const pinch = Gesture.Pinch()
         .onUpdate((e) =>
         {
@@ -70,6 +72,7 @@ export default function PanView({ childHeight, childWidth, children, }: PropsWit
             scale.value = pinchScale.value;
         });
 
+    // What to do when the user pans the view
     const pan = Gesture.Pan()
         .onChange((event) =>
         {

@@ -1,6 +1,7 @@
 import { route } from "@/app/Utils/routing";
 import { graph, Node } from "@/maps/graph";
-import {
+import
+{
   clearRoute,
   setRoute,
   useAppDispatch,
@@ -8,7 +9,8 @@ import {
 } from "@/redux/appState";
 import { navigate } from "expo-router/build/global-state/routing";
 import React, { useEffect, useRef, useState } from "react";
-import {
+import
+{
   TextInput as RNTextInput,
   StyleSheet,
   Text,
@@ -19,14 +21,16 @@ import { TextInput } from "react-native-paper";
 import { sanitize } from "../../app/Utils/routingUtils";
 import LocationMenu from "./LocationMenu";
 
-interface ReroutePromptProps {
+interface ReroutePromptProps
+{
   isManualReroute: boolean;
   setShowReroutePrompt: (x: boolean) => void;
   setIsRouteStarted: (x: boolean) => void;
   isIndoors: boolean;
 }
 
-export default function ReroutePrompt(props: ReroutePromptProps) {
+export default function ReroutePrompt(props: ReroutePromptProps)
+{
   const { isManualReroute, setShowReroutePrompt, setIsRouteStarted } = props;
   const dispatch = useAppDispatch();
   const state = useAppSelector((state) => state.jayWalk);
@@ -52,12 +56,16 @@ export default function ReroutePrompt(props: ReroutePromptProps) {
 
   // To correctly reroute the user we need to know the original nodes that the user was using as the start and
   // dest. So this use effect runs one time on mount so that we can grab those nodes from the graph
-  useEffect(() => {
-    graph.nodes.forEach((node) => {
-      if (node.name === state.destination) {
+  useEffect(() =>
+  {
+    graph.nodes.forEach((node) =>
+    {
+      if(node.name === state.destination)
+      {
         setDestNode(node);
       }
-      if (node.name === state.start) {
+      if(node.name === state.start)
+      {
         setOriginalStart(node);
       }
     });
@@ -65,17 +73,22 @@ export default function ReroutePrompt(props: ReroutePromptProps) {
 
   // The primary button(the one on the right) handles progressing to rerouting from the issue we foudn or the user
   // was having
-  function handlePrimaryButtonPress() {
-    if (!isSearching) {
+  function handlePrimaryButtonPress()
+  {
+    if(!isSearching)
+    {
       // if we are on the default "screen" of the prompt then we just set is searching
       setIsSearching(true);
 
       // If we are searching we need to handle rerouting correctly
-    } else {
-      if (newStart && destNode) {
+    } else
+    {
+      if(newStart && destNode)
+      {
         // we need to make sure they have a valid start and dest then route them
         const newRoute = route(state, newStart, [destNode]);
-        if (!newRoute) {
+        if(!newRoute)
+        {
           // if we couldnt find a route we will just kick them to the main screen
           dispatch(clearRoute());
           console.log("No route found!");
@@ -91,12 +104,14 @@ export default function ReroutePrompt(props: ReroutePromptProps) {
   }
 
   // The prompt has two buttons, the secondary button(the one on the left) has two functionallity.
-  function handleSecondaryButtonPress() {
+  function handleSecondaryButtonPress()
+  {
     setShowReroutePrompt(false); // No matter if manual or not it will close the prompt
 
     // If it is manual that means the user has left the path and so if they dont reroute with the primary
     // we will end the route and put them into the main screen cause we cant give them accurate directions
-    if (!isManualReroute) {
+    if(!isManualReroute)
+    {
       setIsRouteStarted(false);
       dispatch(clearRoute()); // Clear the route from the state when ending the route
       navigate("/(tabs)");

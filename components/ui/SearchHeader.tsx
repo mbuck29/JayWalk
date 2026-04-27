@@ -8,16 +8,17 @@ import React, {
   useRef,
   useState,
 } from "react";
-import {
-  Image,
-  LayoutChangeEvent,
-  TextInput as RNTextInput,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import
+  {
+    Image,
+    LayoutChangeEvent,
+    TextInput as RNTextInput,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+  } from "react-native";
 import { TextInput } from "react-native-paper";
 import Animated, {
   useAnimatedStyle,
@@ -27,15 +28,17 @@ import Animated, {
 
 import { route, Route } from "@/app/Utils/routing";
 import { haversineMeters, sanitize } from "@/app/Utils/routingUtils";
-import {
-  clearRoute,
-  setDestination,
-  setRoute,
-  setStart,
-  useAppDispatch,
-  useAppSelector,
-} from "@/redux/appState";
+import
+  {
+    clearRoute,
+    setDestination,
+    setRoute,
+    setStart,
+    useAppDispatch,
+    useAppSelector,
+  } from "@/redux/appState";
 import Arrow from "../../assets/images/icons/arrow.svg";
+import Reroute from "../../assets/images/icons/Misc/reroute.svg";
 import AccessibleSelected from "../../assets/images/icons/Search Icons/accessible_selected.svg";
 import AccessibleUnselected from "../../assets/images/icons/Search Icons/accessible_unselected.svg";
 import AllRoutesSelected from "../../assets/images/icons/Search Icons/allRoutes_selected.svg";
@@ -64,6 +67,7 @@ interface SearchHeaderProps {
   setRouteStatus: Dispatch<
     SetStateAction<"not started" | "previewing" | "started">
   >;
+  handleManualReroute: () => void;
   currentRoute: Route | null;
   currentNode: number;
   locationPermissionStatus: Location.PermissionResponse | null;
@@ -83,6 +87,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
     setCurrLocationText,
     blurTint,
     setRouteStatus,
+    handleManualReroute,
     routeStatus,
     currentRoute,
     currentNode,
@@ -720,21 +725,29 @@ export default function SearchHeader(props: SearchHeaderProps) {
           {headerMode === "summary" && (
             <Animated.View style={animatedSummaryContainer}>
               <View style={styles.summaryRow}>
-                <Image
-                  source={require("../../assets/images/JayWalk-Logo1.png")}
-                  style={styles.logo}
-                  resizeMode="cover"
-                />
-                <Text
-                  style={[
-                    styles.summaryText,
-                    {
-                      color: blurTint === "dark" ? "#fff" : "#000",
-                    },
-                  ]}
-                >
-                  {summaryText}
-                </Text>
+                <View style={styles.summaryRowLeft}>
+                  <Image
+                    source={require("../../assets/images/JayWalk-Logo1.png")}
+                    style={styles.logo}
+                    resizeMode="cover"
+                  />
+                  <Text
+                    style={[
+                      styles.summaryText,
+                      {
+                        color: blurTint === "dark" ? "#fff" : "#000",
+                      },
+                    ]}
+                  >
+                    {summaryText}
+                  </Text>
+                </View>
+                {routeStatus == "started" && 
+                <View style = {{height: "100%", maxHeight: "100%", overflow: "visible"}}>
+                  <TouchableOpacity style={styles.rerouteContainer} onPress={handleManualReroute}>
+                    <Reroute width = {30} height = {30}/>
+                  </TouchableOpacity>
+                </View>}
               </View>
             </Animated.View>
           )}
@@ -845,14 +858,37 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   summaryRow: {
+    width: "100%",
+    maxWidth: "100%",
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    gap: "2%",
     minHeight: 40,
     paddingVertical: 4,
+  },
+  summaryRowLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+    display: "flex",
+    flex: 1
   },
   summaryText: {
     fontSize: 20,
     fontWeight: "600",
     marginLeft: 10,
+    flexShrink: 1,
+    minWidth: 0
   },
+  rerouteContainer: {
+    top: "-5%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "50%",
+    height: "110%",
+    maxHeight: "110%",
+    aspectRatio: "1/1",
+    overflow: "hidden",
+    backgroundColor: "#356EC4"
+  }
 });

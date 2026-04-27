@@ -12,14 +12,12 @@ import printerIconLocation from "@/assets/images/icons/Location Summary/printer.
 import bathroomIconLocation from "@/assets/images/icons/Location Summary/PrivateRestroom.svg";
 import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
-import Reroute from "@/assets/images/icons/reroute.svg";
 import BottomPane from "@/components/ui/BottomPane";
 import DirectionSymbol from "@/components/ui/DirectionSymbol";
 import BottomPaneContent from "@/components/ui/BottomPaneContent";
 import EndRoute from "@/components/ui/EndRoute";
 import LockOnUser from "@/components/ui/lockOnUser";
 import NewIndoorNav from "@/components/ui/NewIndoorNav";
-import ReroutePrompt from "@/components/ui/ReroutePrompt";
 import RoutePolyline from "@/components/ui/RoutePolyline";
 import RouteSummary from "@/components/ui/RouteSummary";
 import SearchHeader from "@/components/ui/SearchHeader";
@@ -659,6 +657,19 @@ export default function TabTwoScreen()
     }
   }
 
+  function reroute()
+  {
+    setCurrLocation(null);
+    setCurrLocationText("");
+    dispatch(setCurrentNode(-1));
+
+    setDestLocationText(state.destination);
+
+    setRouteStatus("not started");
+    dispatch(clearRoute());
+    setShowReroutePrompt(false);
+  }
+
   function getClosestNode(lat: number, lng: number, graph: Graph)
   {
     let bestNode = null;
@@ -727,7 +738,7 @@ export default function TabTwoScreen()
     etaMinutes !== null
       ? etaMinutes < 1
         ? "< 1 min"
-        : `${Math.ceil(etaMinutes)} min`
+        : `${Math.ceil(etaMinutes)} mins`
       : null;
 
   if(!fontsLoaded)
@@ -984,6 +995,7 @@ export default function TabTwoScreen()
         blurTint={blurTint}
         routeStatus={routeStatus}
         setRouteStatus={setRouteStatus}
+        handleManualReroute={handleManualReroute}
         currentRoute={currentRoute}
         currentNode={currentNode}
         locationPermissionStatus={locationPermissionStatus}
@@ -1035,29 +1047,34 @@ export default function TabTwoScreen()
       )}
       {/* ETA pill — shown between recenter and reroute buttons */}
       {routeStarted && !isCurrNodeInDoors && etaText && (
-        <View style={styles.etaPill}>
-          <Text style={styles.etaText}>ETA {etaText}</Text>
-        </View>
-      )}
-      {/* A button that will allow the user to reroute manually */}
-      {!isCurrNodeInDoors && routeStarted && !showReroutePrompt && (
-
-        <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.rerouteButtonContainer, { bottom: 20 + 25 + 0.05 * screenHeight }]}>
-          <TouchableOpacity style={[styles.rerouteButton]}
-            onPress={handleManualReroute}
-          >
-            <Reroute width={30} height={30} style={styles.rerouteIcon} />
-          </TouchableOpacity>
+        <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.etaPill]}>
+          <View style={[styles.blurredInterior, { borderRadius: 9999, justifyContent: "center", alignItems: "center" }]}>
+            <Text style={styles.etaText}>ETA: {etaText}</Text>
+          </View>
         </BlurView>
-
       )}
       {routeStarted && showReroutePrompt && (
-        <ReroutePrompt
-          isManualReroute={isManualReroute}
-          setShowReroutePrompt={setShowReroutePrompt}
-          setIsRouteStarted={() => {}}
-          isIndoors={isCurrNodeInDoors}
-        />
+        <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.reroutePromptContainer]}>
+          <View style={[styles.reroutePromptInterior, { borderRadius: 9999 }]}>
+            <Text style={[styles.rerouteText, { color: darkMode ? "#FFF" : "#FFF" }]}>
+              {isManualReroute ? "Reroute?" : "You have left the path"}
+            </Text>
+            <TouchableOpacity style={[styles.rerouteButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}
+              onPress={reroute}>
+              <Text style={[styles.rerouteText]}>
+                Reroute
+              </Text>
+            </TouchableOpacity>
+            {isManualReroute && (
+              <TouchableOpacity style={[styles.rerouteButton, { backgroundColor: darkMode ? "#356EC4" : "#5F88C9" }]}
+                onPress={() => setShowReroutePrompt(false)}>
+                <Text style={[styles.rerouteText]}>
+                  Continue
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </BlurView>
       )}
     </View>
   );
@@ -1099,6 +1116,8 @@ const styles = StyleSheet.create({
     zIndex: 100,
   },
   blurredInterior: {
+    width: "100%",
+    height: "100%",
     borderColor: "rgba(255,255,255,0.35)",
     borderWidth: 1,
     borderStyle: "solid",
@@ -1202,30 +1221,59 @@ const styles = StyleSheet.create({
     aspectRatio: "1/1",
     overflow: "hidden"
   },
-  rerouteButton: {
+  rerouteIcon: { alignSelf: "center" },
+  reroutePromptContainer: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    overflow: "hidden",
+    transform: "translate(-50%, -50%)",
+    borderRadius: 9999,
+  },
+  reroutePromptInterior: {
     borderColor: "rgba(255,255,255,0.35)",
+    height: "100%",
     borderWidth: 1,
     borderStyle: "solid",
-    width: "100%",
-    height: "100%",
-    borderRadius: "50%",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: "2.5%",
+    paddingHorizontal: "5%",
+    gap: "2%"
   },
-  rerouteIcon: { alignSelf: "center" },
+  rerouteText:
+  {
+    color: "#fff",
+    fontSize: 20,
+    fontFamily: "SF Pro Display",
+  },
+  rerouteButton: {
+    borderRadius: 9999,
+
+    paddingVertical: "3%",
+    paddingHorizontal: "5%",
+    display: "flex",
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "center"
+  },
   etaPill: {
     position: "absolute",
+    overflow: "hidden",
     bottom: 20,
-    alignSelf: "center",
-    backgroundColor: "#0A2145",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
+    right: 30,
+    height: "5%",
+    width: "50%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 9999,
     zIndex: 1,
   },
   etaText: {
     color: "#fff",
-    fontSize: 12,
+    fontSize: 20,
     fontFamily: "SF Pro Display",
   },
   locationfeatrues_headerRow: {
