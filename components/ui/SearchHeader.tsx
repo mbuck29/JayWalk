@@ -410,11 +410,6 @@ export default function SearchHeader(props: SearchHeaderProps) {
   };
 
   function handleStartRoutingPress() {
-    setRouteStatus("previewing");
-
-    // Start animation
-    summaryProgress.value = withTiming(1, { duration: 250 });
-
     // Before we start routing we need to know from and to for the algo to work
     console.log(`Routing from ${currLocation?.name} to ${destLocationText}...`);
 
@@ -424,9 +419,15 @@ export default function SearchHeader(props: SearchHeaderProps) {
     // If there is no route, log it and return
     if (!calculatedRoute) {
       dispatch(clearRoute());
+      triggerSearchButtonShake();
       console.log("No route found!");
       return;
     }
+
+    // Start animation
+    summaryProgress.value = withTiming(1, { duration: 250 });
+
+    setRouteStatus("previewing");
 
     // Sanitize the route and then push it to the global state
     dispatch(setRoute(sanitize(calculatedRoute)));
