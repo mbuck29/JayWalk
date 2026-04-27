@@ -35,6 +35,7 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
         setCurrentDirectionIndex(index);
     }
 
+    // When this first loads, find the index of the direction we should start from
     useEffect(() =>
     {
         if(directions.length <= currentDirectionIndex)
@@ -60,6 +61,7 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
     return (
         directions &&
         <View style={[styles.background, { backgroundColor: (darkMode ? "#0D1521" : "#FFF") }]}>
+            {/** Header with logo and title */}
             <View style={[styles.header]}>
                 <View style={[styles.headerLeft]}>
                     <View style={styles.symbolHolder}>
@@ -80,9 +82,10 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
 
                 </View>
             </View>
+            {/** Second header with the end button and the button to pull up the floor plan */}
             <View style={[styles.header2]}>
-                <TouchableOpacity onPress={() => setIsRouteStarted(false)} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
-                    <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>END ROUTE</Text>
+                <TouchableOpacity onPress={() => setIsRouteStarted(false)} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#356EC480" : "#356EC480" }]}>
+                    <Text style={{ color: darkMode ? "#C2DCF0" : "#FFF" }}>END ROUTE</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => setBottomPanePosition(bottomPanePosition == "low" ? "mid" : "low")} style={[styles.floorPlanButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
                     <Text style={{ color: darkMode ? "#5F88C9" : "#C2DCF0" }}>
@@ -90,6 +93,7 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
                     </Text>
                 </TouchableOpacity>
             </View>
+            {/** The directions the user is following */}
             <View style={[styles.directionsBlock]}>
                 {directions.map((dir, i) =>
                     <View style={styles.directionHolder} key={"direction " + i.toString()}>
@@ -97,31 +101,11 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
                     </View>
                 )}
             </View>
-            {/*<View style={[styles.footer]}>
-                <View style={[styles.prevNextHolder, { borderRadius: 0.35 * 0.8 * 0.08 * screenHeight, backgroundColor: darkMode ? "#223252" : "#356EC4" }]}>
-                    <TouchableOpacity style={[styles.prev, currentDirectionIndex == 0 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)}>
-                        <View style={[styles.symbolHolder]}>
-                            <Arrow style={[styles.symbolImage, { transform: [{ rotate: "-90deg" }] }]}></Arrow>
-                        </View>
 
-                        <Text style={{ color: "#FFF" }}>
-                            Previous
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity style={[styles.next, currentDirectionIndex == directions.length - 1 ? { opacity: 0.5, pointerEvents: "none" } : undefined]} onPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)}>
-                        <Text style={{ color: "#FFF" }}>
-                            Next
-                        </Text>
-
-                        <View style={[styles.symbolHolder]}>
-                            <Arrow style={[styles.symbolImage, { transform: [{ rotate: "90deg" }] }]}></Arrow>
-                        </View>
-                    </TouchableOpacity>
-                </View>
-            </View>*/}
+            {/** The footer with the previous/next buttons */}
             {<Footer leftPress={() => changeDirectionIndex(currentDirectionIndex - 1 >= 0 ? currentDirectionIndex - 1 : 0)} rightPress={() => changeDirectionIndex(currentDirectionIndex + 1 < directions.length ? currentDirectionIndex + 1 : currentDirectionIndex)} currentDirectionIndex={currentDirectionIndex} />/**/}
 
+            {/** The bottom pane that pops up to hold the floor plan */}
             <BottomPane
                 position={bottomPanePosition}
                 setPosition={setBottomPanePosition}
@@ -145,6 +129,9 @@ export default function NewIndoorNav({ setIsRouteStarted }: { setIsRouteStarted:
     );
 }
 
+/**
+ * The footer that has the previous/next buttons
+ */
 function Footer({ leftPress, rightPress, currentDirectionIndex, hat }: { leftPress: () => void, rightPress: () => void, currentDirectionIndex: number, hat?: boolean; })
 {
     const state = useAppState();
