@@ -206,6 +206,28 @@ def main():
 
                 dump(buildings, buildingFile, indent=4)
                 buildingFile.close()
+        elif whatDo == "audit":
+            for node in nodes:
+                for id in node["edgeIds"]:
+                    for edge in edges:
+                        if edge["id"] != id:
+                            continue
+
+                        if edge["startNodeId"] != node["id"] and edge["endNodeId"] != node["id"]:
+                            print(f"Mistake on edge {edge["id"]}")
+            
+            for edge in edges:
+                for node in nodes:
+                    if node["id"] == edge["startNodeId"] or node["id"] == edge["endNodeId"]:
+                        good = False
+                        for id in node["edgeIds"]:
+                            if id == edge["id"]:
+                                good = True
+                                break
+                        
+                        if not good:
+                            print(f"Mistake on node {node["id"]} w.r.t edge {edge["id"]}")
+
 
 
 
