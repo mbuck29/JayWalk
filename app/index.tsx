@@ -8,10 +8,9 @@
 import bookIconLocation from "@/assets/images/icons/Location Summary/book.svg";
 import busStopIconLocation from "@/assets/images/icons/Location Summary/busStop.svg";
 import computerIconLocation from "@/assets/images/icons/Location Summary/computer.svg";
+import foodIconLocation from "@/assets/images/icons/Location Summary/food.svg";
 import printerIconLocation from "@/assets/images/icons/Location Summary/printer.svg";
 import bathroomIconLocation from "@/assets/images/icons/Location Summary/PrivateRestroom.svg";
-import foodIconLocation from "@/assets/images/icons/Location Summary/food.svg";
-import foodIcon from "@/assets/images/icons/Map Tags/food.svg";
 import Burger from "@/assets/images/icons/Misc/burger.svg";
 import BottomPane from "@/components/ui/BottomPane";
 import BottomPaneContent from "@/components/ui/BottomPaneContent";
@@ -109,7 +108,7 @@ const TAG_CONFIG: Record<
   },
   food: {
     color: "#356EC4",
-    label: "Food", 
+    label: "Food",
     icon: foodIconLocation
   },
   computers: {
@@ -1051,16 +1050,16 @@ export default function TabTwoScreen()
       {routeStarted && !isCurrNodeInDoors && etaText && (
         <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.etaPill]}>
           <View style={[styles.blurredInterior, { borderRadius: 9999, justifyContent: "center", alignItems: "center" }]}>
-            <Text style={styles.etaText}>ETA: {etaText}</Text>
+            <Text style={[styles.etaText, { color: darkMode ? "#FFF" : "#000" }]}>ETA: {etaText}</Text>
           </View>
         </BlurView>
       )}
       {routeStarted && showReroutePrompt && (
         <BlurView tint={darkMode ? "dark" : "light"} intensity={80} style={[styles.reroutePromptContainer]}>
           <View style={[styles.reroutePromptInterior, { borderRadius: 9999 }]}>
-            <Text style={[styles.rerouteText, { color: darkMode ? "#FFF" : "#FFF" }]}>
-              {isManualReroute ? "Reroute?" : "You have left the path"}
-            </Text>
+            {!isManualReroute && <Text style={[styles.rerouteText, { color: darkMode ? "#FFF" : "#000" }]}>
+              {"You have left the path"}
+            </Text>}
             <TouchableOpacity style={[styles.rerouteButton, { backgroundColor: darkMode ? "#223252" : "#356EC4" }]}
               onPress={reroute}>
               <Text style={[styles.rerouteText]}>
@@ -1277,6 +1276,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 20,
     fontFamily: "SF Pro Display",
+    fontWeight: 500
   },
   locationfeatrues_headerRow: {
     flexDirection: "row",
