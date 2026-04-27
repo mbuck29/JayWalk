@@ -31,7 +31,9 @@ import { haversineMeters, sanitize } from "@/app/Utils/routingUtils";
 import
   {
     clearRoute,
+    setAccessiblePreference,
     setDestination,
+    setIndoorOutdoorPreference,
     setRoute,
     setStart,
     useAppDispatch,
@@ -164,6 +166,19 @@ export default function SearchHeader(props: SearchHeaderProps) {
   }, [routeStatus, currentRoute, currentNode]);
 
   useEffect(() => {
+    if(selectedPreference.includes("All Routes"))
+    {
+        dispatch(setIndoorOutdoorPreference(""));
+        dispatch(setAccessiblePreference(false));
+        return;
+    }
+
+    dispatch(setIndoorOutdoorPreference(selectedPreference.includes("Indoor Only") ? "indoors" : selectedPreference.includes("Outdoor Only") ? "outdoors" : ""));
+    dispatch(setAccessiblePreference(selectedPreference.includes("Accessible")));
+
+  }, [selectedPreference]);
+
+  useEffect(() => {
     if (routeStatus === "not started") {
       resetToEditingCollapsed();
     }
@@ -249,6 +264,7 @@ export default function SearchHeader(props: SearchHeaderProps) {
       if (preference === "Outdoor Only") {
         next = next.filter((p) => p !== "Indoor Only");
       }
+
 
       return [...next, preference];
     });
